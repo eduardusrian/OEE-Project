@@ -1,0 +1,1763 @@
+<!doctype html>
+<html lang="id">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem OEE Manufacturing</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100%;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .tab-button {
+      padding: 12px 24px;
+      border: none;
+      background: #e5e7eb;
+      color: #4b5563;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      margin-right: 8px;
+    }
+    
+    .tab-button.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border 0.3s;
+    }
+    
+    .input-field:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 32px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .metric-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .metric-value {
+      font-size: 36px;
+      font-weight: 700;
+      margin: 8px 0;
+    }
+    
+    .metric-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th {
+      background: #f9fafb;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-top: 20px;
+    }
+    
+    .notice-error {
+      background: #fee2e2;
+      border: 2px solid #ef4444;
+      color: #991b1b;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+    
+    .dynamic-list {
+      border: 2px dashed #e5e7eb;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+    
+    .dynamic-item {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    
+    .odt-item {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    
+    @keyframes blink-red {
+      0%, 100% { background-color: #fee2e2; }
+      50% { background-color: #fecaca; }
+    }
+    
+    .low-oee {
+      animation: blink-red 1.5s infinite;
+      font-weight: 700;
+      color: #991b1b;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container"><!-- Header -->
+   <div class="card" style="text-align: center; margin-bottom: 24px;">
+    <h1 id="appTitle" style="margin: 0; font-size: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sistem OEE Manufacturing</h1>
+    <p id="companyName" style="margin: 8px 0 0 0; color: #6b7280;">PT. Manufacturing Indonesia</p>
+   </div><!-- Tabs -->
+   <div class="card">
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;"><button class="tab-button active" onclick="switchTab('dashboard')">📊 Dashboard</button> <button class="tab-button" onclick="switchTab('inputMesin')">⚙️ Input Mesin</button> <button class="tab-button" onclick="switchTab('inputOEE')">📝 Input OEE</button> <button class="tab-button" onclick="switchTab('history')">📋 History</button> <button class="tab-button" onclick="switchTab('download')">💾 Download</button>
+    </div>
+   </div><!-- Dashboard Tab -->
+   <div id="dashboardTab" class="tab-content">
+    <div class="grid-3" style="margin-bottom: 20px;">
+     <div class="metric-card">
+      <div class="metric-label">
+       Rata-rata OEE
+      </div>
+      <div class="metric-value" id="avgOEE">
+       0%
+      </div>
+     </div>
+     <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+      <div class="metric-label">
+       Total Output
+      </div>
+      <div class="metric-value" id="totalOutput">
+       0
+      </div>
+     </div>
+     <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+      <div class="metric-label">
+       Total Records
+      </div>
+      <div class="metric-value" id="totalRecords">
+       0
+      </div>
+     </div>
+    </div>
+    <div class="grid-2">
+     <div class="card">
+      <h3 style="margin-top: 0;">📈 Trend OEE</h3>
+      <div class="chart-container">
+       <canvas id="oeeChart"></canvas>
+      </div>
+     </div>
+     <div class="card">
+      <h3 style="margin-top: 0;">⚡ Availability vs Performance vs Quality</h3>
+      <div class="chart-container">
+       <canvas id="apqChart"></canvas>
+      </div>
+     </div>
+    </div>
+    <div class="grid-2">
+     <div class="card">
+      <h3 style="margin-top: 0;">🔧 Line Stop Mesin</h3>
+      <div class="chart-container">
+       <canvas id="lineStopMesinChart"></canvas>
+      </div>
+     </div>
+     <div class="card">
+      <h3 style="margin-top: 0;">⚠️ Line Stop Non Mesin</h3>
+      <div class="chart-container">
+       <canvas id="lineStopNonMesinChart"></canvas>
+      </div>
+     </div>
+    </div>
+    <div class="grid-2">
+     <div class="card">
+      <h3 style="margin-top: 0;">⏸️ Minor Stop</h3>
+      <div class="chart-container">
+       <canvas id="minorStopChart"></canvas>
+      </div>
+     </div>
+     <div class="card">
+      <h3 style="margin-top: 0;">🏭 OEE per Mesin</h3>
+      <div class="chart-container">
+       <canvas id="oeePerMesinChart"></canvas>
+      </div>
+     </div>
+    </div>
+    <div class="card">
+     <h3 style="margin-top: 0;">👤 Performa Operator (PIC)</h3>
+     <div class="table-container">
+      <table id="operatorTable">
+       <thead>
+        <tr>
+         <th>PIC</th>
+         <th>Total Output</th>
+         <th>Target Total</th>
+         <th>Achievement (%)</th>
+         <th>Rata-rata OEE (%)</th>
+         <th>Jumlah Shift</th>
+        </tr>
+       </thead>
+       <tbody></tbody>
+      </table>
+     </div>
+    </div>
+   </div><!-- Input Mesin Tab -->
+   <div id="inputMesinTab" class="tab-content hidden">
+    <div class="card">
+     <h2 style="margin-top: 0;">⚙️ Input Data Mesin</h2><!-- Mode Selection -->
+     <div style="margin-bottom: 24px;"><button class="btn-secondary" onclick="setMesinMode('create')" id="btnCreateMode">➕ Tambah Mesin Baru</button> <button class="btn-secondary" onclick="setMesinMode('edit')" id="btnEditMode">✏️ Edit Mesin</button>
+     </div><!-- Edit Mode: Select Machine -->
+     <div id="editMesinSelector" class="hidden" style="margin-bottom: 24px;"><label>Pilih Mesin yang akan di-edit:</label> <select id="selectEditMesin" class="input-field" onchange="loadMesinForEdit()"> <option value="">-- Pilih Mesin --</option> </select>
+     </div><!-- Form Input Mesin -->
+     <form id="formInputMesin" onsubmit="saveMesin(event)">
+      <div class="grid-2">
+       <div class="form-group"><label>ID Mesin *</label> <input type="text" id="mesinId" class="input-field" required placeholder="Contoh: M001">
+       </div>
+       <div class="form-group"><label>Nama Mesin *</label> <input type="text" id="mesinNama" class="input-field" required placeholder="Contoh: Injection Molding 1">
+       </div>
+      </div>
+      <div class="grid-2">
+       <div class="form-group"><label>Area *</label> <select id="mesinArea" class="input-field" required> <option value="">-- Pilih Area --</option> <option value="Injeksi">Injeksi</option> <option value="Non Injeksi">Non Injeksi</option> </select>
+       </div>
+       <div class="form-group"><label>Target Output per Shift (butir) *</label> <input type="number" id="mesinTarget" class="input-field" required placeholder="Contoh: 1000">
+       </div>
+      </div>
+      <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="mesinPIC" class="input-field" required placeholder="Contoh: JD">
+      </div>
+      <div class="form-group"><label>ODT (Operational Downtime) Items</label>
+       <div class="dynamic-list" id="odtList">
+        <div class="odt-item"><input type="text" class="input-field" placeholder="Nama ODT" id="odtName0"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime0"> <span></span> <button type="button" class="btn-danger" onclick="removeODT(0)">❌</button>
+        </div>
+       </div><button type="button" class="btn-secondary" onclick="addODT()" style="margin-top: 8px;">➕ Tambah ODT</button>
+      </div>
+      <div class="form-group"><label>Line Stop Mesin Items</label>
+       <div class="dynamic-list" id="lsMesinList">
+        <div class="dynamic-item"><input type="text" class="input-field" placeholder="Nama Line Stop Mesin" id="lsMesin0"> <button type="button" class="btn-danger" onclick="removeLSMesin(0)">❌</button>
+        </div>
+       </div><button type="button" class="btn-secondary" onclick="addLSMesin()" style="margin-top: 8px;">➕ Tambah LS Mesin</button>
+      </div>
+      <div class="form-group"><label>Line Stop Non Mesin Items</label>
+       <div class="dynamic-list" id="lsNonMesinList">
+        <div class="dynamic-item"><input type="text" class="input-field" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin0"> <button type="button" class="btn-danger" onclick="removeLSNonMesin(0)">❌</button>
+        </div>
+       </div><button type="button" class="btn-secondary" onclick="addLSNonMesin()" style="margin-top: 8px;">➕ Tambah LS Non Mesin</button>
+      </div>
+      <div class="form-group"><label>Minor Stop Items</label>
+       <div class="dynamic-list" id="minorStopList">
+        <div class="dynamic-item"><input type="text" class="input-field" placeholder="Nama Minor Stop" id="minorStop0"> <button type="button" class="btn-danger" onclick="removeMinorStop(0)">❌</button>
+        </div>
+       </div><button type="button" class="btn-secondary" onclick="addMinorStop()" style="margin-top: 8px;">➕ Tambah Minor Stop</button>
+      </div><button type="submit" class="btn-primary" id="btnSaveMesin">💾 Simpan Mesin</button>
+     </form>
+    </div>
+   </div><!-- Input OEE Tab -->
+   <div id="inputOEETab" class="tab-content hidden">
+    <div class="card">
+     <h2 style="margin-top: 0;">📝 Input Data OEE</h2>
+     <div id="oeeErrorNotice" class="notice-error hidden"></div>
+     <form id="formInputOEE" onsubmit="saveOEE(event)">
+      <div class="grid-2">
+       <div class="form-group"><label>Pilih Mesin *</label> <select id="oeeSelectMesin" class="input-field" required onchange="loadMesinData()"> <option value="">-- Pilih Mesin --</option> </select>
+       </div>
+       <div class="form-group"><label>Tanggal Produksi *</label> <input type="date" id="oeeTanggal" class="input-field" required>
+       </div>
+      </div>
+      <div class="form-group"><label>Shift *</label> <select id="oeeShift" class="input-field" required> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (07.00 - 15.30 | 510 menit)</option> <option value="Shift 2">Shift 2 (15.20 - 22.50 | 450 menit)</option> <option value="Shift 3">Shift 3 (22.40 - 07.10 | 510 menit)</option> </select>
+      </div>
+      <div class="grid-2">
+       <div class="form-group"><label>Kode Produk *</label> <input type="text" id="oeeKodeProduk" class="input-field" required placeholder="Contoh: PRD-001">
+       </div>
+       <div class="form-group"><label>Batch Number *</label> <input type="text" id="oeeBatch" class="input-field" required placeholder="Contoh: BATCH-2024-001">
+       </div>
+      </div>
+      <div class="grid-2">
+       <div class="form-group"><label>Jumlah Output (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 950">
+       </div>
+       <div class="form-group"><label>Jumlah Reject (butir) *</label> <input type="number" id="oeeReject" class="input-field" required placeholder="Contoh: 50">
+       </div>
+      </div>
+      <div class="form-group"><label>ODT Items (dengan Waktu Aktual)</label>
+       <div class="dynamic-list" id="oeeODTList"></div>
+      </div>
+      <div class="form-group"><label>Line Stop Mesin</label>
+       <div class="dynamic-list" id="oeeLSMesinList"></div>
+       <div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px;"><strong>Custom Line Stop Mesin:</strong>
+        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field" placeholder="Nama Custom LS Mesin 1" id="customLSMesin1"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSMesinTime1">
+        </div>
+        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field" placeholder="Nama Custom LS Mesin 2" id="customLSMesin2"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSMesinTime2">
+        </div>
+       </div>
+      </div>
+      <div class="form-group"><label>Line Stop Non Mesin</label>
+       <div class="dynamic-list" id="oeeLSNonMesinList"></div>
+       <div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px;"><strong>Custom Line Stop Non Mesin:</strong>
+        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field" placeholder="Nama Custom LS Non Mesin 1" id="customLSNonMesin1"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSNonMesinTime1">
+        </div>
+        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field" placeholder="Nama Custom LS Non Mesin 2" id="customLSNonMesin2"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSNonMesinTime2">
+        </div>
+       </div>
+      </div>
+      <div class="form-group"><label>Minor Stop</label>
+       <div class="dynamic-list" id="oeeMinorStopList"></div>
+      </div><button type="submit" class="btn-primary">💾 Simpan Data OEE</button>
+     </form>
+    </div>
+   </div><!-- History Tab -->
+   <div id="historyTab" class="tab-content hidden">
+    <div class="card">
+     <h2 style="margin-top: 0;">📋 History Data OEE</h2>
+     <div class="table-container">
+      <table id="historyTable">
+       <thead>
+        <tr>
+         <th>Tanggal</th>
+         <th>Mesin</th>
+         <th>Shift</th>
+         <th>PIC</th>
+         <th>Output</th>
+         <th>Reject</th>
+         <th>OEE (%)</th>
+         <th>A (%)</th>
+         <th>P (%)</th>
+         <th>Q (%)</th>
+        </tr>
+       </thead>
+       <tbody></tbody>
+      </table>
+     </div>
+    </div>
+   </div><!-- Download Tab -->
+   <div id="downloadTab" class="tab-content hidden">
+    <div class="card">
+     <h2 style="margin-top: 0;">💾 Download Data</h2>
+     <p style="color: #6b7280; margin-bottom: 24px;">Download data OEE dalam format CSV untuk analisis lebih lanjut.</p>
+     <div class="grid-2">
+      <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="downloadFromDate" class="input-field">
+      </div>
+      <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="downloadToDate" class="input-field">
+      </div>
+     </div><button class="btn-primary" onclick="downloadCSV()">📥 Download CSV</button>
+    </div>
+   </div>
+  </div>
+  <script>
+    // ===== DEMO MODE CONFIGURATION =====
+    const DEMO_MODE = false;
+    const SUPABASE_URL = 'https://xgnaukbzfxvenieavkmq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbmF1a2J6Znh2ZW5pZWF2a21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MjA3NjQsImV4cCI6MjA3ODQ5Njc2NH0.gASmwrimGIDCi3TK277DxZoEF-Nos8v8MFq9_cUuR0o';
+    
+    let supabase = null;
+    if (!DEMO_MODE && typeof window.supabase !== 'undefined') {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // ===== GLOBAL STATE =====
+    let currentTab = 'dashboard';
+    let mesinMode = 'create';
+    let editingMesinId = null;
+    let allMachines = [];
+    let allOEERecords = [];
+    let odtCounter = 1;
+    let lsMesinCounter = 1;
+    let lsNonMesinCounter = 1;
+    let minorStopCounter = 1;
+    let charts = {};
+    
+    // ===== DEMO DATA =====
+    let demoMachines = [
+      {
+        id: '1',
+        mesin_id: 'M001',
+        mesin_nama: 'Injection Molding 1',
+        area: 'Injeksi',
+        target_output: 1000,
+        pic_inisial: 'JD',
+        odt_items: [
+          { name: 'Setup Mesin', time: 30 },
+          { name: 'Ganti Mold', time: 45 }
+        ],
+        line_stop_mesin_items: ['Kerusakan Hydraulic', 'Sensor Error'],
+        line_stop_non_mesin_items: ['Listrik Mati', 'Material Habis'],
+        minor_stop_items: ['Cleaning', 'Adjustment'],
+        is_active: true
+      },
+      {
+        id: '2',
+        mesin_id: 'M002',
+        mesin_nama: 'Injection Molding 2',
+        area: 'Injeksi',
+        target_output: 1200,
+        pic_inisial: 'AS',
+        odt_items: [
+          { name: 'Setup Mesin', time: 25 },
+          { name: 'Ganti Mold', time: 40 }
+        ],
+        line_stop_mesin_items: ['Kerusakan Motor', 'Heating Error'],
+        line_stop_non_mesin_items: ['Material Delay', 'QC Hold'],
+        minor_stop_items: ['Cleaning', 'Inspection'],
+        is_active: true
+      }
+    ];
+    
+    let demoOEERecords = [
+      {
+        id: '1',
+        mesin_id: 'M001',
+        mesin_nama: 'Injection Molding 1',
+        area: 'Injeksi',
+        pic_inisial: 'JD',
+        shift: 'Shift 1',
+        shift_duration: 480,
+        kode_produk: 'PRD-001',
+        batch_number: 'BATCH-2024-001',
+        jumlah_output: 950,
+        jumlah_reject: 50,
+        target_output: 1000,
+        odt_items: [{ name: 'Setup Mesin', standard: 30, actual: 30 }],
+        line_stop_mesin_items: [{ name: 'Kerusakan Hydraulic', time: 20 }],
+        line_stop_non_mesin_items: [{ name: 'Material Habis', time: 15 }],
+        minor_stop_items: ['Cleaning'],
+        availability: '85.42',
+        performance: '95.00',
+        quality: '94.74',
+        oee: '76.88',
+        tanggal_produksi: '2024-01-15'
+      },
+      {
+        id: '2',
+        mesin_id: 'M002',
+        mesin_nama: 'Injection Molding 2',
+        area: 'Injeksi',
+        pic_inisial: 'AS',
+        shift: 'Shift 2',
+        shift_duration: 480,
+        kode_produk: 'PRD-002',
+        batch_number: 'BATCH-2024-002',
+        jumlah_output: 1150,
+        jumlah_reject: 30,
+        target_output: 1200,
+        odt_items: [{ name: 'Setup Mesin', standard: 25, actual: 25 }],
+        line_stop_mesin_items: [{ name: 'Heating Error', time: 10 }],
+        line_stop_non_mesin_items: [{ name: 'QC Hold', time: 12 }],
+        minor_stop_items: ['Inspection'],
+        availability: '90.21',
+        performance: '95.83',
+        quality: '97.39',
+        oee: '84.21',
+        tanggal_produksi: '2024-01-16'
+      },
+      {
+        id: '3',
+        mesin_id: 'M001',
+        mesin_nama: 'Injection Molding 1',
+        area: 'Injeksi',
+        pic_inisial: 'JD',
+        shift: 'Shift 1',
+        shift_duration: 480,
+        kode_produk: 'PRD-001',
+        batch_number: 'BATCH-2024-003',
+        jumlah_output: 980,
+        jumlah_reject: 20,
+        target_output: 1000,
+        odt_items: [{ name: 'Ganti Mold', standard: 45, actual: 45 }],
+        line_stop_mesin_items: [{ name: 'Sensor Error', time: 15 }],
+        line_stop_non_mesin_items: [{ name: 'Listrik Mati', time: 25 }],
+        minor_stop_items: ['Adjustment'],
+        availability: '82.29',
+        performance: '98.00',
+        quality: '97.96',
+        oee: '79.01',
+        tanggal_produksi: '2024-01-17'
+      }
+    ];
+    
+    let nextMachineId = 3;
+    let nextOEEId = 4;
+
+    // ===== ELEMENT SDK CONFIGURATION =====
+    const defaultConfig = {
+      app_title: 'Sistem OEE Manufacturing',
+      company_name: 'PT. Manufacturing Indonesia',
+      primary_color: '#667eea',
+      secondary_color: '#764ba2',
+      accent_color: '#f093fb',
+      text_color: '#374151',
+      background_gradient_start: '#667eea',
+      background_gradient_end: '#764ba2'
+    };
+
+    async function onConfigChange(config) {
+      const appTitle = config.app_title || defaultConfig.app_title;
+      const companyName = config.company_name || defaultConfig.company_name;
+      
+      document.getElementById('appTitle').textContent = appTitle;
+      document.getElementById('companyName').textContent = companyName;
+      
+      const primaryColor = config.primary_color || defaultConfig.primary_color;
+      const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
+      
+      document.body.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.primary_color || defaultConfig.primary_color,
+              set: (value) => {
+                config.primary_color = value;
+                window.elementSdk.setConfig({ primary_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_color || defaultConfig.secondary_color,
+              set: (value) => {
+                config.secondary_color = value;
+                window.elementSdk.setConfig({ secondary_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['app_title', config.app_title || defaultConfig.app_title],
+          ['company_name', config.company_name || defaultConfig.company_name]
+        ])
+      });
+    }
+
+    // ===== TAB MANAGEMENT =====
+    function switchTab(tabName) {
+      console.log('Switching to tab:', tabName);
+      currentTab = tabName;
+      
+      // Hide all tabs
+      const allTabs = ['dashboardTab', 'inputMesinTab', 'inputOEETab', 'historyTab', 'downloadTab'];
+      allTabs.forEach(tabId => {
+        const el = document.getElementById(tabId);
+        if (el) el.classList.add('hidden');
+      });
+      
+      // Remove active from all buttons
+      document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+      
+      // Show selected tab
+      const tabElement = document.getElementById(tabName + 'Tab');
+      if (tabElement) {
+        tabElement.classList.remove('hidden');
+        console.log('Tab shown:', tabName + 'Tab');
+      } else {
+        console.error('Tab not found:', tabName + 'Tab');
+      }
+      
+      // Activate button by finding the one that calls this tab
+      const buttons = document.querySelectorAll('.tab-button');
+      buttons.forEach(btn => {
+        const onclick = btn.getAttribute('onclick');
+        if (onclick && onclick.includes(`'${tabName}'`)) {
+          btn.classList.add('active');
+        }
+      });
+      
+      // Load data for specific tabs
+      if (tabName === 'dashboard') {
+        loadDashboard();
+      } else if (tabName === 'inputOEE') {
+        loadMachinesForOEE();
+      } else if (tabName === 'history') {
+        loadHistory();
+      }
+    }
+
+    // ===== INPUT MESIN FUNCTIONS =====
+    function setMesinMode(mode) {
+      mesinMode = mode;
+      
+      if (mode === 'create') {
+        document.getElementById('btnCreateMode').classList.add('active');
+        document.getElementById('btnEditMode').classList.remove('active');
+        document.getElementById('editMesinSelector').classList.add('hidden');
+        resetMesinForm();
+        document.getElementById('mesinId').disabled = false;
+        document.getElementById('btnSaveMesin').textContent = '💾 Simpan Mesin';
+      } else {
+        document.getElementById('btnEditMode').classList.add('active');
+        document.getElementById('btnCreateMode').classList.remove('active');
+        document.getElementById('editMesinSelector').classList.remove('hidden');
+        loadMachinesForEdit();
+        document.getElementById('btnSaveMesin').textContent = '✏️ Update Mesin';
+      }
+    }
+
+    async function loadMachinesForEdit() {
+      let data;
+      
+      if (DEMO_MODE) {
+        data = demoMachines.filter(m => m.is_active);
+      } else {
+        const result = await supabase.from('machines').select('*').eq('is_active', true);
+        if (result.error) {
+          console.error('Error loading machines:', result.error);
+          return;
+        }
+        data = result.data;
+      }
+      
+      const select = document.getElementById('selectEditMesin');
+      select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
+      
+      data.forEach(machine => {
+        const option = document.createElement('option');
+        option.value = machine.id;
+        option.textContent = `${machine.mesin_id} - ${machine.mesin_nama}`;
+        select.appendChild(option);
+      });
+    }
+
+    async function loadMesinForEdit() {
+      const selectedId = document.getElementById('selectEditMesin').value;
+      
+      if (!selectedId) {
+        resetMesinForm();
+        return;
+      }
+      
+      let data;
+      
+      if (DEMO_MODE) {
+        data = demoMachines.find(m => m.id === selectedId);
+        if (!data) {
+          console.error('Machine not found');
+          return;
+        }
+      } else {
+        const result = await supabase.from('machines').select('*').eq('id', selectedId).single();
+        if (result.error) {
+          console.error('Error loading machine:', result.error);
+          return;
+        }
+        data = result.data;
+      }
+      
+      editingMesinId = data.id;
+      
+      document.getElementById('mesinId').value = data.mesin_id;
+      document.getElementById('mesinId').disabled = true;
+      document.getElementById('mesinNama').value = data.mesin_nama;
+      document.getElementById('mesinArea').value = data.area;
+      document.getElementById('mesinTarget').value = data.target_output;
+      document.getElementById('mesinPIC').value = data.pic_inisial;
+      
+      // Load ODT items
+      const odtList = document.getElementById('odtList');
+      odtList.innerHTML = '';
+      odtCounter = 0;
+      (data.odt_items || []).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'odt-item';
+        div.innerHTML = `
+          <input type="text" class="input-field" placeholder="Nama ODT" id="odtName${odtCounter}" value="${item.name}">
+          <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime${odtCounter}" value="${item.time}">
+          <span></span>
+          <button type="button" class="btn-danger" onclick="removeODT(${odtCounter})">❌</button>
+        `;
+        odtList.appendChild(div);
+        odtCounter++;
+      });
+      
+      // Load LS Mesin
+      const lsMesinList = document.getElementById('lsMesinList');
+      lsMesinList.innerHTML = '';
+      lsMesinCounter = 0;
+      (data.line_stop_mesin_items || []).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+          <input type="text" class="input-field" placeholder="Nama Line Stop Mesin" id="lsMesin${lsMesinCounter}" value="${item}">
+          <button type="button" class="btn-danger" onclick="removeLSMesin(${lsMesinCounter})">❌</button>
+        `;
+        lsMesinList.appendChild(div);
+        lsMesinCounter++;
+      });
+      
+      // Load LS Non Mesin
+      const lsNonMesinList = document.getElementById('lsNonMesinList');
+      lsNonMesinList.innerHTML = '';
+      lsNonMesinCounter = 0;
+      (data.line_stop_non_mesin_items || []).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+          <input type="text" class="input-field" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin${lsNonMesinCounter}" value="${item}">
+          <button type="button" class="btn-danger" onclick="removeLSNonMesin(${lsNonMesinCounter})">❌</button>
+        `;
+        lsNonMesinList.appendChild(div);
+        lsNonMesinCounter++;
+      });
+      
+      // Load Minor Stop
+      const minorStopList = document.getElementById('minorStopList');
+      minorStopList.innerHTML = '';
+      minorStopCounter = 0;
+      (data.minor_stop_items || []).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+          <input type="text" class="input-field" placeholder="Nama Minor Stop" id="minorStop${minorStopCounter}" value="${item}">
+          <button type="button" class="btn-danger" onclick="removeMinorStop(${minorStopCounter})">❌</button>
+        `;
+        minorStopList.appendChild(div);
+        minorStopCounter++;
+      });
+    }
+
+    function resetMesinForm() {
+      document.getElementById('formInputMesin').reset();
+      editingMesinId = null;
+      
+      // Reset ODT
+      document.getElementById('odtList').innerHTML = `
+        <div class="odt-item">
+          <input type="text" class="input-field" placeholder="Nama ODT" id="odtName0">
+          <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime0">
+          <span></span>
+          <button type="button" class="btn-danger" onclick="removeODT(0)">❌</button>
+        </div>
+      `;
+      odtCounter = 1;
+      
+      // Reset LS Mesin
+      document.getElementById('lsMesinList').innerHTML = `
+        <div class="dynamic-item">
+          <input type="text" class="input-field" placeholder="Nama Line Stop Mesin" id="lsMesin0">
+          <button type="button" class="btn-danger" onclick="removeLSMesin(0)">❌</button>
+        </div>
+      `;
+      lsMesinCounter = 1;
+      
+      // Reset LS Non Mesin
+      document.getElementById('lsNonMesinList').innerHTML = `
+        <div class="dynamic-item">
+          <input type="text" class="input-field" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin0">
+          <button type="button" class="btn-danger" onclick="removeLSNonMesin(0)">❌</button>
+        </div>
+      `;
+      lsNonMesinCounter = 1;
+      
+      // Reset Minor Stop
+      document.getElementById('minorStopList').innerHTML = `
+        <div class="dynamic-item">
+          <input type="text" class="input-field" placeholder="Nama Minor Stop" id="minorStop0">
+          <button type="button" class="btn-danger" onclick="removeMinorStop(0)">❌</button>
+        </div>
+      `;
+      minorStopCounter = 1;
+    }
+
+    function addODT() {
+      const list = document.getElementById('odtList');
+      const div = document.createElement('div');
+      div.className = 'odt-item';
+      div.innerHTML = `
+        <input type="text" class="input-field" placeholder="Nama ODT" id="odtName${odtCounter}">
+        <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime${odtCounter}">
+        <span></span>
+        <button type="button" class="btn-danger" onclick="removeODT(${odtCounter})">❌</button>
+      `;
+      list.appendChild(div);
+      odtCounter++;
+    }
+
+    function removeODT(index) {
+      const element = document.getElementById(`odtName${index}`).parentElement;
+      element.remove();
+    }
+
+    function addLSMesin() {
+      const list = document.getElementById('lsMesinList');
+      const div = document.createElement('div');
+      div.className = 'dynamic-item';
+      div.innerHTML = `
+        <input type="text" class="input-field" placeholder="Nama Line Stop Mesin" id="lsMesin${lsMesinCounter}">
+        <button type="button" class="btn-danger" onclick="removeLSMesin(${lsMesinCounter})">❌</button>
+      `;
+      list.appendChild(div);
+      lsMesinCounter++;
+    }
+
+    function removeLSMesin(index) {
+      const element = document.getElementById(`lsMesin${index}`).parentElement;
+      element.remove();
+    }
+
+    function addLSNonMesin() {
+      const list = document.getElementById('lsNonMesinList');
+      const div = document.createElement('div');
+      div.className = 'dynamic-item';
+      div.innerHTML = `
+        <input type="text" class="input-field" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin${lsNonMesinCounter}">
+        <button type="button" class="btn-danger" onclick="removeLSNonMesin(${lsNonMesinCounter})">❌</button>
+      `;
+      list.appendChild(div);
+      lsNonMesinCounter++;
+    }
+
+    function removeLSNonMesin(index) {
+      const element = document.getElementById(`lsNonMesin${index}`).parentElement;
+      element.remove();
+    }
+
+    function addMinorStop() {
+      const list = document.getElementById('minorStopList');
+      const div = document.createElement('div');
+      div.className = 'dynamic-item';
+      div.innerHTML = `
+        <input type="text" class="input-field" placeholder="Nama Minor Stop" id="minorStop${minorStopCounter}">
+        <button type="button" class="btn-danger" onclick="removeMinorStop(${minorStopCounter})">❌</button>
+      `;
+      list.appendChild(div);
+      minorStopCounter++;
+    }
+
+    function removeMinorStop(index) {
+      const element = document.getElementById(`minorStop${index}`).parentElement;
+      element.remove();
+    }
+
+    async function saveMesin(event) {
+      event.preventDefault();
+      
+      const mesinId = document.getElementById('mesinId').value;
+      const mesinNama = document.getElementById('mesinNama').value;
+      const mesinArea = document.getElementById('mesinArea').value;
+      const mesinTarget = parseInt(document.getElementById('mesinTarget').value);
+      const mesinPIC = document.getElementById('mesinPIC').value;
+      
+      // Collect ODT items
+      const odtItems = [];
+      for (let i = 0; i < odtCounter; i++) {
+        const nameEl = document.getElementById(`odtName${i}`);
+        const timeEl = document.getElementById(`odtTime${i}`);
+        if (nameEl && timeEl && nameEl.value && timeEl.value) {
+          odtItems.push({
+            name: nameEl.value,
+            time: parseInt(timeEl.value)
+          });
+        }
+      }
+      
+      // Collect LS Mesin
+      const lsMesinItems = [];
+      for (let i = 0; i < lsMesinCounter; i++) {
+        const el = document.getElementById(`lsMesin${i}`);
+        if (el && el.value) {
+          lsMesinItems.push(el.value);
+        }
+      }
+      
+      // Collect LS Non Mesin
+      const lsNonMesinItems = [];
+      for (let i = 0; i < lsNonMesinCounter; i++) {
+        const el = document.getElementById(`lsNonMesin${i}`);
+        if (el && el.value) {
+          lsNonMesinItems.push(el.value);
+        }
+      }
+      
+      // Collect Minor Stop
+      const minorStopItems = [];
+      for (let i = 0; i < minorStopCounter; i++) {
+        const el = document.getElementById(`minorStop${i}`);
+        if (el && el.value) {
+          minorStopItems.push(el.value);
+        }
+      }
+      
+      const machineData = {
+        mesin_id: mesinId,
+        mesin_nama: mesinNama,
+        area: mesinArea,
+        target_output: mesinTarget,
+        pic_inisial: mesinPIC,
+        odt_items: odtItems,
+        line_stop_mesin_items: lsMesinItems,
+        line_stop_non_mesin_items: lsNonMesinItems,
+        minor_stop_items: minorStopItems,
+        is_active: true
+      };
+      
+      if (DEMO_MODE) {
+        if (mesinMode === 'edit' && editingMesinId) {
+          const index = demoMachines.findIndex(m => m.id === editingMesinId);
+          if (index !== -1) {
+            demoMachines[index] = { ...machineData, id: editingMesinId };
+          }
+        } else {
+          demoMachines.push({ ...machineData, id: String(nextMachineId++) });
+        }
+      } else {
+        let result;
+        if (mesinMode === 'edit' && editingMesinId) {
+          result = await supabase.from('machines').update(machineData).eq('id', editingMesinId);
+        } else {
+          result = await supabase.from('machines').insert([machineData]);
+        }
+        
+        if (result.error) {
+          alert('Error menyimpan data mesin: ' + result.error.message);
+          return;
+        }
+      }
+      
+      alert(mesinMode === 'edit' ? 'Mesin berhasil diupdate!' : 'Mesin berhasil disimpan!');
+      resetMesinForm();
+      
+      if (mesinMode === 'edit') {
+        loadMachinesForEdit();
+      }
+    }
+
+    // ===== INPUT OEE FUNCTIONS =====
+    async function loadMachinesForOEE() {
+      let data;
+      
+      if (DEMO_MODE) {
+        data = demoMachines.filter(m => m.is_active);
+      } else {
+        const result = await supabase.from('machines').select('*').eq('is_active', true);
+        if (result.error) {
+          console.error('Error loading machines:', result.error);
+          return;
+        }
+        data = result.data;
+      }
+      
+      allMachines = data;
+      
+      const select = document.getElementById('oeeSelectMesin');
+      select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
+      
+      data.forEach(machine => {
+        const option = document.createElement('option');
+        option.value = machine.id;
+        option.textContent = `${machine.mesin_id} - ${machine.mesin_nama}`;
+        select.appendChild(option);
+      });
+    }
+
+    function loadMesinData() {
+      const selectedId = document.getElementById('oeeSelectMesin').value;
+      
+      if (!selectedId) {
+        document.getElementById('oeeODTList').innerHTML = '';
+        document.getElementById('oeeLSMesinList').innerHTML = '';
+        document.getElementById('oeeLSNonMesinList').innerHTML = '';
+        document.getElementById('oeeMinorStopList').innerHTML = '';
+        return;
+      }
+      
+      const machine = allMachines.find(m => m.id === selectedId);
+      
+      if (!machine) return;
+      
+      // Load ODT with actual time
+      const odtList = document.getElementById('oeeODTList');
+      odtList.innerHTML = '';
+      (machine.odt_items || []).forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'odt-item';
+        div.innerHTML = `
+          <input type="checkbox" id="odtCheck${index}" style="width: auto;">
+          <span style="flex: 1;">${item.name} (${item.time} menit)</span>
+          <input type="number" class="input-field" placeholder="Waktu Aktual" id="odtActual${index}" style="width: 120px;">
+          <span></span>
+        `;
+        odtList.appendChild(div);
+      });
+      
+      // Load LS Mesin
+      const lsMesinList = document.getElementById('oeeLSMesinList');
+      lsMesinList.innerHTML = '';
+      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+          <span style="flex: 1;">${item}</span>
+          <input type="number" class="input-field" placeholder="Waktu (menit)" id="lsMesinTime${index}" style="width: 150px;">
+        `;
+        lsMesinList.appendChild(div);
+      });
+      
+      // Load LS Non Mesin
+      const lsNonMesinList = document.getElementById('oeeLSNonMesinList');
+      lsNonMesinList.innerHTML = '';
+      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+          <span style="flex: 1;">${item}</span>
+          <input type="number" class="input-field" placeholder="Waktu (menit)" id="lsNonMesinTime${index}" style="width: 150px;">
+        `;
+        lsNonMesinList.appendChild(div);
+      });
+      
+      // Load Minor Stop
+      const minorStopList = document.getElementById('oeeMinorStopList');
+      minorStopList.innerHTML = '';
+      (machine.minor_stop_items || []).forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+          <input type="checkbox" id="minorStopCheck${index}" style="width: auto;">
+          <span style="flex: 1;">${item}</span>
+        `;
+        minorStopList.appendChild(div);
+      });
+    }
+
+    async function saveOEE(event) {
+      event.preventDefault();
+      
+      document.getElementById('oeeErrorNotice').classList.add('hidden');
+      
+      const selectedMesinId = document.getElementById('oeeSelectMesin').value;
+      const machine = allMachines.find(m => m.id === selectedMesinId);
+      
+      if (!machine) {
+        alert('Pilih mesin terlebih dahulu');
+        return;
+      }
+      
+      const tanggal = document.getElementById('oeeTanggal').value;
+      const shift = document.getElementById('oeeShift').value;
+      
+      // Durasi shift otomatis berdasarkan pilihan shift
+      let durasi = 480;
+      if (shift === 'Shift 1') {
+        durasi = 510; // 07.00 - 15.30 = 8.5 jam = 510 menit
+      } else if (shift === 'Shift 2') {
+        durasi = 450; // 15.20 - 22.50 = 7.5 jam = 450 menit
+      } else if (shift === 'Shift 3') {
+        durasi = 510; // 22.40 - 07.10 = 8.5 jam = 510 menit
+      }
+      
+      const kodeProduk = document.getElementById('oeeKodeProduk').value;
+      const batch = document.getElementById('oeeBatch').value;
+      const output = parseInt(document.getElementById('oeeOutput').value);
+      const reject = parseInt(document.getElementById('oeeReject').value);
+      
+      // Collect ODT with actual time
+      const odtItems = [];
+      let totalODT = 0;
+      (machine.odt_items || []).forEach((item, index) => {
+        const checked = document.getElementById(`odtCheck${index}`)?.checked;
+        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
+        
+        if (checked && actual > 0) {
+          odtItems.push({
+            name: item.name,
+            standard: item.time,
+            actual: actual
+          });
+          totalODT += Math.min(actual, item.time);
+        }
+      });
+      
+      // Collect LS Mesin
+      const lsMesinItems = [];
+      let totalLSMesin = 0;
+      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
+        if (time > 0) {
+          lsMesinItems.push({ name: item, time: time });
+          totalLSMesin += time;
+        }
+      });
+      
+      // Add custom LS Mesin
+      const customLSMesin1 = document.getElementById('customLSMesin1').value;
+      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1').value || 0);
+      if (customLSMesin1 && customLSMesinTime1 > 0) {
+        lsMesinItems.push({ name: customLSMesin1, time: customLSMesinTime1 });
+        totalLSMesin += customLSMesinTime1;
+      }
+      
+      const customLSMesin2 = document.getElementById('customLSMesin2').value;
+      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2').value || 0);
+      if (customLSMesin2 && customLSMesinTime2 > 0) {
+        lsMesinItems.push({ name: customLSMesin2, time: customLSMesinTime2 });
+        totalLSMesin += customLSMesinTime2;
+      }
+      
+      // Collect LS Non Mesin + auto from ODT overtime
+      const lsNonMesinItems = [];
+      let totalLSNonMesin = 0;
+      
+      // Add ODT overtime to LS Non Mesin
+      odtItems.forEach(odt => {
+        if (odt.actual > odt.standard) {
+          const overtime = odt.actual - odt.standard;
+          lsNonMesinItems.push({ name: odt.name, time: overtime });
+          totalLSNonMesin += overtime;
+        }
+      });
+      
+      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+        const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
+        if (time > 0) {
+          lsNonMesinItems.push({ name: item, time: time });
+          totalLSNonMesin += time;
+        }
+      });
+      
+      // Add custom LS Non Mesin
+      const customLSNonMesin1 = document.getElementById('customLSNonMesin1').value;
+      const customLSNonMesinTime1 = parseInt(document.getElementById('customLSNonMesinTime1').value || 0);
+      if (customLSNonMesin1 && customLSNonMesinTime1 > 0) {
+        lsNonMesinItems.push({ name: customLSNonMesin1, time: customLSNonMesinTime1 });
+        totalLSNonMesin += customLSNonMesinTime1;
+      }
+      
+      const customLSNonMesin2 = document.getElementById('customLSNonMesin2').value;
+      const customLSNonMesinTime2 = parseInt(document.getElementById('customLSNonMesinTime2').value || 0);
+      if (customLSNonMesin2 && customLSNonMesinTime2 > 0) {
+        lsNonMesinItems.push({ name: customLSNonMesin2, time: customLSNonMesinTime2 });
+        totalLSNonMesin += customLSNonMesinTime2;
+      }
+      
+      // Collect Minor Stop
+      const minorStopItems = [];
+      (machine.minor_stop_items || []).forEach((item, index) => {
+        const checked = document.getElementById(`minorStopCheck${index}`)?.checked;
+        if (checked) {
+          minorStopItems.push(item);
+        }
+      });
+      
+      // Calculate OEE
+      const runTime = durasi - totalODT - totalLSMesin - totalLSNonMesin;
+      const availability = (runTime / durasi) * 100;
+      
+      const performance = (output / machine.target_output) * 100;
+      
+      const goodOutput = output - reject;
+      const quality = (goodOutput / output) * 100;
+      
+      const oee = (availability * performance * quality) / 10000;
+      
+      // Validate OEE > 100%
+      if (oee > 100) {
+        document.getElementById('oeeErrorNotice').innerHTML = `
+          <strong>⚠️ ERROR: OEE MELEBIHI 100%!</strong><br>
+          OEE Anda: <strong>${oee.toFixed(2)}%</strong><br><br>
+          Kemungkinan penyebab:<br>
+          • Output melebihi target terlalu banyak<br>
+          • Durasi downtime terlalu kecil<br>
+          • Reject terlalu sedikit dibanding output<br><br>
+          <strong>Mohon periksa kembali data input Anda!</strong>
+        `;
+        document.getElementById('oeeErrorNotice').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      
+      const oeeData = {
+        mesin_id: machine.mesin_id,
+        mesin_nama: machine.mesin_nama,
+        area: machine.area,
+        pic_inisial: machine.pic_inisial,
+        shift: shift,
+        shift_duration: durasi,
+        kode_produk: kodeProduk,
+        batch_number: batch,
+        jumlah_output: output,
+        jumlah_reject: reject,
+        target_output: machine.target_output,
+        odt_items: odtItems,
+        line_stop_mesin_items: lsMesinItems,
+        line_stop_non_mesin_items: lsNonMesinItems,
+        minor_stop_items: minorStopItems,
+        availability: availability.toFixed(2),
+        performance: performance.toFixed(2),
+        quality: quality.toFixed(2),
+        oee: oee.toFixed(2),
+        tanggal_produksi: tanggal
+      };
+      
+      if (DEMO_MODE) {
+        demoOEERecords.unshift({ ...oeeData, id: String(nextOEEId++) });
+      } else {
+        const { error } = await supabase.from('oee_records').insert([oeeData]);
+        
+        if (error) {
+          alert('Error menyimpan data OEE: ' + error.message);
+          return;
+        }
+      }
+      
+      alert('Data OEE berhasil disimpan!');
+      document.getElementById('formInputOEE').reset();
+      loadMesinData();
+    }
+
+    // ===== DASHBOARD FUNCTIONS =====
+    async function loadDashboard() {
+      let data;
+      
+      if (DEMO_MODE) {
+        data = [...demoOEERecords].sort((a, b) => b.tanggal_produksi.localeCompare(a.tanggal_produksi));
+      } else {
+        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
+        if (result.error) {
+          console.error('Error loading OEE records:', result.error);
+          return;
+        }
+        data = result.data;
+      }
+      
+      allOEERecords = data;
+      
+      // Calculate metrics
+      const avgOEE = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.oee), 0) / data.length).toFixed(2) : 0;
+      const totalOutput = data.reduce((sum, r) => sum + r.jumlah_output, 0);
+      
+      document.getElementById('avgOEE').textContent = avgOEE + '%';
+      document.getElementById('totalOutput').textContent = totalOutput.toLocaleString();
+      document.getElementById('totalRecords').textContent = data.length;
+      
+      // Render charts
+      renderOEEChart(data);
+      renderAPQChart(data);
+      renderLineStopMesinChart(data);
+      renderLineStopNonMesinChart(data);
+      renderMinorStopChart(data);
+      renderOEEPerMesinChart(data);
+      renderOperatorTable(data);
+    }
+
+    function renderOEEChart(data) {
+      const ctx = document.getElementById('oeeChart');
+      
+      if (charts.oeeChart) {
+        charts.oeeChart.destroy();
+      }
+      
+      const last10 = data.slice(0, 10).reverse();
+      
+      charts.oeeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: last10.map(r => r.tanggal_produksi),
+          datasets: [{
+            label: 'OEE (%)',
+            data: last10.map(r => parseFloat(r.oee)),
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
+        }
+      });
+    }
+
+    function renderAPQChart(data) {
+      const ctx = document.getElementById('apqChart');
+      
+      if (charts.apqChart) {
+        charts.apqChart.destroy();
+      }
+      
+      const avgA = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.availability), 0) / data.length).toFixed(2) : 0;
+      const avgP = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.performance), 0) / data.length).toFixed(2) : 0;
+      const avgQ = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.quality), 0) / data.length).toFixed(2) : 0;
+      
+      charts.apqChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Availability', 'Performance', 'Quality'],
+          datasets: [{
+            label: 'Average (%)',
+            data: [avgA, avgP, avgQ],
+            backgroundColor: ['#667eea', '#f093fb', '#4facfe']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
+        }
+      });
+    }
+
+    function renderLineStopMesinChart(data) {
+      const ctx = document.getElementById('lineStopMesinChart');
+      
+      if (charts.lineStopMesinChart) {
+        charts.lineStopMesinChart.destroy();
+      }
+      
+      const lsMap = {};
+      data.forEach(record => {
+        (record.line_stop_mesin_items || []).forEach(item => {
+          lsMap[item.name] = (lsMap[item.name] || 0) + item.time;
+        });
+      });
+      
+      const labels = Object.keys(lsMap).slice(0, 10);
+      const values = labels.map(l => lsMap[l]);
+      
+      charts.lineStopMesinChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total Waktu (menit)',
+            data: values,
+            backgroundColor: '#ef4444'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderLineStopNonMesinChart(data) {
+      const ctx = document.getElementById('lineStopNonMesinChart');
+      
+      if (charts.lineStopNonMesinChart) {
+        charts.lineStopNonMesinChart.destroy();
+      }
+      
+      const lsMap = {};
+      data.forEach(record => {
+        (record.line_stop_non_mesin_items || []).forEach(item => {
+          lsMap[item.name] = (lsMap[item.name] || 0) + item.time;
+        });
+      });
+      
+      const labels = Object.keys(lsMap).slice(0, 10);
+      const values = labels.map(l => lsMap[l]);
+      
+      charts.lineStopNonMesinChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total Waktu (menit)',
+            data: values,
+            backgroundColor: '#f59e0b'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderMinorStopChart(data) {
+      const ctx = document.getElementById('minorStopChart');
+      
+      if (charts.minorStopChart) {
+        charts.minorStopChart.destroy();
+      }
+      
+      const msMap = {};
+      data.forEach(record => {
+        (record.minor_stop_items || []).forEach(item => {
+          msMap[item] = (msMap[item] || 0) + 1;
+        });
+      });
+      
+      const labels = Object.keys(msMap).slice(0, 10);
+      const values = labels.map(l => msMap[l]);
+      
+      charts.minorStopChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right' }
+          }
+        }
+      });
+    }
+
+    function renderOEEPerMesinChart(data) {
+      const ctx = document.getElementById('oeePerMesinChart');
+      
+      if (charts.oeePerMesinChart) {
+        charts.oeePerMesinChart.destroy();
+      }
+      
+      const mesinMap = {};
+      data.forEach(record => {
+        if (!mesinMap[record.mesin_nama]) {
+          mesinMap[record.mesin_nama] = { total: 0, count: 0 };
+        }
+        mesinMap[record.mesin_nama].total += parseFloat(record.oee);
+        mesinMap[record.mesin_nama].count += 1;
+      });
+      
+      const labels = Object.keys(mesinMap);
+      const values = labels.map(l => (mesinMap[l].total / mesinMap[l].count).toFixed(2));
+      
+      charts.oeePerMesinChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Rata-rata OEE (%)',
+            data: values,
+            backgroundColor: '#667eea'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
+        }
+      });
+    }
+
+    function renderOperatorTable(data) {
+      const picMap = {};
+      
+      data.forEach(record => {
+        if (!picMap[record.pic_inisial]) {
+          picMap[record.pic_inisial] = {
+            totalOutput: 0,
+            totalTarget: 0,
+            totalOEE: 0,
+            count: 0
+          };
+        }
+        
+        picMap[record.pic_inisial].totalOutput += record.jumlah_output;
+        picMap[record.pic_inisial].totalTarget += record.target_output;
+        picMap[record.pic_inisial].totalOEE += parseFloat(record.oee);
+        picMap[record.pic_inisial].count += 1;
+      });
+      
+      const tbody = document.querySelector('#operatorTable tbody');
+      tbody.innerHTML = '';
+      
+      Object.keys(picMap).forEach(pic => {
+        const stats = picMap[pic];
+        const achievement = ((stats.totalOutput / stats.totalTarget) * 100).toFixed(2);
+        const avgOEE = (stats.totalOEE / stats.count).toFixed(2);
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${pic}</strong></td>
+          <td>${stats.totalOutput.toLocaleString()}</td>
+          <td>${stats.totalTarget.toLocaleString()}</td>
+          <td><strong>${achievement}%</strong></td>
+          <td><strong>${avgOEE}%</strong></td>
+          <td>${stats.count}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ===== HISTORY FUNCTIONS =====
+    async function loadHistory() {
+      let data;
+      
+      if (DEMO_MODE) {
+        data = [...demoOEERecords].sort((a, b) => b.tanggal_produksi.localeCompare(a.tanggal_produksi));
+      } else {
+        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
+        if (result.error) {
+          console.error('Error loading history:', result.error);
+          return;
+        }
+        data = result.data;
+      }
+      
+      const tbody = document.querySelector('#historyTable tbody');
+      tbody.innerHTML = '';
+      
+      data.forEach(record => {
+        const row = document.createElement('tr');
+        const oeeValue = parseFloat(record.oee);
+        const oeeClass = oeeValue < 86 ? 'low-oee' : '';
+        
+        row.innerHTML = `
+          <td>${record.tanggal_produksi}</td>
+          <td>${record.mesin_nama}</td>
+          <td>${record.shift}</td>
+          <td>${record.pic_inisial}</td>
+          <td>${record.jumlah_output}</td>
+          <td>${record.jumlah_reject}</td>
+          <td class="${oeeClass}"><strong>${record.oee}%</strong></td>
+          <td>${record.availability}%</td>
+          <td>${record.performance}%</td>
+          <td>${record.quality}%</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ===== DOWNLOAD FUNCTIONS =====
+    async function downloadCSV() {
+      const fromDate = document.getElementById('downloadFromDate').value;
+      const toDate = document.getElementById('downloadToDate').value;
+      
+      let data;
+      
+      if (DEMO_MODE) {
+        data = [...demoOEERecords];
+        
+        if (fromDate) {
+          data = data.filter(r => r.tanggal_produksi >= fromDate);
+        }
+        
+        if (toDate) {
+          data = data.filter(r => r.tanggal_produksi <= toDate);
+        }
+        
+        data.sort((a, b) => b.tanggal_produksi.localeCompare(a.tanggal_produksi));
+      } else {
+        let query = supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
+        
+        if (fromDate) {
+          query = query.gte('tanggal_produksi', fromDate);
+        }
+        
+        if (toDate) {
+          query = query.lte('tanggal_produksi', toDate);
+        }
+        
+        const result = await query;
+        
+        if (result.error) {
+          alert('Error mengambil data: ' + result.error.message);
+          return;
+        }
+        
+        data = result.data;
+      }
+      
+      if (data.length === 0) {
+        alert('Tidak ada data untuk di-download');
+        return;
+      }
+      
+      // Create CSV
+      const headers = ['Tanggal', 'Mesin ID', 'Mesin Nama', 'Area', 'PIC', 'Shift', 'Durasi Shift', 'Kode Produk', 'Batch', 'Output', 'Reject', 'Target', 'Availability', 'Performance', 'Quality', 'OEE'];
+      
+      const rows = data.map(r => [
+        r.tanggal_produksi,
+        r.mesin_id,
+        r.mesin_nama,
+        r.area,
+        r.pic_inisial,
+        r.shift,
+        r.shift_duration,
+        r.kode_produk,
+        r.batch_number,
+        r.jumlah_output,
+        r.jumlah_reject,
+        r.target_output,
+        r.availability,
+        r.performance,
+        r.quality,
+        r.oee
+      ]);
+      
+      const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `oee_data_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+
+    // ===== INITIALIZATION =====
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboard();
+      
+      // Set default date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('oeeTanggal').value = today;
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d35ab8b3a4fe08',t:'MTc2MjkyMjQ1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
