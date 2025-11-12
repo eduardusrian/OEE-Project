@@ -395,7 +395,7 @@
        </div>
       </div>
       <div class="grid-2">
-       <div class="form-group"><label>Shift *</label> <select id="oeeShift" class="input-field" required> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (07.00 - 15.30 | 510 menit)</option> <option value="Shift 2">Shift 2 (15.20 - 22.50 | 450 menit)</option> <option value="Shift 3">Shift 3 (22.40 - 07.10 | 510 menit)</option> </select>
+       <div class="form-group"><label>Shift *</label> <select id="oeeShift" class="input-field" required> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (07.00 - 15.30 | 510 menit)</option> <option value="Shift 2">Shift 2 (15.20 - 22.50 | 450 menit)</option> <option value="Shift 3">Shift 3 (22.40 - 07.10 | 510 menit)</option> <option value="Long Shift Pagi">Long Shift Pagi (07.00 - 19.00 | 720 menit)</option> <option value="Long Shift Malam">Long Shift Malam (19.00 - 07.00 | 720 menit)</option> </select>
        </div>
        <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="oeePIC" class="input-field uppercase-input" required placeholder="Contoh: JD">
        </div>
@@ -1253,6 +1253,7 @@
       if (shift === 'Shift 1') durasi = 510;
       else if (shift === 'Shift 2') durasi = 450;
       else if (shift === 'Shift 3') durasi = 510;
+      else if (shift === 'Long Shift Pagi' || shift === 'Long Shift Malam') durasi = 720;
       
       // Calculate total ODT
       let totalODT = 0;
@@ -1337,6 +1338,8 @@
         durasi = 450;
       } else if (shift === 'Shift 3') {
         durasi = 510;
+      } else if (shift === 'Long Shift Pagi' || shift === 'Long Shift Malam') {
+        durasi = 720;
       }
       
       const kodeProduk = document.getElementById('oeeKodeProduk').value.toUpperCase();
@@ -1465,6 +1468,7 @@
       }
       
       const oeeData = {
+        mesin_id: machine.mesin_id,
         mesin_nama: machine.mesin_nama,
         area: machine.area,
         pic_inisial: picInisial,
@@ -1931,5 +1935,5 @@
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d42a5cb7c1ce3f',t:'MTc2MjkzMDk2NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d4300a4604fd2d',t:'MTc2MjkzMTE5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
