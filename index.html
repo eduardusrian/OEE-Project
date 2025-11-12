@@ -404,6 +404,9 @@
       </div>
       <div class="grid-2">
        <div class="form-group"><label>Jumlah Output (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 950">
+        <div id="targetOutputDisplay" style="margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 6px; color: #166534; font-weight: 600; display: none;">
+         🎯 Target Output/shift: <span id="targetOutputValue">0</span> butir
+        </div>
        </div>
        <div class="form-group"><label>Jumlah Reject (butir) *</label> <input type="number" id="oeeReject" class="input-field" required placeholder="Contoh: 50">
        </div>
@@ -1118,12 +1121,17 @@
         document.getElementById('oeeLSMesinList').innerHTML = '';
         document.getElementById('oeeLSNonMesinList').innerHTML = '';
         document.getElementById('oeeMinorStopList').innerHTML = '';
+        document.getElementById('targetOutputDisplay').style.display = 'none';
         return;
       }
       
       const machine = allMachines.find(m => m.id === selectedId);
       
       if (!machine) return;
+      
+      // Show target output
+      document.getElementById('targetOutputValue').textContent = machine.target_output.toLocaleString();
+      document.getElementById('targetOutputDisplay').style.display = 'block';
       
       // Load ODT with actual time
       const odtList = document.getElementById('oeeODTList');
@@ -1792,5 +1800,5 @@
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d3d5ff77bcb5e1',t:'MTc2MjkyNzUwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d3e13890f9659e',t:'MTc2MjkyNzk2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
