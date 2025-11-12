@@ -1664,10 +1664,9 @@
         }
       });
       
-      // Get WR number if applicable
-      let wrNumber = null;
+      // Check WR requirement (validation only, not saved to database)
       if (totalLSMesin > 179) {
-        wrNumber = document.getElementById('oeeWRNumber').value.toUpperCase();
+        const wrNumber = document.getElementById('oeeWRNumber').value.toUpperCase();
         if (!wrNumber) {
           alert('⚠️ Line Stop Mesin > 179 menit. Nomor WR wajib diisi!');
           return;
@@ -2127,6 +2126,24 @@
         const oeeValue = parseFloat(record.oee);
         const oeeClass = oeeValue < 86 ? 'low-oee' : '';
         
+        // Format ODT
+        const odtText = (record.odt_items || []).map(item => `${item.name} (${item.actual}m)`).join(', ') || '-';
+        
+        // Format LS Mesin
+        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name} (${item.time}m)`).join(', ') || '-';
+        
+        // Format LS Non Mesin
+        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name} (${item.time}m)`).join(', ') || '-';
+        
+        // Format Minor Stop
+        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name} (${item.frequency}x)`).join(', ') || '-';
+        
+        // Calculate total Minor Stop frequency
+        const totalMinorStopFreq = (record.minor_stop_items || []).reduce((sum, item) => sum + item.frequency, 0);
+        
+        // WR Number
+        const wrNumber = record.wr_number || '-';
+        
         row.innerHTML = `
           <td>${record.tanggal_produksi}</td>
           <td>${record.mesin_nama}</td>
@@ -2138,6 +2155,12 @@
           <td>${record.availability}%</td>
           <td>${record.performance}%</td>
           <td>${record.quality}%</td>
+          <td style="font-size: 11px;">${odtText}</td>
+          <td style="font-size: 11px;">${lsMesinText}</td>
+          <td style="font-size: 11px;">${lsNonMesinText}</td>
+          <td style="font-size: 11px;">${minorStopText}</td>
+          <td>${totalMinorStopFreq}</td>
+          <td>${wrNumber}</td>
         `;
         tbody.appendChild(row);
       });
@@ -2234,5 +2257,5 @@
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d4684fd13bebfc',t:'MTc2MjkzMzUwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d4711dc7c341d7',t:'MTc2MjkzMzg2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
