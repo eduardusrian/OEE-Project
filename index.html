@@ -512,6 +512,42 @@
       </div><button type="submit" class="btn-primary">💾 Simpan Data OEE</button>
      </form>
     </div>
+   </div><!-- Download Tab -->
+   <div id="downloadTab" class="tab-content hidden">
+    <div class="card">
+     <h2 style="margin-top: 0;">💾 Download Data OEE</h2>
+     <div class="card" style="background: #f9fafb; margin-bottom: 20px;">
+      <h3 style="margin-top: 0;">🔍 Filter Data Download</h3>
+      <div class="grid-3">
+       <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="downloadFromDate" class="input-field">
+       </div>
+       <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="downloadToDate" class="input-field">
+       </div>
+       <div class="form-group"><label>Pilih Mesin</label> <select id="downloadFilterMesin" class="input-field"> <option value="">-- Semua Mesin --</option> </select>
+       </div>
+      </div>
+     </div>
+     <div style="display: flex; gap: 12px; flex-wrap: wrap;"><button class="btn-primary" onclick="downloadCSV()">📥 Download CSV</button> <button class="btn-primary" onclick="downloadExcel()">📊 Download Excel</button>
+     </div>
+     <div id="downloadPreview" style="margin-top: 24px; display: none;">
+      <h3>Preview Data (10 baris pertama)</h3>
+      <div class="table-container">
+       <table id="downloadPreviewTable">
+        <thead>
+         <tr>
+          <th>Tanggal</th>
+          <th>Mesin</th>
+          <th>Shift</th>
+          <th>PIC</th>
+          <th>Output</th>
+          <th>OEE (%)</th>
+         </tr>
+        </thead>
+        <tbody></tbody>
+       </table>
+      </div>
+     </div>
+    </div>
    </div><!-- History Tab -->
    <div id="historyTab" class="tab-content hidden">
     <div class="card">
@@ -552,18 +588,6 @@
        <tbody></tbody>
       </table>
      </div>
-    </div>
-   </div><!-- Download Tab -->
-   <div id="downloadTab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">💾 Download Data</h2>
-     <p style="color: #6b7280; margin-bottom: 24px;">Download data OEE dalam format CSV untuk analisis lebih lanjut.</p>
-     <div class="grid-2">
-      <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="downloadFromDate" class="input-field">
-      </div>
-      <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="downloadToDate" class="input-field">
-      </div>
-     </div><button class="btn-primary" onclick="downloadCSV()">📥 Download CSV</button>
     </div>
    </div>
   </div>
@@ -815,6 +839,8 @@
         loadMachinesForOEE();
       } else if (tabName === 'history') {
         loadHistory();
+      } else if (tabName === 'download') {
+        loadDownloadTab();
       }
     }
 
@@ -2107,6 +2133,160 @@
       });
     }
 
+    // ===== DOWNLOAD FUNCTIONS =====
+    async function loadDownloadTab() {
+      let machines;
+      
+      if (DEMO_MODE) {
+        machines = demoMachines.filter(m => m.is_active);
+      } else {
+        const result = await supabase.from('machines').select('*').eq('is_active', true);
+        if (result.error) {
+          console.error('Error loading machines:', result.error);
+          return;
+        }
+        machines = result.data;
+      }
+      
+      const select = document.getElementById('downloadFilterMesin');
+      select.innerHTML = '<option value="">-- Semua Mesin --</option>';
+      
+      machines.forEach(machine => {
+        const option = document.createElement('option');
+        option.value = machine.mesin_nama;
+        option.textContent = machine.mesin_nama;
+        select.appendChild(option);
+      });
+    }
+    
+    async function getFilteredDownloadData() {
+      let data;
+      
+      if (DEMO_MODE) {
+        data = [...demoOEERecords];
+      } else {
+        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
+        if (result.error) {
+          console.error('Error loading data:', result.error);
+          return [];
+        }
+        data = result.data;
+      }
+      
+      const fromDate = document.getElementById('downloadFromDate').value;
+      const toDate = document.getElementById('downloadToDate').value;
+      const mesinFilter = document.getElementById('downloadFilterMesin').value;
+      
+      if (fromDate) {
+        data = data.filter(r => r.tanggal_produksi >= fromDate);
+      }
+      
+      if (toDate) {
+        data = data.filter(r => r.tanggal_produksi <= toDate);
+      }
+      
+      if (mesinFilter) {
+        data = data.filter(r => r.mesin_nama === mesinFilter);
+      }
+      
+      return data;
+    }
+    
+    async function downloadCSV() {
+      const data = await getFilteredDownloadData();
+      
+      if (data.length === 0) {
+        alert('Tidak ada data untuk didownload!');
+        return;
+      }
+      
+      // CSV Header
+      let csv = 'Tanggal,Mesin,Area,Shift,PIC,Kode Produk,Batch Number,Output,Reject,Target Output,Availability (%),Performance (%),Quality (%),OEE (%),ODT Items,LS Mesin,LS Non Mesin,Minor Stop,WR Number\n';
+      
+      // CSV Rows
+      data.forEach(record => {
+        const odtText = (record.odt_items || []).map(item => `${item.name}(${item.actual}m)`).join('; ');
+        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
+        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
+        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name}(${item.frequency}x)`).join('; ');
+        const wrNumber = record.wr_number || '-';
+        
+        csv += `${record.tanggal_produksi},${record.mesin_nama},${record.area},${record.shift},${record.pic_inisial},${record.kode_produk},${record.batch_number},${record.jumlah_output},${record.jumlah_reject},${record.target_output},${record.availability},${record.performance},${record.quality},${record.oee},"${odtText}","${lsMesinText}","${lsNonMesinText}","${minorStopText}",${wrNumber}\n`;
+      });
+      
+      // Download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `OEE_Data_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`✅ ${data.length} baris data berhasil didownload!`);
+    }
+    
+    async function downloadExcel() {
+      const data = await getFilteredDownloadData();
+      
+      if (data.length === 0) {
+        alert('Tidak ada data untuk didownload!');
+        return;
+      }
+      
+      // Create HTML table for Excel
+      let html = '<table><thead><tr>';
+      html += '<th>Tanggal</th><th>Mesin</th><th>Area</th><th>Shift</th><th>PIC</th><th>Kode Produk</th><th>Batch Number</th><th>Output</th><th>Reject</th><th>Target Output</th><th>Availability (%)</th><th>Performance (%)</th><th>Quality (%)</th><th>OEE (%)</th><th>ODT Items</th><th>LS Mesin</th><th>LS Non Mesin</th><th>Minor Stop</th><th>WR Number</th>';
+      html += '</tr></thead><tbody>';
+      
+      data.forEach(record => {
+        const odtText = (record.odt_items || []).map(item => `${item.name}(${item.actual}m)`).join('; ');
+        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
+        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
+        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name}(${item.frequency}x)`).join('; ');
+        const wrNumber = record.wr_number || '-';
+        
+        html += '<tr>';
+        html += `<td>${record.tanggal_produksi}</td>`;
+        html += `<td>${record.mesin_nama}</td>`;
+        html += `<td>${record.area}</td>`;
+        html += `<td>${record.shift}</td>`;
+        html += `<td>${record.pic_inisial}</td>`;
+        html += `<td>${record.kode_produk}</td>`;
+        html += `<td>${record.batch_number}</td>`;
+        html += `<td>${record.jumlah_output}</td>`;
+        html += `<td>${record.jumlah_reject}</td>`;
+        html += `<td>${record.target_output}</td>`;
+        html += `<td>${record.availability}</td>`;
+        html += `<td>${record.performance}</td>`;
+        html += `<td>${record.quality}</td>`;
+        html += `<td>${record.oee}</td>`;
+        html += `<td>${odtText}</td>`;
+        html += `<td>${lsMesinText}</td>`;
+        html += `<td>${lsNonMesinText}</td>`;
+        html += `<td>${minorStopText}</td>`;
+        html += `<td>${wrNumber}</td>`;
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table>';
+      
+      // Download as Excel
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `OEE_Data_${new Date().toISOString().split('T')[0]}.xls`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`✅ ${data.length} baris data berhasil didownload!`);
+    }
+
     // ===== HISTORY FUNCTIONS =====
     async function loadHistory() {
       let data;
@@ -2170,82 +2350,7 @@
       });
     }
 
-    // ===== DOWNLOAD FUNCTIONS =====
-    async function downloadCSV() {
-      const fromDate = document.getElementById('downloadFromDate').value;
-      const toDate = document.getElementById('downloadToDate').value;
-      
-      let data;
-      
-      if (DEMO_MODE) {
-        data = [...demoOEERecords];
-        
-        if (fromDate) {
-          data = data.filter(r => r.tanggal_produksi >= fromDate);
-        }
-        
-        if (toDate) {
-          data = data.filter(r => r.tanggal_produksi <= toDate);
-        }
-        
-        data.sort((a, b) => b.tanggal_produksi.localeCompare(a.tanggal_produksi));
-      } else {
-        let query = supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
-        
-        if (fromDate) {
-          query = query.gte('tanggal_produksi', fromDate);
-        }
-        
-        if (toDate) {
-          query = query.lte('tanggal_produksi', toDate);
-        }
-        
-        const result = await query;
-        
-        if (result.error) {
-          alert('Error mengambil data: ' + result.error.message);
-          return;
-        }
-        
-        data = result.data;
-      }
-      
-      if (data.length === 0) {
-        alert('Tidak ada data untuk di-download');
-        return;
-      }
-      
-      // Create CSV
-      const headers = ['Tanggal', 'Mesin Nama', 'Area', 'PIC', 'Shift', 'Durasi Shift', 'Kode Produk', 'Batch', 'Output', 'Reject', 'Target', 'Availability', 'Performance', 'Quality', 'OEE'];
-      
-      const rows = data.map(r => [
-        r.tanggal_produksi,
-        r.mesin_nama,
-        r.area,
-        r.pic_inisial,
-        r.shift,
-        r.shift_duration,
-        r.kode_produk,
-        r.batch_number,
-        r.jumlah_output,
-        r.jumlah_reject,
-        r.target_output,
-        r.availability,
-        r.performance,
-        r.quality,
-        r.oee
-      ]);
-      
-      const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
-      
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `oee_data_${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    }
+
 
     // ===== INITIALIZATION =====
     document.addEventListener('DOMContentLoaded', () => {
@@ -2261,5 +2366,5 @@
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d4764e83724aca',t:'MTc2MjkzNDA3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d48163946cfd6f',t:'MTc2MjkzNDUyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
