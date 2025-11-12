@@ -351,7 +351,7 @@
       <div class="grid-2">
        <div class="form-group"><label>Area *</label> <select id="mesinArea" class="input-field" required> <option value="">-- Pilih Area --</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
        </div>
-       <div class="form-group"><label>Target Output per Shift (butir) *</label> <input type="number" id="mesinTarget" class="input-field" required placeholder="Contoh: 1000">
+       <div class="form-group"><label>Target Output per Menit (butir) *</label> <input type="number" id="mesinTarget" class="input-field" required placeholder="Contoh: 2" step="0.01">
        </div>
       </div>
       <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="mesinPIC" class="input-field uppercase-input" required placeholder="Contoh: JD">
@@ -394,21 +394,16 @@
        <div class="form-group"><label>Tanggal Produksi *</label> <input type="date" id="oeeTanggal" class="input-field" required>
        </div>
       </div>
-      <div class="form-group"><label>Shift *</label> <select id="oeeShift" class="input-field" required> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (07.00 - 15.30 | 510 menit)</option> <option value="Shift 2">Shift 2 (15.20 - 22.50 | 450 menit)</option> <option value="Shift 3">Shift 3 (22.40 - 07.10 | 510 menit)</option> </select>
+      <div class="grid-2">
+       <div class="form-group"><label>Shift *</label> <select id="oeeShift" class="input-field" required> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (07.00 - 15.30 | 510 menit)</option> <option value="Shift 2">Shift 2 (15.20 - 22.50 | 450 menit)</option> <option value="Shift 3">Shift 3 (22.40 - 07.10 | 510 menit)</option> </select>
+       </div>
+       <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="oeePIC" class="input-field uppercase-input" required placeholder="Contoh: JD">
+       </div>
       </div>
       <div class="grid-2">
        <div class="form-group"><label>Kode Produk *</label> <input type="text" id="oeeKodeProduk" class="input-field uppercase-input" required placeholder="Contoh: PRD-001">
        </div>
        <div class="form-group"><label>Batch Number *</label> <input type="text" id="oeeBatch" class="input-field uppercase-input" required placeholder="Contoh: BATCH-2024-001">
-       </div>
-      </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Jumlah Output (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 950">
-        <div id="targetOutputDisplay" style="margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 6px; color: #166534; font-weight: 600; display: none;">
-         🎯 Target Output/shift: <span id="targetOutputValue">0</span> butir
-        </div>
-       </div>
-       <div class="form-group"><label>Jumlah Reject (butir) *</label> <input type="number" id="oeeReject" class="input-field" required placeholder="Contoh: 50">
        </div>
       </div>
       <div class="form-group"><label>ODT Items (dengan Waktu Aktual)</label>
@@ -434,6 +429,30 @@
       </div>
       <div class="form-group"><label>Minor Stop</label>
        <div class="dynamic-list" id="oeeMinorStopList"></div>
+      </div>
+      <div class="grid-2">
+       <div class="form-group"><label>Jumlah Output (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 950">
+       </div>
+       <div class="form-group"><label>Jumlah Reject (butir) *</label> <input type="number" id="oeeReject" class="input-field" required placeholder="Contoh: 50">
+       </div>
+      </div>
+      <div id="targetOutputInfo" style="margin-top: 20px; padding: 16px; background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; display: none;">
+       <h4 style="margin: 0 0 12px 0; color: #1e40af;">📊 Perhitungan Target Output Otomatis</h4>
+       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div><strong>Target per Menit:</strong> <span id="infoTargetPerMinute">0</span> butir/menit
+        </div>
+        <div><strong>Durasi Shift:</strong> <span id="infoShiftDuration">0</span> menit
+        </div>
+        <div><strong>Total ODT:</strong> <span id="infoTotalODT">0</span> menit
+        </div>
+        <div><strong>Total Line Stop:</strong> <span id="infoTotalLineStop">0</span> menit
+        </div>
+       </div>
+       <div style="padding: 12px; background: #f0fdf4; border-radius: 6px; border: 2px solid #22c55e;"><strong style="color: #166534; font-size: 16px;">🎯 Target Output Aktual: <span id="infoTargetOutput">0</span> butir</strong>
+        <div style="margin-top: 4px; font-size: 12px; color: #166534;">
+         Rumus: Target/menit × (Durasi Shift - Total ODT - Total Line Stop)
+        </div>
+       </div>
       </div><button type="submit" class="btn-primary">💾 Simpan Data OEE</button>
      </form>
     </div>
@@ -507,7 +526,7 @@
         id: '1',
         mesin_nama: 'INJECTION MOLDING 1',
         area: 'INJEKSI',
-        target_output: 1000,
+        target_output: 2,
         pic_inisial: 'JD',
         odt_items: [
           { name: 'SETUP MESIN', time: 30 },
@@ -522,7 +541,7 @@
         id: '2',
         mesin_nama: 'INJECTION MOLDING 2',
         area: 'INJEKSI',
-        target_output: 1200,
+        target_output: 2.5,
         pic_inisial: 'AS',
         odt_items: [
           { name: 'SETUP MESIN', time: 25 },
@@ -995,48 +1014,49 @@
       
       const mesinNama = document.getElementById('mesinNama').value.toUpperCase();
       const mesinArea = document.getElementById('mesinArea').value;
-      const mesinTarget = parseInt(document.getElementById('mesinTarget').value);
+      const mesinTarget = parseFloat(document.getElementById('mesinTarget').value);
       const mesinPIC = document.getElementById('mesinPIC').value.toUpperCase();
       
-      // Collect ODT items
+      // Collect ODT items - scan ALL possible indices
       const odtItems = [];
-      for (let i = 0; i < odtCounter; i++) {
-        const nameEl = document.getElementById(`odtName${i}`);
-        const timeEl = document.getElementById(`odtTime${i}`);
-        if (nameEl && timeEl && nameEl.value && timeEl.value) {
+      const odtElements = document.querySelectorAll('[id^="odtName"]');
+      odtElements.forEach(nameEl => {
+        const index = nameEl.id.replace('odtName', '');
+        const timeEl = document.getElementById(`odtTime${index}`);
+        if (nameEl.value && timeEl && timeEl.value) {
           odtItems.push({
             name: nameEl.value.toUpperCase(),
             time: parseInt(timeEl.value)
           });
         }
-      }
+      });
       
-      // Collect LS Mesin
+      // Collect LS Mesin - scan ALL possible indices
       const lsMesinItems = [];
-      for (let i = 0; i < lsMesinCounter; i++) {
-        const el = document.getElementById(`lsMesin${i}`);
-        if (el && el.value) {
+      const lsMesinElements = document.querySelectorAll('[id^="lsMesin"]');
+      lsMesinElements.forEach(el => {
+        if (el.value) {
           lsMesinItems.push(el.value.toUpperCase());
         }
-      }
+      });
       
-      // Collect LS Non Mesin
+      // Collect LS Non Mesin - scan ALL possible indices
       const lsNonMesinItems = [];
-      for (let i = 0; i < lsNonMesinCounter; i++) {
-        const el = document.getElementById(`lsNonMesin${i}`);
-        if (el && el.value) {
+      const lsNonMesinElements = document.querySelectorAll('[id^="lsNonMesin"]');
+      lsNonMesinElements.forEach(el => {
+        if (el.value) {
           lsNonMesinItems.push(el.value.toUpperCase());
         }
-      }
+      });
       
-      // Collect Minor Stop
+      // Collect Minor Stop - scan ALL possible indices
       const minorStopItems = [];
-      for (let i = 0; i < minorStopCounter; i++) {
-        const el = document.getElementById(`minorStop${i}`);
-        if (el && el.value) {
+      const minorStopElements = document.querySelectorAll('[id^="minorStop"]');
+      minorStopElements.forEach(el => {
+        if (el.value) {
           minorStopItems.push(el.value.toUpperCase());
         }
-      }
+      });
       
       // Generate mesin_id from mesin_nama (remove spaces, uppercase)
       const mesinId = mesinNama.replace(/\s+/g, '_').toUpperCase();
@@ -1067,12 +1087,15 @@
         let result;
         if (mesinMode === 'edit' && editingMesinId) {
           result = await supabase.from('machines').update(machineData).eq('id', editingMesinId);
+          console.log('Update result:', result);
         } else {
           result = await supabase.from('machines').insert([machineData]);
+          console.log('Insert result:', result);
         }
         
         if (result.error) {
           alert('Error menyimpan data mesin: ' + result.error.message);
+          console.error('Supabase error:', result.error);
           return;
         }
       }
@@ -1121,17 +1144,13 @@
         document.getElementById('oeeLSMesinList').innerHTML = '';
         document.getElementById('oeeLSNonMesinList').innerHTML = '';
         document.getElementById('oeeMinorStopList').innerHTML = '';
-        document.getElementById('targetOutputDisplay').style.display = 'none';
+        document.getElementById('targetOutputInfo').style.display = 'none';
         return;
       }
       
       const machine = allMachines.find(m => m.id === selectedId);
       
       if (!machine) return;
-      
-      // Show target output
-      document.getElementById('targetOutputValue').textContent = machine.target_output.toLocaleString();
-      document.getElementById('targetOutputDisplay').style.display = 'block';
       
       // Load ODT with actual time
       const odtList = document.getElementById('oeeODTList');
@@ -1186,6 +1205,111 @@
         `;
         minorStopList.appendChild(div);
       });
+      
+      // Add event listeners for auto calculation
+      setTimeout(() => {
+        document.getElementById('oeeShift').addEventListener('change', calculateTargetOutput);
+        
+        // Add listeners to all ODT checkboxes and actual time inputs
+        (machine.odt_items || []).forEach((item, index) => {
+          const checkbox = document.getElementById(`odtCheck${index}`);
+          const actualInput = document.getElementById(`odtActual${index}`);
+          if (checkbox) checkbox.addEventListener('change', calculateTargetOutput);
+          if (actualInput) actualInput.addEventListener('input', calculateTargetOutput);
+        });
+        
+        // Add listeners to all LS Mesin time inputs
+        (machine.line_stop_mesin_items || []).forEach((item, index) => {
+          const timeInput = document.getElementById(`lsMesinTime${index}`);
+          if (timeInput) timeInput.addEventListener('input', calculateTargetOutput);
+        });
+        
+        // Add listeners to all LS Non Mesin time inputs
+        (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+          const timeInput = document.getElementById(`lsNonMesinTime${index}`);
+          if (timeInput) timeInput.addEventListener('input', calculateTargetOutput);
+        });
+        
+        // Add listeners to custom LS inputs
+        document.getElementById('customLSMesinTime1').addEventListener('input', calculateTargetOutput);
+        document.getElementById('customLSMesinTime2').addEventListener('input', calculateTargetOutput);
+        document.getElementById('customLSNonMesinTime1').addEventListener('input', calculateTargetOutput);
+        document.getElementById('customLSNonMesinTime2').addEventListener('input', calculateTargetOutput);
+      }, 100);
+    }
+    
+    function calculateTargetOutput() {
+      const selectedId = document.getElementById('oeeSelectMesin').value;
+      if (!selectedId) return;
+      
+      const machine = allMachines.find(m => m.id === selectedId);
+      if (!machine) return;
+      
+      const shift = document.getElementById('oeeShift').value;
+      if (!shift) return;
+      
+      // Get shift duration
+      let durasi = 480;
+      if (shift === 'Shift 1') durasi = 510;
+      else if (shift === 'Shift 2') durasi = 450;
+      else if (shift === 'Shift 3') durasi = 510;
+      
+      // Calculate total ODT
+      let totalODT = 0;
+      (machine.odt_items || []).forEach((item, index) => {
+        const checked = document.getElementById(`odtCheck${index}`)?.checked;
+        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
+        if (checked && actual > 0) {
+          totalODT += Math.min(actual, item.time);
+        }
+      });
+      
+      // Calculate total LS Mesin
+      let totalLSMesin = 0;
+      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
+        if (time > 0) totalLSMesin += time;
+      });
+      
+      // Add custom LS Mesin
+      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1')?.value || 0);
+      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2')?.value || 0);
+      totalLSMesin += customLSMesinTime1 + customLSMesinTime2;
+      
+      // Calculate total LS Non Mesin
+      let totalLSNonMesin = 0;
+      
+      // Add ODT overtime
+      (machine.odt_items || []).forEach((item, index) => {
+        const checked = document.getElementById(`odtCheck${index}`)?.checked;
+        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
+        if (checked && actual > item.time) {
+          totalLSNonMesin += (actual - item.time);
+        }
+      });
+      
+      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+        const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
+        if (time > 0) totalLSNonMesin += time;
+      });
+      
+      // Add custom LS Non Mesin
+      const customLSNonMesinTime1 = parseInt(document.getElementById('customLSNonMesinTime1')?.value || 0);
+      const customLSNonMesinTime2 = parseInt(document.getElementById('customLSNonMesinTime2')?.value || 0);
+      totalLSNonMesin += customLSNonMesinTime1 + customLSNonMesinTime2;
+      
+      // Calculate target output
+      const totalLineStop = totalLSMesin + totalLSNonMesin;
+      const availableTime = durasi - totalODT - totalLineStop;
+      const targetOutput = Math.round(machine.target_output * availableTime);
+      
+      // Update display
+      document.getElementById('infoTargetPerMinute').textContent = machine.target_output;
+      document.getElementById('infoShiftDuration').textContent = durasi;
+      document.getElementById('infoTotalODT').textContent = totalODT;
+      document.getElementById('infoTotalLineStop').textContent = totalLineStop;
+      document.getElementById('infoTargetOutput').textContent = targetOutput.toLocaleString();
+      document.getElementById('targetOutputInfo').style.display = 'block';
     }
 
     async function saveOEE(event) {
@@ -1203,6 +1327,7 @@
       
       const tanggal = document.getElementById('oeeTanggal').value;
       const shift = document.getElementById('oeeShift').value;
+      const picInisial = document.getElementById('oeePIC').value.toUpperCase();
       
       // Durasi shift otomatis berdasarkan pilihan shift
       let durasi = 480;
@@ -1307,11 +1432,16 @@
         }
       });
       
+      // Calculate target output automatically
+      const totalLineStop = totalLSMesin + totalLSNonMesin;
+      const availableTime = durasi - totalODT - totalLineStop;
+      const targetOutput = Math.round(machine.target_output * availableTime);
+      
       // Calculate OEE
       const runTime = durasi - totalODT - totalLSMesin - totalLSNonMesin;
       const availability = (runTime / durasi) * 100;
       
-      const performance = (output / machine.target_output) * 100;
+      const performance = (output / targetOutput) * 100;
       
       const goodOutput = output - reject;
       const quality = (goodOutput / output) * 100;
@@ -1337,14 +1467,15 @@
       const oeeData = {
         mesin_nama: machine.mesin_nama,
         area: machine.area,
-        pic_inisial: machine.pic_inisial,
+        pic_inisial: picInisial,
         shift: shift,
         shift_duration: durasi,
         kode_produk: kodeProduk,
         batch_number: batch,
         jumlah_output: output,
         jumlah_reject: reject,
-        target_output: machine.target_output,
+        target_output: targetOutput,
+        target_per_minute: machine.target_output,
         odt_items: odtItems,
         line_stop_mesin_items: lsMesinItems,
         line_stop_non_mesin_items: lsNonMesinItems,
@@ -1369,6 +1500,7 @@
       
       alert('✅ Data OEE berhasil disimpan!');
       document.getElementById('formInputOEE').reset();
+      document.getElementById('targetOutputInfo').style.display = 'none';
       loadMesinData();
     }
 
@@ -1800,5 +1932,5 @@
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d3e13890f9659e',t:'MTc2MjkyNzk2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d40151b0ce960c',t:'MTc2MjkyOTI4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
