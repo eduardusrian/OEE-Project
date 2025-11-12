@@ -249,6 +249,17 @@
     </div>
    </div><!-- Dashboard Tab -->
    <div id="dashboardTab" class="tab-content">
+    <div class="card" style="margin-bottom: 20px;">
+     <h3 style="margin-top: 0;">🔍 Filter Dashboard</h3>
+     <div class="grid-3">
+      <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="dashboardFromDate" class="input-field" onchange="applyDashboardFilter()">
+      </div>
+      <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="dashboardToDate" class="input-field" onchange="applyDashboardFilter()">
+      </div>
+      <div class="form-group"><label>Pilih Mesin</label> <select id="dashboardFilterMesin" class="input-field" onchange="applyDashboardFilter()"> <option value="">-- Semua Mesin --</option> </select>
+      </div>
+     </div><button class="btn-secondary" onclick="resetDashboardFilter()">🔄 Reset Filter</button>
+    </div>
     <div class="grid-3" style="margin-bottom: 20px;">
      <div class="metric-card">
       <div class="metric-label">
@@ -427,8 +438,11 @@
         </div>
        </div>
       </div>
-      <div class="form-group"><label>Minor Stop</label>
+      <div class="form-group"><label>Minor Stop (Frekuensi dalam Kali)</label>
        <div class="dynamic-list" id="oeeMinorStopList"></div>
+      </div>
+      <div id="wrSection" class="form-group hidden" style="padding: 16px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px;">
+       <h4 style="margin: 0 0 12px 0; color: #92400e;">⚠️ Line Stop Mesin &gt; 179 Menit - Isi WR (Work Request)</h4><label>Nomor WR *</label> <input type="text" id="oeeWRNumber" class="input-field uppercase-input" placeholder="Contoh: WR-2024-001">
       </div>
       <div class="grid-2">
        <div class="form-group"><label>Jumlah Output (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 950">
@@ -502,6 +516,17 @@
    <div id="historyTab" class="tab-content hidden">
     <div class="card">
      <h2 style="margin-top: 0;">📋 History Data OEE</h2>
+     <div class="card" style="background: #f9fafb; margin-bottom: 20px;">
+      <h3 style="margin-top: 0;">🔍 Filter History</h3>
+      <div class="grid-3">
+       <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="historyFromDate" class="input-field" onchange="applyHistoryFilter()">
+       </div>
+       <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="historyToDate" class="input-field" onchange="applyHistoryFilter()">
+       </div>
+       <div class="form-group"><label>Pilih Mesin</label> <select id="historyFilterMesin" class="input-field" onchange="applyHistoryFilter()"> <option value="">-- Semua Mesin --</option> </select>
+       </div>
+      </div><button class="btn-secondary" onclick="resetHistoryFilter()">🔄 Reset Filter</button>
+     </div>
      <div class="table-container">
       <table id="historyTable">
        <thead>
@@ -516,6 +541,12 @@
          <th>A (%)</th>
          <th>P (%)</th>
          <th>Q (%)</th>
+         <th>ODT</th>
+         <th>LS Mesin</th>
+         <th>LS Non Mesin</th>
+         <th>Minor Stop</th>
+         <th>Frek MS</th>
+         <th>WR</th>
         </tr>
        </thead>
        <tbody></tbody>
@@ -556,6 +587,7 @@
     let editingMesinId = null;
     let allMachines = [];
     let allOEERecords = [];
+    let filteredOEERecords = [];
     let odtCounter = 1;
     let lsMesinCounter = 1;
     let lsNonMesinCounter = 1;
@@ -612,7 +644,9 @@
         odt_items: [{ name: 'SETUP MESIN', standard: 30, actual: 30 }],
         line_stop_mesin_items: [{ name: 'KERUSAKAN HYDRAULIC', time: 20 }],
         line_stop_non_mesin_items: [{ name: 'MATERIAL HABIS', time: 15 }],
-        minor_stop_items: ['CLEANING'],
+        minor_stop_items: [{ name: 'CLEANING', frequency: 3 }],
+        minor_stop_frequency: null,
+        wr_number: null,
         availability: '85.42',
         performance: '95.00',
         quality: '94.74',
@@ -634,7 +668,9 @@
         odt_items: [{ name: 'SETUP MESIN', standard: 25, actual: 25 }],
         line_stop_mesin_items: [{ name: 'HEATING ERROR', time: 10 }],
         line_stop_non_mesin_items: [{ name: 'QC HOLD', time: 12 }],
-        minor_stop_items: ['INSPECTION'],
+        minor_stop_items: [{ name: 'INSPECTION', frequency: 2 }],
+        minor_stop_frequency: null,
+        wr_number: null,
         availability: '90.21',
         performance: '95.83',
         quality: '97.39',
@@ -656,7 +692,9 @@
         odt_items: [{ name: 'GANTI MOLD', standard: 45, actual: 45 }],
         line_stop_mesin_items: [{ name: 'SENSOR ERROR', time: 15 }],
         line_stop_non_mesin_items: [{ name: 'LISTRIK MATI', time: 25 }],
-        minor_stop_items: ['ADJUSTMENT'],
+        minor_stop_items: [{ name: 'ADJUSTMENT', frequency: 4 }],
+        minor_stop_frequency: null,
+        wr_number: null,
         availability: '82.29',
         performance: '98.00',
         quality: '97.96',
@@ -1242,8 +1280,8 @@
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
-          <input type="checkbox" id="minorStopCheck${index}" style="width: auto;">
           <span style="flex: 1;">${item}</span>
+          <input type="number" class="input-field" placeholder="Berapa kali?" id="minorStopFreq${index}" style="width: 150px;" min="0">
         `;
         minorStopList.appendChild(div);
       });
@@ -1263,7 +1301,10 @@
         // Add listeners to all LS Mesin time inputs
         (machine.line_stop_mesin_items || []).forEach((item, index) => {
           const timeInput = document.getElementById(`lsMesinTime${index}`);
-          if (timeInput) timeInput.addEventListener('input', calculateTargetOutput);
+          if (timeInput) {
+            timeInput.addEventListener('input', calculateTargetOutput);
+            timeInput.addEventListener('input', checkWRRequirement);
+          }
         });
         
         // Add listeners to all LS Non Mesin time inputs
@@ -1274,14 +1315,53 @@
         
         // Add listeners to custom LS inputs
         document.getElementById('customLSMesinTime1').addEventListener('input', calculateTargetOutput);
+        document.getElementById('customLSMesinTime1').addEventListener('input', checkWRRequirement);
         document.getElementById('customLSMesinTime2').addEventListener('input', calculateTargetOutput);
+        document.getElementById('customLSMesinTime2').addEventListener('input', checkWRRequirement);
         document.getElementById('customLSNonMesinTime1').addEventListener('input', calculateTargetOutput);
         document.getElementById('customLSNonMesinTime2').addEventListener('input', calculateTargetOutput);
         
         // Add listeners to output and reject for OEE preview
         document.getElementById('oeeOutput').addEventListener('input', calculateOEEPreview);
         document.getElementById('oeeReject').addEventListener('input', calculateOEEPreview);
+        
+        // Add listener to check WR requirement
+        setTimeout(() => {
+          checkWRRequirement();
+        }, 200);
       }, 100);
+    }
+    
+    function checkWRRequirement() {
+      const selectedId = document.getElementById('oeeSelectMesin').value;
+      if (!selectedId) return;
+      
+      const machine = allMachines.find(m => m.id === selectedId);
+      if (!machine) return;
+      
+      // Calculate total LS Mesin
+      let totalLSMesin = 0;
+      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
+        if (time > 0) totalLSMesin += time;
+      });
+      
+      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1')?.value || 0);
+      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2')?.value || 0);
+      totalLSMesin += customLSMesinTime1 + customLSMesinTime2;
+      
+      // Show/hide WR section
+      const wrSection = document.getElementById('wrSection');
+      const wrInput = document.getElementById('oeeWRNumber');
+      
+      if (totalLSMesin > 179) {
+        wrSection.classList.remove('hidden');
+        wrInput.required = true;
+      } else {
+        wrSection.classList.add('hidden');
+        wrInput.required = false;
+        wrInput.value = '';
+      }
     }
     
     function calculateTargetOutput() {
@@ -1575,14 +1655,24 @@
         totalLSNonMesin += customLSNonMesinTime2;
       }
       
-      // Collect Minor Stop
+      // Collect Minor Stop with frequency
       const minorStopItems = [];
       (machine.minor_stop_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`minorStopCheck${index}`)?.checked;
-        if (checked) {
-          minorStopItems.push(item);
+        const freq = parseInt(document.getElementById(`minorStopFreq${index}`)?.value || 0);
+        if (freq > 0) {
+          minorStopItems.push({ name: item, frequency: freq });
         }
       });
+      
+      // Get WR number if applicable
+      let wrNumber = null;
+      if (totalLSMesin > 179) {
+        wrNumber = document.getElementById('oeeWRNumber').value.toUpperCase();
+        if (!wrNumber) {
+          alert('⚠️ Line Stop Mesin > 179 menit. Nomor WR wajib diisi!');
+          return;
+        }
+      }
       
       // Calculate target output automatically
       const totalLineStop = totalLSMesin + totalLSNonMesin;
@@ -1632,6 +1722,8 @@
         line_stop_mesin_items: lsMesinItems,
         line_stop_non_mesin_items: lsNonMesinItems,
         minor_stop_items: minorStopItems,
+        minor_stop_frequency: null,
+        wr_number: wrNumber,
         availability: availability.toFixed(2),
         performance: performance.toFixed(2),
         quality: quality.toFixed(2),
@@ -1673,6 +1765,59 @@
       
       allOEERecords = data;
       
+      // Load machines for filter
+      await loadMachinesForDashboardFilter();
+      
+      // Apply filter
+      applyDashboardFilter();
+    }
+    
+    async function loadMachinesForDashboardFilter() {
+      let machines;
+      
+      if (DEMO_MODE) {
+        machines = demoMachines.filter(m => m.is_active);
+      } else {
+        const result = await supabase.from('machines').select('*').eq('is_active', true);
+        if (result.error) {
+          console.error('Error loading machines:', result.error);
+          return;
+        }
+        machines = result.data;
+      }
+      
+      const select = document.getElementById('dashboardFilterMesin');
+      select.innerHTML = '<option value="">-- Semua Mesin --</option>';
+      
+      machines.forEach(machine => {
+        const option = document.createElement('option');
+        option.value = machine.mesin_nama;
+        option.textContent = machine.mesin_nama;
+        select.appendChild(option);
+      });
+    }
+    
+    function applyDashboardFilter() {
+      const fromDate = document.getElementById('dashboardFromDate').value;
+      const toDate = document.getElementById('dashboardToDate').value;
+      const mesinFilter = document.getElementById('dashboardFilterMesin').value;
+      
+      let data = [...allOEERecords];
+      
+      if (fromDate) {
+        data = data.filter(r => r.tanggal_produksi >= fromDate);
+      }
+      
+      if (toDate) {
+        data = data.filter(r => r.tanggal_produksi <= toDate);
+      }
+      
+      if (mesinFilter) {
+        data = data.filter(r => r.mesin_nama === mesinFilter);
+      }
+      
+      filteredOEERecords = data;
+      
       // Calculate metrics
       const avgOEE = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.oee), 0) / data.length).toFixed(2) : 0;
       const totalOutput = data.reduce((sum, r) => sum + r.jumlah_output, 0);
@@ -1689,6 +1834,13 @@
       renderMinorStopChart(data);
       renderOEEPerMesinChart(data);
       renderOperatorTable(data);
+    }
+    
+    function resetDashboardFilter() {
+      document.getElementById('dashboardFromDate').value = '';
+      document.getElementById('dashboardToDate').value = '';
+      document.getElementById('dashboardFilterMesin').value = '';
+      applyDashboardFilter();
     }
 
     function renderOEEChart(data) {
@@ -2084,5 +2236,5 @@
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d4403c53edfcf3',t:'MTc2MjkzMTg2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d45f8e35500d3d',t:'MTc2MjkzMzE0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
