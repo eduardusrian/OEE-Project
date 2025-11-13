@@ -2016,19 +2016,31 @@
     }
 
     function renderMinorStopChart(data) {
-      const ctx = document.getElementById('minorStopChart');
-      
-      if (charts.minorStopChart) {
-        charts.minorStopChart.destroy();
-      }
-      
-      const msMap = {};
-      data.forEach(record => {
-        (record.minor_stop_items || []).forEach(item => {
-          msMap[item] = (msMap[item] || 0) + 1;
-        });
-      });
-      
+  const ctx = document.getElementById('minorStopChart');
+  if (charts.minorStopChart) charts.minorStopChart.destroy();
+
+  const msMap = {};
+  data.forEach(record => {
+    (record.minor_stop_items || []).forEach(item => {
+      const key = item.name || String(item);
+      const freq = typeof item.frequency === 'number' ? item.frequency : 1;
+      msMap[key] = (msMap[key] || 0) + freq;
+    });
+  });
+
+  const labels = Object.keys(msMap).slice(0, 10);
+  const values = labels.map(l => msMap[l]);
+
+  charts.minorStopChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: ['#667eea','#f093fb','#4facfe','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+}
+     
       const labels = Object.keys(msMap).slice(0, 10);
       const values = labels.map(l => msMap[l]);
       
@@ -2365,6 +2377,55 @@
         input.addEventListener('input', makeUppercase);
       });
     });
+   async function loadMesinList() {
+  if (!supabase) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('machines') // nama tabel yang benar
+      .select('id, mesin_nama')
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Gagal ambil data mesin:', error.message);
+      return;
+    }
+
+    const dropdownIds = [
+      'dashboardFilterMesin',
+      'downloadFilterMesin',
+      'historyFilterMesin',
+      'oeeSelectMesin',
+      'selectEditMesin'
+    ];
+
+    dropdownIds.forEach(id => {
+      const select = document.getElementById(id);
+      if (!select) return;
+
+      const isFilter = id.includes('Filter');
+      select.innerHTML = isFilter
+        ? '<option value="">-- Semua Mesin --</option>'
+        : '<option value="">-- Pilih Mesin --</option>';
+
+      data.forEach(mesin => {
+        const option = document.createElement('option');
+        option.value = isFilter ? mesin.mesin_nama : mesin.id;
+        option.textContent = mesin.mesin_nama;
+        select.appendChild(option);
+      });
+    });
+
+    allMachines = data;
+  } catch (err) {
+    console.error('Error saat load mesin:', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadMesinList();
+});
+
   </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d48163946cfd6f',t:'MTc2MjkzNDUyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
