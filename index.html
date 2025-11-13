@@ -2136,6 +2136,38 @@
     // ===== DOWNLOAD FUNCTIONS =====
     async function loadDownloadTab() {
       let machines;
+
+     // ===== HISTORY FUNCTIONS =====
+async function loadHistory() {
+  await loadMachinesForHistory();
+  // di sini kamu bisa tambahkan logika untuk filter tanggal & data OEE history
+}
+
+async function loadMachinesForHistory() {
+  let machines;
+
+  if (DEMO_MODE) {
+    machines = demoMachines.filter(m => m.is_active);
+  } else {
+    const result = await supabase.from('machines').select('*').eq('is_active', true);
+    if (result.error) {
+      console.error('Error loading machines for history:', result.error);
+      return;
+    }
+    machines = result.data;
+  }
+
+  const select = document.getElementById('historyFilterMesin');
+  select.innerHTML = '<option value="">-- Semua Mesin --</option>';
+
+  machines.forEach(machine => {
+    const option = document.createElement('option');
+    option.value = machine.mesin_nama;
+    option.textContent = machine.mesin_nama;
+    select.appendChild(option);
+  });
+}
+
       
       if (DEMO_MODE) {
         machines = demoMachines.filter(m => m.is_active);
