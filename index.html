@@ -599,11 +599,10 @@
     const DEMO_MODE = false;
     const SUPABASE_URL = 'https://xgnaukbzfxvenieavkmq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbmF1a2J6Znh2ZW5pZWF2a21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MjA3NjQsImV4cCI6MjA3ODQ5Njc2NH0.gASmwrimGIDCi3TK277DxZoEF-Nos8v8MFq9_cUuR0o';
-    
-    let supabase = null;
-    if (!DEMO_MODE && typeof window.supabase !== 'undefined') {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
+    // ✅ FIX Supabase koneksi langsung
+const { createClient } = window.supabase;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+console.log("✅ Supabase connected:", SUPABASE_URL);
 
     // ===== GLOBAL STATE =====
     let currentTab = 'dashboard';
