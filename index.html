@@ -2368,3 +2368,47 @@
   </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d48163946cfd6f',t:'MTc2MjkzNDUyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+// ===== LOAD MESIN KE SEMUA DROPDOWN =====
+async function loadMesinList() {
+  if (!supabase) return;
+
+  try {
+    const { data, error } = await supabase.from('mesin').select('*').eq('is_active', true);
+    if (error) {
+      console.error('Gagal ambil data mesin:', error.message);
+      return;
+    }
+
+    const dropdownIds = [
+      'dashboardFilterMesin',
+      'downloadFilterMesin',
+      'historyFilterMesin',
+      'oeeSelectMesin',
+      'selectEditMesin'
+    ];
+
+    dropdownIds.forEach(id => {
+      const select = document.getElementById(id);
+      if (select) {
+        // reset isi
+        select.innerHTML = '<option value="">-- Semua Mesin --</option>';
+        data.forEach(mesin => {
+          const option = document.createElement('option');
+          option.value = mesin.id;
+          option.textContent = mesin.mesin_nama;
+          select.appendChild(option);
+        });
+      }
+    });
+
+    allMachines = data;
+  } catch (err) {
+    console.error('Error saat load mesin:', err);
+  }
+}
+
+// ===== PANGGIL SAAT HALAMAN DIMUAT =====
+document.addEventListener('DOMContentLoaded', () => {
+  loadMesinList();
+});
+
