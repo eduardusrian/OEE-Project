@@ -775,6 +775,24 @@
       
       const isEditMode = document.getElementById('editModeToggle').checked;
       const machineId = isEditMode ? document.getElementById('editMachineSelect').value : Date.now().toString();
+      const machineName = document.getElementById('machineName').value.toUpperCase();
+      
+      // Check for duplicate machine name (only for new machines or when changing name in edit mode)
+      if (!isEditMode) {
+        // New machine - check if name already exists
+        const existingMachine = machines.find(m => m.name === machineName);
+        if (existingMachine) {
+          alert(`Error: Mesin dengan nama "${machineName}" sudah ada!\n\nSilakan gunakan nama yang berbeda atau edit mesin yang sudah ada.`);
+          return;
+        }
+      } else {
+        // Edit mode - check if name exists in other machines (not the current one being edited)
+        const existingMachine = machines.find(m => m.name === machineName && m.id !== machineId);
+        if (existingMachine) {
+          alert(`Error: Mesin dengan nama "${machineName}" sudah ada!\n\nSilakan gunakan nama yang berbeda.`);
+          return;
+        }
+      }
       
       // Collect basic info
       const machineData = {
@@ -1812,5 +1830,5 @@
       document.body.removeChild(link);
     }
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99dbce23574912b0',t:'MTc2MzAxMTA3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99dbd37f60f612b0',t:'MTc2MzAxMTI5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
