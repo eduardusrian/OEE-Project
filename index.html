@@ -2148,14 +2148,18 @@ async function loadMachinesForHistory() {
 
   if (DEMO_MODE) {
     machines = demoMachines.filter(m => m.is_active);
+    console.log("🔧 DEMO machines:", machines);
   } else {
     const result = await supabase.from('machines').select('*').eq('is_active', true);
+    console.log("📦 Supabase result:", result);
     if (result.error) {
-      console.error('Error loading machines for history:', result.error);
+      console.error('❌ Supabase error:', result.error);
       return;
     }
     machines = result.data;
   }
+
+  console.log("✅ Machines loaded for history:", machines);
 
   const select = document.getElementById('historyFilterMesin');
   select.innerHTML = '<option value="">-- Semua Mesin --</option>';
@@ -2167,7 +2171,6 @@ async function loadMachinesForHistory() {
     select.appendChild(option);
   });
 }
-
       
       if (DEMO_MODE) {
         machines = demoMachines.filter(m => m.is_active);
