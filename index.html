@@ -357,15 +357,15 @@
      <form id="formInputMesin" onsubmit="saveMesin(event)">
       <div class="form-group"><label>🔐 Kata Sandi *</label> <input type="password" id="mesinPassword" class="input-field" required placeholder="Masukkan kata sandi">
       </div>
-      <div class="form-group"><label>Nama Mesin *</label> <input type="text" id="mesinNama" class="input-field uppercase-input" required placeholder="Contoh: INJECTION MOLDING 1">
+      <div class="form-group"><label>Nama Mesin *</label> <input type="text" id="mesinNama" class="input-field uppercase-input" required placeholder="Contoh: JCMCO 29">
       </div>
       <div class="grid-2">
        <div class="form-group"><label>Area *</label> <select id="mesinArea" class="input-field" required> <option value="">-- Pilih Area --</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
        </div>
-       <div class="form-group"><label>Target Output per Menit (butir) *</label> <input type="number" id="mesinTarget" class="input-field" required placeholder="Contoh: 2" step="0.01">
+       <div class="form-group"><label>Target Output per Menit (butir) *</label> <input type="number" id="mesinTarget" class="input-field" required placeholder="CONTOH: 100" step="0.01">
        </div>
       </div>
-      <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="mesinPIC" class="input-field uppercase-input" required placeholder="Contoh: JD">
+      <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="mesinPIC" class="input-field uppercase-input" required placeholder="CONTOH: ABC">
       </div>
       <div class="form-group"><label>ODT (Operational Downtime) Items</label>
        <div class="dynamic-list" id="odtList">
@@ -373,13 +373,13 @@
         </div>
        </div><button type="button" class="btn-secondary" onclick="addODT()" style="margin-top: 8px;">➕ Tambah ODT</button>
       </div>
-      <div class="form-group"><label>Line Stop Mesin Items</label>
+      <div class="form-group"><label>Line Stop Mesin</label>
        <div class="dynamic-list" id="lsMesinList">
         <div class="dynamic-item"><input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin0"> <button type="button" class="btn-danger" onclick="removeLSMesin(0)">❌</button>
         </div>
        </div><button type="button" class="btn-secondary" onclick="addLSMesin()" style="margin-top: 8px;">➕ Tambah LS Mesin</button>
       </div>
-      <div class="form-group"><label>Line Stop Non Mesin Items</label>
+      <div class="form-group"><label>Line Stop Non Mesin</label>
        <div class="dynamic-list" id="lsNonMesinList">
         <div class="dynamic-item"><input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin0"> <button type="button" class="btn-danger" onclick="removeLSNonMesin(0)">❌</button>
         </div>
@@ -408,13 +408,13 @@
       <div class="grid-2">
        <div class="form-group"><label>Shift *</label> <select id="oeeShift" class="input-field" required> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (07.00 - 15.30 | 510 menit)</option> <option value="Shift 2">Shift 2 (15.20 - 22.50 | 450 menit)</option> <option value="Shift 3">Shift 3 (22.40 - 07.10 | 510 menit)</option> <option value="Long Shift Pagi">Long Shift Pagi (07.00 - 19.00 | 720 menit)</option> <option value="Long Shift Malam">Long Shift Malam (19.00 - 07.00 | 720 menit)</option> </select>
        </div>
-       <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="oeePIC" class="input-field uppercase-input" required placeholder="Contoh: JD">
+       <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="oeePIC" class="input-field uppercase-input" required placeholder="CONTOH: ABC">
        </div>
       </div>
       <div class="grid-2">
-       <div class="form-group"><label>Kode Produk *</label> <input type="text" id="oeeKodeProduk" class="input-field uppercase-input" required placeholder="Contoh: PRD-001">
+       <div class="form-group"><label>Kode Produk *</label> <input type="text" id="oeeKodeProduk" class="input-field uppercase-input" required placeholder="CONTOH: TABC1">
        </div>
-       <div class="form-group"><label>Batch Number *</label> <input type="text" id="oeeBatch" class="input-field uppercase-input" required placeholder="Contoh: BATCH-2024-001">
+       <div class="form-group"><label>Batch Number *</label> <input type="text" id="oeeBatch" class="input-field uppercase-input" required placeholder="CONTOH: TABC12345">
        </div>
       </div>
       <div class="form-group"><label>ODT Items (dengan Waktu Aktual)</label>
@@ -445,9 +445,9 @@
        <h4 style="margin: 0 0 12px 0; color: #92400e;">⚠️ Line Stop Mesin &gt; 179 Menit - Isi WR (Work Request)</h4><label>Nomor WR *</label> <input type="text" id="oeeWRNumber" class="input-field uppercase-input" placeholder="Contoh: WR-2024-001">
       </div>
       <div class="grid-2">
-       <div class="form-group"><label>Jumlah Output (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 950">
+       <div class="form-group"><label>Jumlah Output / shift (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 100000">
        </div>
-       <div class="form-group"><label>Jumlah Reject (butir) *</label> <input type="number" id="oeeReject" class="input-field" required placeholder="Contoh: 50">
+       <div class="form-group"><label>Jumlah Reject / shift (butir) *</label> <input type="number" id="oeeReject" class="input-field" required placeholder="Contoh: 50">
        </div>
       </div>
       <div id="targetOutputInfo" style="margin-top: 20px; padding: 16px; background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; display: none;">
@@ -622,7 +622,7 @@
     let demoMachines = [
       {
         id: '1',
-        mesin_nama: 'INJECTION MOLDING 1',
+        mesin_nama: 'JCMCO 29',
         area: 'INJEKSI',
         target_output: 2,
         pic_inisial: 'JD',
@@ -655,7 +655,7 @@
     let demoOEERecords = [
       {
         id: '1',
-        mesin_nama: 'INJECTION MOLDING 1',
+        mesin_nama: 'JCMCO 29',
         area: 'INJEKSI',
         pic_inisial: 'JD',
         shift: 'Shift 1',
@@ -703,7 +703,7 @@
       },
       {
         id: '3',
-        mesin_nama: 'INJECTION MOLDING 1',
+        mesin_nama: 'JCMCO 29',
         area: 'INJEKSI',
         pic_inisial: 'JD',
         shift: 'Shift 1',
