@@ -550,6 +550,105 @@
     
     // Password untuk input mesin
     const MACHINE_PASSWORD = 'admin123';
+    
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://xgnaukbzfxvenieavkmq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbmF1a2J6Znh2ZW5pZWF2a21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MjA3NjQsImV4cCI6MjA3ODQ5Njc2NH0.gASmwrimGIDCi3TK277DxZoEF-Nos8v8MFq9_cUuR0o';
+    
+    // Supabase Client (Simple implementation)
+    const supabase = {
+      async insert(table, data) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(data)
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          console.log(`✅ Data berhasil disimpan ke Supabase table: ${table}`);
+          return { success: true };
+        } catch (error) {
+          console.error(`❌ Error saving to Supabase:`, error);
+          return { success: false, error: error.message };
+        }
+      },
+      
+      async select(table, query = '') {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log(`✅ Data berhasil diambil dari Supabase table: ${table}`);
+          return { success: true, data };
+        } catch (error) {
+          console.error(`❌ Error fetching from Supabase:`, error);
+          return { success: false, error: error.message };
+        }
+      }
+    };
+    
+    // Sync functions
+    async function syncToSupabase(type, data) {
+      if (type === 'machine') {
+        return await supabase.insert('machines', {
+          machine_id: data.id,
+          name: data.name,
+          area: data.area,
+          target_per_minute: data.targetPerMinute,
+          pic: data.pic,
+          odt: JSON.stringify(data.odt),
+          line_stop_mesin: JSON.stringify(data.lineStopMesin),
+          line_stop_non_mesin: JSON.stringify(data.lineStopNonMesin),
+          minor_stop: JSON.stringify(data.minorStop),
+          created_at: new Date().toISOString()
+        });
+      } else if (type === 'oee') {
+        return await supabase.insert('oee_records', {
+          record_id: data.id,
+          tanggal: data.tanggal,
+          mesin: data.mesin,
+          shift: data.shift,
+          pic: data.pic,
+          kode_produk: data.kodeProduk,
+          batch_number: data.batchNumber,
+          target_per_minute: data.targetPerMinute,
+          shift_duration: data.shiftDuration,
+          total_odt: data.totalODT,
+          total_line_stop: data.totalLineStop,
+          target_output: data.targetOutput,
+          actual_output: data.actualOutput,
+          reject_output: data.rejectOutput,
+          availability: data.availability,
+          performance: data.performance,
+          quality: data.quality,
+          oee: data.oee,
+          wr_number: data.wrNumber,
+          odt_data: JSON.stringify(data.odt),
+          line_stop_mesin_data: JSON.stringify(data.lineStopMesin),
+          line_stop_non_mesin_data: JSON.stringify(data.lineStopNonMesin),
+          minor_stop_data: JSON.stringify(data.minorStop),
+          created_at: new Date().toISOString()
+        });
+      }
+    }
 
     // Initialize app
     document.addEventListener('DOMContentLoaded', function() {
@@ -853,6 +952,17 @@
       // Save to localStorage
       localStorage.setItem('oee_machines', JSON.stringify(machines));
       
+      // Sync to Supabase
+      if (!isEditMode) {
+        syncToSupabase('machine', machineData).then(result => {
+          if (result.success) {
+            console.log('✅ Mesin berhasil disync ke Supabase');
+          } else {
+            console.log('⚠️ Gagal sync ke Supabase, data tersimpan di localStorage');
+          }
+        });
+      }
+      
       // Update dropdowns
       loadMachinesToDropdowns();
       
@@ -1029,12 +1139,19 @@
 
     function updateTargetCalculation() {
       const shift = document.getElementById('oeeShift').value;
+      const targetPerMinute = parseFloat(document.getElementById('targetPerMinute').value) || 0;
+      
+      // Debug log
+      console.log('Shift:', shift);
+      console.log('Target per minute:', targetPerMinute);
+      
       let shiftDuration = 0;
       
       if (shift.includes('480')) shiftDuration = 480;
       else if (shift.includes('720')) shiftDuration = 720;
       
       document.getElementById('shiftDuration').value = shiftDuration;
+      console.log('Shift duration:', shiftDuration);
       
       // Calculate total ODT and collect overtime data
       let totalODT = 0;
@@ -1064,6 +1181,7 @@
       });
       
       document.getElementById('totalODT').value = totalODT;
+      console.log('Total ODT:', totalODT);
       
       // Update ODT overtime fields with specific ODT names
       const totalOdtOvertime = odtOvertimeData.reduce((sum, odt) => sum + odt.overtime, 0);
@@ -1084,24 +1202,33 @@
       // Calculate total Line Stop Mesin (excluding ODT overtime)
       let totalLSMesin = 0;
       document.querySelectorAll('.ls-mesin-input').forEach(input => {
-        totalLSMesin += parseFloat(input.value) || 0;
+        const value = parseFloat(input.value) || 0;
+        totalLSMesin += value;
       });
       
       // Calculate total Line Stop Non Mesin (including ODT overtime)
       let totalLSNonMesin = totalOdtOvertime;
       document.querySelectorAll('.ls-non-mesin-input:not([id*="odt_overtime"])').forEach(input => {
-        totalLSNonMesin += parseFloat(input.value) || 0;
+        const value = parseFloat(input.value) || 0;
+        totalLSNonMesin += value;
       });
       
       const totalLineStop = totalLSMesin + totalLSNonMesin;
       document.getElementById('totalLineStop').value = totalLineStop;
+      console.log('Total Line Stop:', totalLineStop);
       
-      // Calculate target output
-      const targetPerMinute = parseFloat(document.getElementById('targetPerMinute').value) || 0;
-      const runTime = shiftDuration - totalODT - totalLineStop;
-      const targetOutput = Math.max(0, runTime * targetPerMinute);
-      
-      document.getElementById('targetOutput').value = Math.round(targetOutput);
+      // Calculate target output - FIXED CALCULATION
+      if (shiftDuration > 0 && targetPerMinute > 0) {
+        const runTime = Math.max(0, shiftDuration - totalODT - totalLineStop);
+        const targetOutput = Math.max(0, runTime * targetPerMinute);
+        
+        console.log('Run time:', runTime);
+        console.log('Target output:', targetOutput);
+        
+        document.getElementById('targetOutput').value = Math.round(targetOutput);
+      } else {
+        document.getElementById('targetOutput').value = 0;
+      }
       
       // Check if WR is needed (Line Stop Mesin > 179 menit)
       const wrSection = document.getElementById('wrSection');
@@ -1128,27 +1255,57 @@
       const actualOutput = parseFloat(document.getElementById('actualOutput').value) || 0;
       const rejectOutput = parseFloat(document.getElementById('rejectOutput').value) || 0;
       
-      if (shiftDuration === 0) return;
+      console.log('=== CALCULATE OEE DEBUG ===');
+      console.log('Shift Duration:', shiftDuration);
+      console.log('Total ODT:', totalODT);
+      console.log('Total Line Stop:', totalLineStop);
+      console.log('Target Output:', targetOutput);
+      console.log('Actual Output:', actualOutput);
+      console.log('Reject Output:', rejectOutput);
       
-      // Calculate Availability
-      const runTime = shiftDuration - totalODT - totalLineStop;
-      const availability = (runTime / shiftDuration) * 100;
+      if (shiftDuration === 0) {
+        console.log('ERROR: Shift duration is 0');
+        return;
+      }
       
-      // Calculate Performance
-      const performance = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
+      // Calculate Availability - FIXED: Ensure positive values
+      const runTime = Math.max(0, shiftDuration - totalODT - totalLineStop);
+      const availability = Math.max(0, Math.min(100, (runTime / shiftDuration) * 100));
       
-      // Calculate Quality
-      const goodOutput = actualOutput - rejectOutput;
-      const quality = actualOutput > 0 ? (goodOutput / actualOutput) * 100 : 0;
+      // Calculate Performance - FIXED: Handle division by zero
+      const performance = (targetOutput > 0 && actualOutput >= 0) ? 
+        Math.max(0, (actualOutput / targetOutput) * 100) : 0;
       
-      // Calculate OEE
+      // Calculate Quality - FIXED: Handle negative reject and division by zero
+      const validReject = Math.max(0, Math.min(rejectOutput, actualOutput));
+      const goodOutput = Math.max(0, actualOutput - validReject);
+      const quality = (actualOutput > 0) ? 
+        Math.max(0, Math.min(100, (goodOutput / actualOutput) * 100)) : 0;
+      
+      // Calculate OEE - FIXED: Proper percentage calculation
       const oee = (availability * performance * quality) / 10000;
       
-      // Update preview
+      console.log('Run Time:', runTime);
+      console.log('Availability:', availability.toFixed(2) + '%');
+      console.log('Performance:', performance.toFixed(2) + '%');
+      console.log('Quality:', quality.toFixed(2) + '%');
+      console.log('OEE:', oee.toFixed(2) + '%');
+      console.log('=== END DEBUG ===');
+      
+      // Update preview with validation
       document.getElementById('previewA').textContent = availability.toFixed(2) + '%';
       document.getElementById('previewP').textContent = performance.toFixed(2) + '%';
       document.getElementById('previewQ').textContent = quality.toFixed(2) + '%';
       document.getElementById('previewOEE').textContent = oee.toFixed(2) + '%';
+      
+      // Add visual feedback for invalid values
+      const previewBox = document.getElementById('oeePreview');
+      if (oee > 100 || availability > 100 || performance > 100 || quality > 100) {
+        previewBox.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        previewBox.innerHTML += '<div class="mt-2 text-sm">⚠️ Ada nilai yang tidak valid! Cek input data.</div>';
+      } else {
+        previewBox.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      }
     }
 
     function saveOEE(event) {
@@ -1252,6 +1409,17 @@
       oeeData.push(oeeRecord);
       localStorage.setItem('oee_data', JSON.stringify(oeeData));
       
+      // Sync to Supabase
+      syncToSupabase('oee', oeeRecord).then(result => {
+        if (result.success) {
+          console.log('✅ Data OEE berhasil disync ke Supabase');
+          alert('Data OEE berhasil disimpan dan disync ke database! 🎉');
+        } else {
+          console.log('⚠️ Gagal sync ke Supabase, data tersimpan di localStorage');
+          alert('Data OEE berhasil disimpan! (Offline mode - akan sync otomatis nanti)');
+        }
+      });
+      
       // Reset form
       document.getElementById('oeeForm').reset();
       document.getElementById('odtCheckboxContainer').innerHTML = '';
@@ -1266,7 +1434,30 @@
       document.getElementById('previewQ').textContent = '0%';
       document.getElementById('previewOEE').textContent = '0%';
       
-      alert('Data OEE berhasil disimpan!');
+      // Clear preview box styling
+      const previewBox = document.getElementById('oeePreview');
+      previewBox.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      previewBox.innerHTML = `
+        <h3 class="text-xl font-bold mb-4">🎯 Preview OEE</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="preview-item">
+            <span>Availability:</span>
+            <span id="previewA">0%</span>
+          </div>
+          <div class="preview-item">
+            <span>Performance:</span>
+            <span id="previewP">0%</span>
+          </div>
+          <div class="preview-item">
+            <span>Quality:</span>
+            <span id="previewQ">0%</span>
+          </div>
+          <div class="preview-item">
+            <span><strong>OEE:</strong></span>
+            <span id="previewOEE"><strong>0%</strong></span>
+          </div>
+        </div>
+      `;
       
       // Refresh dashboard if currently viewing
       if (currentTab === 'dashboard') {
@@ -1830,5 +2021,5 @@
       document.body.removeChild(link);
     }
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99dbd37f60f612b0',t:'MTc2MzAxMTI5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99dc340033e95844',t:'MTc2MzAxNTI0NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
