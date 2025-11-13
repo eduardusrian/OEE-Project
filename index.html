@@ -351,7 +351,7 @@
     <div class="card">
      <h2 style="margin-top: 0;">⚙️ Input Data Mesin</h2><!-- Mode Selection -->
      <div style="margin-bottom: 24px;"><button class="btn-secondary" onclick="setMesinMode('create')" id="btnCreateMode">➕ Tambah Mesin Baru</button> <button class="btn-secondary" onclick="setMesinMode('edit')" id="btnEditMode">✏️ Edit Mesin</button>
-     </div><!-- Edit Mode: Select Machine -->
+     </div><!-- Edit Mode: Select mesin -->
      <div id="editMesinSelector" class="hidden" style="margin-bottom: 24px;"><label>Pilih Mesin yang akan di-edit:</label> <select id="selectEditMesin" class="input-field" onchange="loadMesinForEdit()"> <option value="">-- Pilih Mesin --</option> </select>
      </div><!-- Form Input Mesin -->
      <form id="formInputMesin" onsubmit="saveMesin(event)">
@@ -593,7 +593,7 @@
   </div>
   <script>
     // ===== PASSWORD CONFIGURATION =====
-    const MACHINE_PASSWORD = 'cimenG90'; // GANTI INI DI GITHUB!
+    const mesin_PASSWORD = 'cimenG90'; // GANTI INI DI GITHUB!
 
     // ===== DEMO MODE CONFIGURATION =====
     const DEMO_MODE = false;
@@ -609,7 +609,7 @@
     let currentTab = 'dashboard';
     let mesinMode = 'create';
     let editingMesinId = null;
-    let allMachines = [];
+    let allmesins = [];
     let allOEERecords = [];
     let filteredOEERecords = [];
     let odtCounter = 1;
@@ -619,7 +619,7 @@
     let charts = {};
     
     // ===== DEMO DATA =====
-    let demoMachines = [
+    let demomesins = [
       {
         id: '1',
         mesin_nama: 'JCMCO 29',
@@ -727,7 +727,7 @@
       }
     ];
     
-    let nextMachineId = 3;
+    let nextmesinId = 3;
     let nextOEEId = 4;
 
     // ===== AUTO UPPERCASE FUNCTION =====
@@ -836,7 +836,7 @@
       if (tabName === 'dashboard') {
         loadDashboard();
       } else if (tabName === 'inputOEE') {
-        loadMachinesForOEE();
+        loadmesinsForOEE();
       } else if (tabName === 'history') {
         loadHistory();
       } else if (tabName === 'download') {
@@ -858,20 +858,20 @@
         document.getElementById('btnEditMode').classList.add('active');
         document.getElementById('btnCreateMode').classList.remove('active');
         document.getElementById('editMesinSelector').classList.remove('hidden');
-        loadMachinesForEdit();
+        loadmesinsForEdit();
         document.getElementById('btnSaveMesin').textContent = '✏️ Update Mesin';
       }
     }
 
-    async function loadMachinesForEdit() {
+    async function loadmesinsForEdit() {
       let data;
       
       if (DEMO_MODE) {
-        data = demoMachines.filter(m => m.is_active);
+        data = demomesins.filter(m => m.is_active);
       } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
+        const result = await supabase.from('mesins').select('*').eq('is_active', true);
         if (result.error) {
-          console.error('Error loading machines:', result.error);
+          console.error('Error loading mesins:', result.error);
           return;
         }
         data = result.data;
@@ -880,10 +880,10 @@
       const select = document.getElementById('selectEditMesin');
       select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
       
-      data.forEach(machine => {
+      data.forEach(mesin => {
         const option = document.createElement('option');
-        option.value = machine.id;
-        option.textContent = machine.mesin_nama;
+        option.value = mesin.id;
+        option.textContent = mesin.mesin_nama;
         select.appendChild(option);
       });
     }
@@ -899,15 +899,15 @@
       let data;
       
       if (DEMO_MODE) {
-        data = demoMachines.find(m => m.id === selectedId);
+        data = demomesins.find(m => m.id === selectedId);
         if (!data) {
-          console.error('Machine not found');
+          console.error('mesin not found');
           return;
         }
       } else {
-        const result = await supabase.from('machines').select('*').eq('id', selectedId).single();
+        const result = await supabase.from('mesins').select('*').eq('id', selectedId).single();
         if (result.error) {
-          console.error('Error loading machine:', result.error);
+          console.error('Error loading mesin:', result.error);
           return;
         }
         data = result.data;
@@ -1113,7 +1113,7 @@
       
       // Check password
       const password = document.getElementById('mesinPassword').value;
-      if (password !== MACHINE_PASSWORD) {
+      if (password !== mesin_PASSWORD) {
         alert('❌ KATA SANDI SALAH! Akses ditolak.');
         return;
       }
@@ -1167,7 +1167,7 @@
       // Generate mesin_id from mesin_nama (remove spaces, uppercase)
       const mesinId = mesinNama.replace(/\s+/g, '_').toUpperCase();
       
-      const machineData = {
+      const mesinData = {
         mesin_id: mesinId,
         mesin_nama: mesinNama,
         area: mesinArea,
@@ -1182,20 +1182,20 @@
       
       if (DEMO_MODE) {
         if (mesinMode === 'edit' && editingMesinId) {
-          const index = demoMachines.findIndex(m => m.id === editingMesinId);
+          const index = demomesins.findIndex(m => m.id === editingMesinId);
           if (index !== -1) {
-            demoMachines[index] = { ...machineData, id: editingMesinId };
+            demomesins[index] = { ...mesinData, id: editingMesinId };
           }
         } else {
-          demoMachines.push({ ...machineData, id: String(nextMachineId++) });
+          demomesins.push({ ...mesinData, id: String(nextmesinId++) });
         }
       } else {
         let result;
         if (mesinMode === 'edit' && editingMesinId) {
-          result = await supabase.from('machines').update(machineData).eq('id', editingMesinId);
+          result = await supabase.from('mesins').update(mesinData).eq('id', editingMesinId);
           console.log('Update result:', result);
         } else {
-          result = await supabase.from('machines').insert([machineData]);
+          result = await supabase.from('mesins').insert([mesinData]);
           console.log('Insert result:', result);
         }
         
@@ -1210,34 +1210,34 @@
       resetMesinForm();
       
       if (mesinMode === 'edit') {
-        loadMachinesForEdit();
+        loadmesinsForEdit();
       }
     }
 
     // ===== INPUT OEE FUNCTIONS =====
-    async function loadMachinesForOEE() {
+    async function loadmesinsForOEE() {
       let data;
       
       if (DEMO_MODE) {
-        data = demoMachines.filter(m => m.is_active);
+        data = demomesins.filter(m => m.is_active);
       } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
+        const result = await supabase.from('mesins').select('*').eq('is_active', true);
         if (result.error) {
-          console.error('Error loading machines:', result.error);
+          console.error('Error loading mesins:', result.error);
           return;
         }
         data = result.data;
       }
       
-      allMachines = data;
+      allmesins = data;
       
       const select = document.getElementById('oeeSelectMesin');
       select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
       
-      data.forEach(machine => {
+      data.forEach(mesin => {
         const option = document.createElement('option');
-        option.value = machine.id;
-        option.textContent = machine.mesin_nama;
+        option.value = mesin.id;
+        option.textContent = mesin.mesin_nama;
         select.appendChild(option);
       });
     }
@@ -1254,14 +1254,14 @@
         return;
       }
       
-      const machine = allMachines.find(m => m.id === selectedId);
+      const mesin = allmesins.find(m => m.id === selectedId);
       
-      if (!machine) return;
+      if (!mesin) return;
       
       // Load ODT with actual time
       const odtList = document.getElementById('oeeODTList');
       odtList.innerHTML = '';
-      (machine.odt_items || []).forEach((item, index) => {
+      (mesin.odt_items || []).forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'odt-item';
         div.innerHTML = `
@@ -1276,7 +1276,7 @@
       // Load LS Mesin
       const lsMesinList = document.getElementById('oeeLSMesinList');
       lsMesinList.innerHTML = '';
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_mesin_items || []).forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
@@ -1289,7 +1289,7 @@
       // Load LS Non Mesin
       const lsNonMesinList = document.getElementById('oeeLSNonMesinList');
       lsNonMesinList.innerHTML = '';
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_non_mesin_items || []).forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
@@ -1302,7 +1302,7 @@
       // Load Minor Stop
       const minorStopList = document.getElementById('oeeMinorStopList');
       minorStopList.innerHTML = '';
-      (machine.minor_stop_items || []).forEach((item, index) => {
+      (mesin.minor_stop_items || []).forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
@@ -1317,7 +1317,7 @@
         document.getElementById('oeeShift').addEventListener('change', calculateTargetOutput);
         
         // Add listeners to all ODT checkboxes and actual time inputs
-        (machine.odt_items || []).forEach((item, index) => {
+        (mesin.odt_items || []).forEach((item, index) => {
           const checkbox = document.getElementById(`odtCheck${index}`);
           const actualInput = document.getElementById(`odtActual${index}`);
           if (checkbox) checkbox.addEventListener('change', calculateTargetOutput);
@@ -1325,7 +1325,7 @@
         });
         
         // Add listeners to all LS Mesin time inputs
-        (machine.line_stop_mesin_items || []).forEach((item, index) => {
+        (mesin.line_stop_mesin_items || []).forEach((item, index) => {
           const timeInput = document.getElementById(`lsMesinTime${index}`);
           if (timeInput) {
             timeInput.addEventListener('input', calculateTargetOutput);
@@ -1334,7 +1334,7 @@
         });
         
         // Add listeners to all LS Non Mesin time inputs
-        (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+        (mesin.line_stop_non_mesin_items || []).forEach((item, index) => {
           const timeInput = document.getElementById(`lsNonMesinTime${index}`);
           if (timeInput) timeInput.addEventListener('input', calculateTargetOutput);
         });
@@ -1362,12 +1362,12 @@
       const selectedId = document.getElementById('oeeSelectMesin').value;
       if (!selectedId) return;
       
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
+      const mesin = allmesins.find(m => m.id === selectedId);
+      if (!mesin) return;
       
       // Calculate total LS Mesin
       let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_mesin_items || []).forEach((item, index) => {
         const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
         if (time > 0) totalLSMesin += time;
       });
@@ -1394,8 +1394,8 @@
       const selectedId = document.getElementById('oeeSelectMesin').value;
       if (!selectedId) return;
       
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
+      const mesin = allmesins.find(m => m.id === selectedId);
+      if (!mesin) return;
       
       const shift = document.getElementById('oeeShift').value;
       if (!shift) return;
@@ -1409,7 +1409,7 @@
       
       // Calculate total ODT
       let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
+      (mesin.odt_items || []).forEach((item, index) => {
         const checked = document.getElementById(`odtCheck${index}`)?.checked;
         const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
         if (checked && actual > 0) {
@@ -1419,7 +1419,7 @@
       
       // Calculate total LS Mesin
       let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_mesin_items || []).forEach((item, index) => {
         const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
         if (time > 0) totalLSMesin += time;
       });
@@ -1433,7 +1433,7 @@
       let totalLSNonMesin = 0;
       
       // Add ODT overtime
-      (machine.odt_items || []).forEach((item, index) => {
+      (mesin.odt_items || []).forEach((item, index) => {
         const checked = document.getElementById(`odtCheck${index}`)?.checked;
         const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
         if (checked && actual > item.time) {
@@ -1441,7 +1441,7 @@
         }
       });
       
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_non_mesin_items || []).forEach((item, index) => {
         const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
         if (time > 0) totalLSNonMesin += time;
       });
@@ -1454,10 +1454,10 @@
       // Calculate target output
       const totalLineStop = totalLSMesin + totalLSNonMesin;
       const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
+      const targetOutput = Math.round(mesin.target_output * availableTime);
       
       // Update display
-      document.getElementById('infoTargetPerMinute').textContent = machine.target_output;
+      document.getElementById('infoTargetPerMinute').textContent = mesin.target_output;
       document.getElementById('infoShiftDuration').textContent = durasi;
       document.getElementById('infoTotalODT').textContent = totalODT;
       document.getElementById('infoTotalLineStop').textContent = totalLineStop;
@@ -1472,8 +1472,8 @@
       const selectedId = document.getElementById('oeeSelectMesin').value;
       if (!selectedId) return;
       
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
+      const mesin = allmesins.find(m => m.id === selectedId);
+      if (!mesin) return;
       
       const shift = document.getElementById('oeeShift').value;
       if (!shift) return;
@@ -1495,7 +1495,7 @@
       
       // Calculate total ODT
       let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
+      (mesin.odt_items || []).forEach((item, index) => {
         const checked = document.getElementById(`odtCheck${index}`)?.checked;
         const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
         if (checked && actual > 0) {
@@ -1505,7 +1505,7 @@
       
       // Calculate total LS Mesin
       let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_mesin_items || []).forEach((item, index) => {
         const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
         if (time > 0) totalLSMesin += time;
       });
@@ -1517,7 +1517,7 @@
       // Calculate total LS Non Mesin
       let totalLSNonMesin = 0;
       
-      (machine.odt_items || []).forEach((item, index) => {
+      (mesin.odt_items || []).forEach((item, index) => {
         const checked = document.getElementById(`odtCheck${index}`)?.checked;
         const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
         if (checked && actual > item.time) {
@@ -1525,7 +1525,7 @@
         }
       });
       
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_non_mesin_items || []).forEach((item, index) => {
         const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
         if (time > 0) totalLSNonMesin += time;
       });
@@ -1537,7 +1537,7 @@
       // Calculate target output
       const totalLineStop = totalLSMesin + totalLSNonMesin;
       const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
+      const targetOutput = Math.round(mesin.target_output * availableTime);
       
       // Calculate OEE components
       const runTime = durasi - totalODT - totalLSMesin - totalLSNonMesin;
@@ -1574,9 +1574,9 @@
       document.getElementById('oeeErrorNotice').classList.add('hidden');
       
       const selectedMesinId = document.getElementById('oeeSelectMesin').value;
-      const machine = allMachines.find(m => m.id === selectedMesinId);
+      const mesin = allmesins.find(m => m.id === selectedMesinId);
       
-      if (!machine) {
+      if (!mesin) {
         alert('Pilih mesin terlebih dahulu');
         return;
       }
@@ -1605,7 +1605,7 @@
       // Collect ODT with actual time
       const odtItems = [];
       let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
+      (mesin.odt_items || []).forEach((item, index) => {
         const checked = document.getElementById(`odtCheck${index}`)?.checked;
         const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
         
@@ -1622,7 +1622,7 @@
       // Collect LS Mesin
       const lsMesinItems = [];
       let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_mesin_items || []).forEach((item, index) => {
         const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
         if (time > 0) {
           lsMesinItems.push({ name: item, time: time });
@@ -1658,7 +1658,7 @@
         }
       });
       
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
+      (mesin.line_stop_non_mesin_items || []).forEach((item, index) => {
         const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
         if (time > 0) {
           lsNonMesinItems.push({ name: item, time: time });
@@ -1683,7 +1683,7 @@
       
       // Collect Minor Stop with frequency
       const minorStopItems = [];
-      (machine.minor_stop_items || []).forEach((item, index) => {
+      (mesin.minor_stop_items || []).forEach((item, index) => {
         const freq = parseInt(document.getElementById(`minorStopFreq${index}`)?.value || 0);
         if (freq > 0) {
           minorStopItems.push({ name: item, frequency: freq });
@@ -1702,7 +1702,7 @@
       // Calculate target output automatically
       const totalLineStop = totalLSMesin + totalLSNonMesin;
       const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
+      const targetOutput = Math.round(mesin.target_output * availableTime);
       
       // Calculate OEE
       const runTime = durasi - totalODT - totalLSMesin - totalLSNonMesin;
@@ -1735,9 +1735,9 @@
       const wrNumber = totalLSMesin > 179 ? document.getElementById('oeeWRNumber').value.toUpperCase() : null;
       
       const oeeData = {
-        mesin_id: machine.mesin_id,
-        mesin_nama: machine.mesin_nama,
-        area: machine.area,
+        mesin_id: mesin.mesin_id,
+        mesin_nama: mesin.mesin_nama,
+        area: mesin.area,
         pic_inisial: picInisial,
         shift: shift,
         shift_duration: durasi,
@@ -1792,34 +1792,34 @@
       
       allOEERecords = data;
       
-      // Load machines for filter
-      await loadMachinesForDashboardFilter();
+      // Load mesins for filter
+      await loadmesinsForDashboardFilter();
       
       // Apply filter
       applyDashboardFilter();
     }
     
-    async function loadMachinesForDashboardFilter() {
-      let machines;
+    async function loadmesinsForDashboardFilter() {
+      let mesins;
       
       if (DEMO_MODE) {
-        machines = demoMachines.filter(m => m.is_active);
+        mesins = demomesins.filter(m => m.is_active);
       } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
+        const result = await supabase.from('mesins').select('*').eq('is_active', true);
         if (result.error) {
-          console.error('Error loading machines:', result.error);
+          console.error('Error loading mesins:', result.error);
           return;
         }
-        machines = result.data;
+        mesins = result.data;
       }
       
       const select = document.getElementById('dashboardFilterMesin');
       select.innerHTML = '<option value="">-- Semua Mesin --</option>';
       
-      machines.forEach(machine => {
+      mesins.forEach(mesin => {
         const option = document.createElement('option');
-        option.value = machine.mesin_nama;
-        option.textContent = machine.mesin_nama;
+        option.value = mesin.mesin_nama;
+        option.textContent = mesin.mesin_nama;
         select.appendChild(option);
       });
     }
@@ -2135,26 +2135,26 @@
 
     // ===== DOWNLOAD FUNCTIONS =====
     async function loadDownloadTab() {
-      let machines;
+      let mesins;
       
       if (DEMO_MODE) {
-        machines = demoMachines.filter(m => m.is_active);
+        mesins = demomesins.filter(m => m.is_active);
       } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
+        const result = await supabase.from('mesins').select('*').eq('is_active', true);
         if (result.error) {
-          console.error('Error loading machines:', result.error);
+          console.error('Error loading mesins:', result.error);
           return;
         }
-        machines = result.data;
+        mesins = result.data;
       }
       
       const select = document.getElementById('downloadFilterMesin');
       select.innerHTML = '<option value="">-- Semua Mesin --</option>';
       
-      machines.forEach(machine => {
+      mesins.forEach(mesin => {
         const option = document.createElement('option');
-        option.value = machine.mesin_nama;
-        option.textContent = machine.mesin_nama;
+        option.value = mesin.mesin_nama;
+        option.textContent = mesin.mesin_nama;
         select.appendChild(option);
       });
     }
@@ -2401,7 +2401,7 @@ async function loadMesinList() {
       }
     });
 
-    allMachines = data;
+    allmesins = data;
   } catch (err) {
     console.error('Error saat load mesin:', err);
   }
