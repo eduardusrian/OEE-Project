@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem OEE Manufacturing v29</title>
+  <title>Sistem OEE Manufacturing v30</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -347,13 +347,13 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
        <div class="input-group"><label for="machinePassword">Kata Sandi *</label> <input type="password" id="machinePassword" required>
        </div>
-       <div class="input-group"><label for="machineName">Nama Mesin *</label> <input type="text" id="machineName" required style="text-transform: uppercase;">
+       <div class="input-group"><label for="machineName">Nama Mesin *</label> <input type="text" id="machineName" required oninput="this.value = this.value.toUpperCase()">
        </div>
        <div class="input-group"><label for="machineArea">Area *</label> <select id="machineArea" required> <option value="">-- Pilih Area --</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
        </div>
        <div class="input-group"><label for="machineTarget">Target Output per Menit *</label> <input type="number" id="machineTarget" step="0.1" required>
        </div>
-       <div class="input-group"><label for="machinePIC">Inisial PIC *</label> <input type="text" id="machinePIC" required style="text-transform: uppercase;">
+       <div class="input-group"><label for="machinePIC">Inisial PIC *</label> <input type="text" id="machinePIC" required oninput="this.value = this.value.toUpperCase()">
        </div>
       </div>
      </div><!-- ODT Section -->
@@ -391,11 +391,11 @@
        </div>
        <div class="input-group"><label for="oeeMachine">Pilih Mesin *</label> <select id="oeeMachine" required onchange="loadMachineTemplate()"> <option value="">-- Pilih Mesin --</option> </select>
        </div>
-       <div class="input-group"><label for="oeePIC">Inisial PIC *</label> <input type="text" id="oeePIC" required style="text-transform: uppercase;">
+       <div class="input-group"><label for="oeePIC">Inisial PIC *</label> <input type="text" id="oeePIC" required oninput="this.value = this.value.toUpperCase()">
        </div>
-       <div class="input-group"><label for="oeeProduct">Kode Produk *</label> <input type="text" id="oeeProduct" required>
+       <div class="input-group"><label for="oeeProduct">Kode Produk *</label> <input type="text" id="oeeProduct" required oninput="this.value = this.value.toUpperCase()">
        </div>
-       <div class="input-group"><label for="oeeBatch">Batch Number *</label> <input type="text" id="oeeBatch" required>
+       <div class="input-group"><label for="oeeBatch">Batch Number *</label> <input type="text" id="oeeBatch" required oninput="this.value = this.value.toUpperCase()">
        </div>
       </div>
      </div><!-- ODT Section -->
@@ -455,7 +455,7 @@
      <div id="wrSection" class="wr-section hidden">
       <h3>📋 Work Request (WR)</h3>
       <p class="text-sm text-amber-700 mb-3">⚠️ Total Line Stop Mesin lebih dari 179 menit. Nomor WR wajib diisi.</p>
-      <div class="input-group"><label for="wrNumber">Nomor WR *</label> <input type="text" id="wrNumber">
+      <div class="input-group"><label for="wrNumber">Nomor WR *</label> <input type="text" id="wrNumber" oninput="this.value = this.value.toUpperCase()">
       </div>
      </div>
      <div class="text-center"><button type="submit" class="btn-primary text-lg px-8 py-3">💾 Simpan Data OEE</button>
@@ -703,7 +703,7 @@
       div.innerHTML = `
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama ODT</label>
-          <input type="text" class="odt-name w-full p-2 border border-gray-300 rounded-md" value="${name}" style="text-transform: uppercase;">
+          <input type="text" class="odt-name w-full p-2 border border-gray-300 rounded-md" value="${name}" oninput="this.value = this.value.toUpperCase()">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Waktu Standar (menit)</label>
@@ -723,7 +723,7 @@
       div.innerHTML = `
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Line Stop Mesin</label>
-          <input type="text" class="ls-mesin-name w-full p-2 border border-gray-300 rounded-md" value="${name}" style="text-transform: uppercase;">
+          <input type="text" class="ls-mesin-name w-full p-2 border border-gray-300 rounded-md" value="${name}" oninput="this.value = this.value.toUpperCase()">
         </div>
         <div>
           <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-danger">❌</button>
@@ -739,7 +739,7 @@
       div.innerHTML = `
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Line Stop Non Mesin</label>
-          <input type="text" class="ls-non-mesin-name w-full p-2 border border-gray-300 rounded-md" value="${name}" style="text-transform: uppercase;">
+          <input type="text" class="ls-non-mesin-name w-full p-2 border border-gray-300 rounded-md" value="${name}" oninput="this.value = this.value.toUpperCase()">
         </div>
         <div>
           <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-danger">❌</button>
@@ -755,7 +755,7 @@
       div.innerHTML = `
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Minor Stop</label>
-          <input type="text" class="minor-stop-name w-full p-2 border border-gray-300 rounded-md" value="${name}" style="text-transform: uppercase;">
+          <input type="text" class="minor-stop-name w-full p-2 border border-gray-300 rounded-md" value="${name}" oninput="this.value = this.value.toUpperCase()">
         </div>
         <div>
           <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-danger">❌</button>
@@ -941,7 +941,7 @@
         div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
         div.innerHTML = `
           <input type="text" id="ls_mesin_custom_name_${i}" class="w-full p-2 border border-gray-300 rounded-md text-sm" 
-                 placeholder="Custom Line Stop Mesin ${i}" style="text-transform: uppercase;">
+                 placeholder="Custom Line Stop Mesin ${i}" oninput="this.value = this.value.toUpperCase()">
           <input type="number" id="ls_mesin_custom_time_${i}" class="ls-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm" 
                  placeholder="0" onchange="updateTargetCalculation()">
         `;
@@ -952,15 +952,17 @@
       const lsNonMesinContainer = document.getElementById('lineStopNonMesinInputContainer');
       lsNonMesinContainer.innerHTML = '';
       
-      // Add ODT Overtime (readonly)
-      const odtOvertimeDiv = document.createElement('div');
-      odtOvertimeDiv.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
-      odtOvertimeDiv.innerHTML = `
-        <label class="text-sm font-medium text-gray-700 flex items-center">ODT OVERTIME</label>
-        <input type="number" id="odt_overtime" class="ls-non-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm bg-gray-100" 
-               placeholder="0" readonly>
-      `;
-      lsNonMesinContainer.appendChild(odtOvertimeDiv);
+      // Add ODT Overtime inputs for each ODT
+      machine.odt.forEach(odt => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
+        div.innerHTML = `
+          <label class="text-sm font-medium text-gray-700 flex items-center">${odt.name} OVERTIME</label>
+          <input type="number" id="odt_overtime_${odt.name}" class="ls-non-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm bg-gray-100" 
+                 placeholder="0" readonly>
+        `;
+        lsNonMesinContainer.appendChild(div);
+      });
       
       machine.lineStopNonMesin.forEach(item => {
         const div = document.createElement('div');
@@ -979,7 +981,7 @@
         div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
         div.innerHTML = `
           <input type="text" id="ls_non_mesin_custom_name_${i}" class="w-full p-2 border border-gray-300 rounded-md text-sm" 
-                 placeholder="Custom Line Stop Non Mesin ${i}" style="text-transform: uppercase;">
+                 placeholder="Custom Line Stop Non Mesin ${i}" oninput="this.value = this.value.toUpperCase()">
           <input type="number" id="ls_non_mesin_custom_time_${i}" class="ls-non-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm" 
                  placeholder="0" onchange="updateTargetCalculation()">
         `;
@@ -1016,9 +1018,9 @@
       
       document.getElementById('shiftDuration').value = shiftDuration;
       
-      // Calculate total ODT
+      // Calculate total ODT and collect overtime data
       let totalODT = 0;
-      let odtOvertime = 0;
+      let odtOvertimeData = [];
       
       document.querySelectorAll('.odt-checkbox:checked').forEach(checkbox => {
         const odtName = checkbox.id.replace('odt_', '');
@@ -1033,22 +1035,47 @@
         
         totalODT += standardTime;
         
-        // Calculate overtime
+        // Calculate overtime - add to line stop non mesin with ODT name
         if (actualTime > standardTime) {
-          odtOvertime += (actualTime - standardTime);
+          const overtimeMinutes = actualTime - standardTime;
+          odtOvertimeData.push({
+            name: odtName,
+            overtime: overtimeMinutes
+          });
         }
       });
       
       document.getElementById('totalODT').value = totalODT;
-      document.getElementById('odt_overtime').value = odtOvertime;
       
-      // Calculate total Line Stop
-      let totalLineStop = odtOvertime; // Start with ODT overtime
+      // Update ODT overtime fields with specific ODT names
+      const totalOdtOvertime = odtOvertimeData.reduce((sum, odt) => sum + odt.overtime, 0);
       
-      document.querySelectorAll('.ls-mesin-input, .ls-non-mesin-input').forEach(input => {
-        totalLineStop += parseFloat(input.value) || 0;
+      // Clear all ODT overtime inputs first
+      document.querySelectorAll('[id^="odt_overtime_"]').forEach(input => {
+        input.value = 0;
       });
       
+      // Update specific ODT overtime inputs
+      odtOvertimeData.forEach(odt => {
+        const overtimeInput = document.getElementById(`odt_overtime_${odt.name}`);
+        if (overtimeInput) {
+          overtimeInput.value = odt.overtime;
+        }
+      });
+      
+      // Calculate total Line Stop Mesin (excluding ODT overtime)
+      let totalLSMesin = 0;
+      document.querySelectorAll('.ls-mesin-input').forEach(input => {
+        totalLSMesin += parseFloat(input.value) || 0;
+      });
+      
+      // Calculate total Line Stop Non Mesin (including ODT overtime)
+      let totalLSNonMesin = totalOdtOvertime;
+      document.querySelectorAll('.ls-non-mesin-input:not([id*="odt_overtime"])').forEach(input => {
+        totalLSNonMesin += parseFloat(input.value) || 0;
+      });
+      
+      const totalLineStop = totalLSMesin + totalLSNonMesin;
       document.getElementById('totalLineStop').value = totalLineStop;
       
       // Calculate target output
@@ -1058,10 +1085,7 @@
       
       document.getElementById('targetOutput').value = Math.round(targetOutput);
       
-      // Check if WR is needed
-      const totalLSMesin = Array.from(document.querySelectorAll('.ls-mesin-input'))
-        .reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
-      
+      // Check if WR is needed (Line Stop Mesin > 179 menit)
       const wrSection = document.getElementById('wrSection');
       const wrNumber = document.getElementById('wrNumber');
       
@@ -1134,8 +1158,8 @@
         mesin: document.getElementById('oeeMachine').value,
         shift: document.getElementById('oeeShift').value,
         pic: document.getElementById('oeePIC').value.toUpperCase(),
-        kodeProduk: document.getElementById('oeeProduct').value,
-        batchNumber: document.getElementById('oeeBatch').value,
+        kodeProduk: document.getElementById('oeeProduct').value.toUpperCase(),
+        batchNumber: document.getElementById('oeeBatch').value.toUpperCase(),
         targetPerMinute: parseFloat(document.getElementById('targetPerMinute').value),
         shiftDuration: parseFloat(document.getElementById('shiftDuration').value),
         totalODT: parseFloat(document.getElementById('totalODT').value),
@@ -1147,7 +1171,7 @@
         performance: parseFloat(document.getElementById('previewP').textContent),
         quality: parseFloat(document.getElementById('previewQ').textContent),
         oee: parseFloat(document.getElementById('previewOEE').textContent),
-        wrNumber: wrNumber.value.trim(),
+        wrNumber: wrNumber.value.trim().toUpperCase(),
         odt: [],
         lineStopMesin: [],
         lineStopNonMesin: [],
@@ -1178,13 +1202,13 @@
         }
       });
       
-      // Collect Line Stop Non Mesin data
+      // Collect Line Stop Non Mesin data (including ODT overtime with specific names)
       document.querySelectorAll('.ls-non-mesin-input').forEach(input => {
         const time = parseFloat(input.value) || 0;
         if (time > 0) {
           let name = '';
-          if (input.id === 'odt_overtime') {
-            name = 'ODT OVERTIME';
+          if (input.id.includes('odt_overtime_')) {
+            name = input.id.replace('odt_overtime_', '').toUpperCase() + ' OVERTIME';
           } else if (input.id.includes('custom')) {
             const customNameId = input.id.replace('time', 'name');
             name = document.getElementById(customNameId).value.trim().toUpperCase();
@@ -1411,7 +1435,7 @@
         });
       }
       
-      // Minor Stop Chart
+      // Minor Stop Chart - Changed from doughnut to bar
       const minorStopData = {};
       data.forEach(item => {
         item.minorStop.forEach(ms => {
@@ -1425,19 +1449,23 @@
       
       if (topMinorStop.length > 0) {
         charts.minorStop = new Chart(document.getElementById('minorStopChart'), {
-          type: 'doughnut',
+          type: 'bar',
           data: {
             labels: topMinorStop.map(item => item[0]),
             datasets: [{
+              label: 'Frekuensi',
               data: topMinorStop.map(item => item[1]),
-              backgroundColor: [
-                '#667eea', '#764ba2', '#10b981', '#f59e0b', '#ef4444',
-                '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899'
-              ]
+              backgroundColor: '#8b5cf6'
             }]
           },
           options: {
-            responsive: true
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
           }
         });
       }
@@ -1784,5 +1812,5 @@
       document.body.removeChild(link);
     }
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99db83d0007a4ac1',t:'MTc2MzAwODAyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99dbce23574912b0',t:'MTc2MzAxMTA3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
