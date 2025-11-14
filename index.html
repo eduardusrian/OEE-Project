@@ -3,72 +3,95 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem OEE Manufacturing</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
-  <script src="/_sdk/element_sdk.js"></script>
+  <title>Sistem OEE Manufacturing v30</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100%;
-    }
-    
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
     }
     
     .tab-button {
-      padding: 12px 24px;
-      border: none;
-      background: #e5e7eb;
-      color: #4b5563;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s;
-      margin-right: 8px;
+      transition: all 0.3s ease;
     }
     
     .tab-button.active {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
     
-    .input-field {
+    .tab-button:not(.active) {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    
+    .tab-button:not(.active):hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    
+    .metric-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .chart-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .form-section {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .form-section h3 {
+      color: #1e293b;
+      font-weight: 600;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    
+    .input-group {
+      margin-bottom: 15px;
+    }
+    
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #374151;
+    }
+    
+    .input-group input, .input-group select, .input-group textarea {
       width: 100%;
-      padding: 12px;
-      border: 2px solid #e5e7eb;
+      padding: 10px;
+      border: 2px solid #d1d5db;
       border-radius: 8px;
       font-size: 14px;
-      transition: border 0.3s;
     }
     
-    .input-field:focus {
+    .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
       outline: none;
       border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     
     .btn-primary {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 12px 32px;
+      padding: 12px 24px;
       border: none;
       border-radius: 8px;
       font-weight: 600;
@@ -82,52 +105,54 @@
     }
     
     .btn-secondary {
-      background: #f3f4f6;
-      color: #374151;
-      padding: 10px 24px;
+      background: #6b7280;
+      color: white;
+      padding: 8px 16px;
       border: none;
-      border-radius: 8px;
-      font-weight: 600;
+      border-radius: 6px;
+      font-size: 12px;
       cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .btn-secondary:hover {
-      background: #e5e7eb;
+      margin: 2px;
     }
     
     .btn-danger {
       background: #ef4444;
       color: white;
-      padding: 8px 16px;
+      padding: 4px 8px;
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      border-radius: 4px;
       font-size: 12px;
+      cursor: pointer;
     }
     
-    .metric-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .preview-box {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: white;
       padding: 20px;
       border-radius: 12px;
-      text-align: center;
+      margin: 20px 0;
     }
     
-    .metric-value {
-      font-size: 36px;
-      font-weight: 700;
+    .preview-item {
+      display: flex;
+      justify-content: space-between;
       margin: 8px 0;
+      font-weight: 500;
     }
     
-    .metric-label {
-      font-size: 14px;
-      opacity: 0.9;
+    .wr-section {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
     }
     
     .table-container {
       overflow-x: auto;
-      margin-top: 16px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
     table {
@@ -136,202 +161,156 @@
     }
     
     th {
-      background: #f9fafb;
-      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 8px;
       text-align: left;
       font-weight: 600;
-      color: #374151;
-      border-bottom: 2px solid #e5e7eb;
+      font-size: 12px;
     }
     
     td {
-      padding: 12px;
+      padding: 10px 8px;
       border-bottom: 1px solid #e5e7eb;
+      font-size: 12px;
     }
     
-    .chart-container {
-      position: relative;
-      height: 300px;
-      margin-top: 20px;
-    }
-    
-    .notice-error {
-      background: #fee2e2;
-      border: 2px solid #ef4444;
-      color: #991b1b;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-weight: 600;
-    }
-    
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #6b7280;
-    }
-    
-    .hidden {
-      display: none;
-    }
-    
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-    }
-    
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-    }
-    
-    .form-group {
-      margin-bottom: 16px;
-    }
-    
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #374151;
-    }
-    
-    .dynamic-list {
-      border: 2px dashed #e5e7eb;
-      padding: 16px;
-      border-radius: 8px;
-      margin-top: 8px;
-    }
-    
-    .dynamic-item {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-    
-    .odt-item {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr auto;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-    
-    @keyframes blink-red {
-      0%, 100% { background-color: #fee2e2; }
-      50% { background-color: #fecaca; }
+    tr:nth-child(even) {
+      background: #f9fafb;
     }
     
     .low-oee {
-      animation: blink-red 1.5s infinite;
-      font-weight: 700;
+      background: #fee2e2 !important;
       color: #991b1b;
+      font-weight: bold;
+      animation: pulse 2s infinite;
     }
-
-    .uppercase-input {
-      text-transform: uppercase;
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 200px;
+      height: 34px;
+      margin-bottom: 20px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: .4s;
+      border-radius: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+      color: white;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 90px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 26px;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(106px);
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
  </head>
- <body>
-  <div class="container"><!-- Header -->
-   <div class="card" style="text-align: center; margin-bottom: 24px;">
-    <h1 id="appTitle" style="margin: 0; font-size: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sistem OEE Manufacturing</h1>
-    <p id="companyName" style="margin: 8px 0 0 0; color: #6b7280;">by Eduardus Rian</p>
-   </div><!-- Tabs -->
-   <div class="card">
-    <div style="display: flex; flex-wrap: wrap; gap: 8px;"><button class="tab-button active" onclick="switchTab('dashboard')">📊 Dashboard</button> <button class="tab-button" onclick="switchTab('inputMesin')">⚙️ Input Mesin</button> <button class="tab-button" onclick="switchTab('inputOEE')">📝 Input OEE</button> <button class="tab-button" onclick="switchTab('history')">📋 History</button> <button class="tab-button" onclick="switchTab('download')">💾 Download</button>
+ <body class="bg-gray-100 min-h-screen"><!-- Navigation Tabs -->
+  <div class="bg-white shadow-lg">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="flex space-x-1 py-4"><button class="tab-button active px-6 py-3 rounded-lg font-semibold" onclick="showTab('dashboard')"> 📊 Dashboard </button> <button class="tab-button px-6 py-3 rounded-lg font-semibold" onclick="showTab('input-mesin')"> 🏭 Input Mesin </button> <button class="tab-button px-6 py-3 rounded-lg font-semibold" onclick="showTab('input-oee')"> 📝 Input OEE </button> <button class="tab-button px-6 py-3 rounded-lg font-semibold" onclick="showTab('history')"> 📋 History </button> <button class="tab-button px-6 py-3 rounded-lg font-semibold" onclick="showTab('download')"> 💾 Download </button>
     </div>
-   </div><!-- Dashboard Tab -->
-   <div id="dashboardTab" class="tab-content">
-    <div class="card" style="margin-bottom: 20px;">
-     <h3 style="margin-top: 0;">🔍 Filter Dashboard</h3>
-     <div class="grid-3">
-      <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="dashboardFromDate" class="input-field" onchange="applyDashboardFilter()">
+   </div>
+  </div><!-- Dashboard Tab -->
+  <div id="dashboard" class="tab-content">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">📊 Dashboard OEE</h1><!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+     <h2 class="text-xl font-semibold mb-4">🔍 Filter Data</h2>
+     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Dari Tanggal</label> <input type="date" id="dashboardFromDate" class="w-full p-2 border border-gray-300 rounded-md">
       </div>
-      <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="dashboardToDate" class="input-field" onchange="applyDashboardFilter()">
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Sampai Tanggal</label> <input type="date" id="dashboardToDate" class="w-full p-2 border border-gray-300 rounded-md">
       </div>
-      <div class="form-group"><label>Pilih Mesin</label> <select id="dashboardFilterMesin" class="input-field" onchange="applyDashboardFilter()"> <option value="">-- Semua Mesin --</option> </select>
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Pilih Mesin</label> <select id="dashboardMachineFilter" class="w-full p-2 border border-gray-300 rounded-md"> <option value="all">Semua Mesin</option> </select>
       </div>
-     </div><button class="btn-secondary" onclick="resetDashboardFilter()">🔄 Reset Filter</button>
-    </div>
-    <div class="grid-3" style="margin-bottom: 20px;">
+      <div class="flex items-end"><button onclick="resetDashboardFilter()" class="btn-primary w-full">Reset Filter</button>
+      </div>
+     </div>
+    </div><!-- Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
      <div class="metric-card">
-      <div class="metric-label">
-       Rata-rata OEE
-      </div>
-      <div class="metric-value" id="avgOEE">
-       0%
-      </div>
+      <h3 class="text-lg font-semibold mb-2">Rata-rata OEE</h3>
+      <p class="text-3xl font-bold" id="avgOEE">0%</p>
      </div>
-     <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-      <div class="metric-label">
-       Total Output
-      </div>
-      <div class="metric-value" id="totalOutput">
-       0
-      </div>
+     <div class="metric-card">
+      <h3 class="text-lg font-semibold mb-2">Total Output</h3>
+      <p class="text-3xl font-bold" id="totalOutput">0</p>
      </div>
-     <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-      <div class="metric-label">
-       Total Records
-      </div>
-      <div class="metric-value" id="totalRecords">
-       0
-      </div>
+     <div class="metric-card">
+      <h3 class="text-lg font-semibold mb-2">Total Records</h3>
+      <p class="text-3xl font-bold" id="totalRecords">0</p>
      </div>
-    </div>
-    <div class="grid-2">
-     <div class="card">
-      <h3 style="margin-top: 0;">📈 Trend OEE</h3>
-      <div class="chart-container">
-       <canvas id="oeeChart"></canvas>
-      </div>
+    </div><!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"><!-- Trend OEE -->
+     <div class="chart-container">
+      <h3 class="text-lg font-semibold mb-4">📈 Trend OEE (10 Data Terakhir)</h3>
+      <canvas id="trendChart" width="400" height="200"></canvas>
+     </div><!-- A vs P vs Q -->
+     <div class="chart-container">
+      <h3 class="text-lg font-semibold mb-4">📊 Availability vs Performance vs Quality</h3>
+      <canvas id="apqChart" width="400" height="200"></canvas>
+     </div><!-- Line Stop Mesin -->
+     <div class="chart-container">
+      <h3 class="text-lg font-semibold mb-4">🔧 Line Stop Mesin (Top 10)</h3>
+      <canvas id="lineStopMesinChart" width="400" height="200"></canvas>
+     </div><!-- Line Stop Non Mesin -->
+     <div class="chart-container">
+      <h3 class="text-lg font-semibold mb-4">⚠️ Line Stop Non Mesin (Top 10)</h3>
+      <canvas id="lineStopNonMesinChart" width="400" height="200"></canvas>
+     </div><!-- Minor Stop -->
+     <div class="chart-container">
+      <h3 class="text-lg font-semibold mb-4">🔄 Minor Stop (Top 10)</h3>
+      <canvas id="minorStopChart" width="400" height="200"></canvas>
+     </div><!-- OEE per Mesin -->
+     <div class="chart-container">
+      <h3 class="text-lg font-semibold mb-4">🏭 OEE per Mesin</h3>
+      <canvas id="oeePerMesinChart" width="400" height="200"></canvas>
      </div>
-     <div class="card">
-      <h3 style="margin-top: 0;">⚡ Availability vs Performance vs Quality</h3>
-      <div class="chart-container">
-       <canvas id="apqChart"></canvas>
-      </div>
-     </div>
-    </div>
-    <div class="grid-2">
-     <div class="card">
-      <h3 style="margin-top: 0;">🔧 Line Stop Mesin</h3>
-      <div class="chart-container">
-       <canvas id="lineStopMesinChart"></canvas>
-      </div>
-     </div>
-     <div class="card">
-      <h3 style="margin-top: 0;">⚠️ Line Stop Non Mesin</h3>
-      <div class="chart-container">
-       <canvas id="lineStopNonMesinChart"></canvas>
-      </div>
-     </div>
-    </div>
-    <div class="grid-2">
-     <div class="card">
-      <h3 style="margin-top: 0;">⏸️ Minor Stop</h3>
-      <div class="chart-container">
-       <canvas id="minorStopChart"></canvas>
-      </div>
-     </div>
-     <div class="card">
-      <h3 style="margin-top: 0;">🏭 OEE per Mesin</h3>
-      <div class="chart-container">
-       <canvas id="oeePerMesinChart"></canvas>
-      </div>
-     </div>
-    </div>
-    <div class="card">
-     <h3 style="margin-top: 0;">👤 Performa Operator (PIC)</h3>
+    </div><!-- Tabel Performa Operator -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+     <h3 class="text-lg font-semibold mb-4">👥 Performa Operator</h3>
      <div class="table-container">
-      <table id="operatorTable">
+      <table>
        <thead>
         <tr>
          <th>PIC</th>
@@ -342,1878 +321,1647 @@
          <th>Jumlah Shift</th>
         </tr>
        </thead>
-       <tbody></tbody>
-      </table>
-     </div>
-    </div>
-   </div><!-- Input Mesin Tab -->
-   <div id="inputMesinTab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">⚙️ Input Data Mesin</h2><!-- Mode Selection -->
-     <div style="margin-bottom: 24px;"><button class="btn-secondary" onclick="setMesinMode('create')" id="btnCreateMode">➕ Tambah Mesin Baru</button> <button class="btn-secondary" onclick="setMesinMode('edit')" id="btnEditMode">✏️ Edit Mesin</button>
-     </div><!-- Edit Mode: Select Machine -->
-     <div id="editMesinSelector" class="hidden" style="margin-bottom: 24px;"><label>Pilih Mesin yang akan di-edit:</label> <select id="selectEditMesin" class="input-field" onchange="loadMesinForEdit()"> <option value="">-- Pilih Mesin --</option> </select>
-     </div><!-- Form Input Mesin -->
-     <form id="formInputMesin" onsubmit="saveMesin(event)">
-      <div class="form-group"><label>🔐 Kata Sandi *</label> <input type="password" id="mesinPassword" class="input-field" required placeholder="Masukkan kata sandi">
-      </div>
-      <div class="form-group"><label>Nama Mesin *</label> <input type="text" id="mesinNama" class="input-field uppercase-input" required placeholder="Contoh: JCMCO 29">
-      </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Area *</label> <select id="mesinArea" class="input-field" required> <option value="">-- Pilih Area --</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
-       </div>
-       <div class="form-group"><label>Target Output per Menit (butir) *</label> <input type="number" id="mesinTarget" class="input-field" required placeholder="CONTOH: 100" step="0.01">
-       </div>
-      </div>
-      <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="mesinPIC" class="input-field uppercase-input" required placeholder="CONTOH: ABC">
-      </div>
-      <div class="form-group"><label>ODT (Operational Downtime) Items</label>
-       <div class="dynamic-list" id="odtList">
-        <div class="odt-item"><input type="text" class="input-field uppercase-input" placeholder="Nama ODT" id="odtName0"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime0"> <span></span> <button type="button" class="btn-danger" onclick="removeODT(0)">❌</button>
-        </div>
-       </div><button type="button" class="btn-secondary" onclick="addODT()" style="margin-top: 8px;">➕ Tambah ODT</button>
-      </div>
-      <div class="form-group"><label>Line Stop Mesin</label>
-       <div class="dynamic-list" id="lsMesinList">
-        <div class="dynamic-item"><input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin0"> <button type="button" class="btn-danger" onclick="removeLSMesin(0)">❌</button>
-        </div>
-       </div><button type="button" class="btn-secondary" onclick="addLSMesin()" style="margin-top: 8px;">➕ Tambah LS Mesin</button>
-      </div>
-      <div class="form-group"><label>Line Stop Non Mesin</label>
-       <div class="dynamic-list" id="lsNonMesinList">
-        <div class="dynamic-item"><input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin0"> <button type="button" class="btn-danger" onclick="removeLSNonMesin(0)">❌</button>
-        </div>
-       </div><button type="button" class="btn-secondary" onclick="addLSNonMesin()" style="margin-top: 8px;">➕ Tambah LS Non Mesin</button>
-      </div>
-      <div class="form-group"><label>Minor Stop Items</label>
-       <div class="dynamic-list" id="minorStopList">
-        <div class="dynamic-item"><input type="text" class="input-field uppercase-input" placeholder="Nama Minor Stop" id="minorStop0"> <button type="button" class="btn-danger" onclick="removeMinorStop(0)">❌</button>
-        </div>
-       </div><button type="button" class="btn-secondary" onclick="addMinorStop()" style="margin-top: 8px;">➕ Tambah Minor Stop</button>
-      </div><button type="submit" class="btn-primary" id="btnSaveMesin">💾 Simpan Mesin</button>
-     </form>
-    </div>
-   </div><!-- Input OEE Tab -->
-   <div id="inputOEETab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">📝 Input Data OEE</h2>
-     <div id="oeeErrorNotice" class="notice-error hidden"></div>
-     <form id="formInputOEE" onsubmit="saveOEE(event)">
-      <div class="grid-2">
-       <div class="form-group"><label>Pilih Mesin *</label> <select id="oeeSelectMesin" class="input-field" required onchange="loadMesinData()"> <option value="">-- Pilih Mesin --</option> </select>
-       </div>
-       <div class="form-group"><label>Tanggal Produksi *</label> <input type="date" id="oeeTanggal" class="input-field" required>
-       </div>
-      </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Shift *</label> <select id="oeeShift" class="input-field" required> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (07.00 - 15.30 | 510 menit)</option> <option value="Shift 2">Shift 2 (15.20 - 22.50 | 450 menit)</option> <option value="Shift 3">Shift 3 (22.40 - 07.10 | 510 menit)</option> <option value="Long Shift Pagi">Long Shift Pagi (07.00 - 19.00 | 720 menit)</option> <option value="Long Shift Malam">Long Shift Malam (19.00 - 07.00 | 720 menit)</option> </select>
-       </div>
-       <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="oeePIC" class="input-field uppercase-input" required placeholder="CONTOH: ABC">
-       </div>
-      </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Kode Produk *</label> <input type="text" id="oeeKodeProduk" class="input-field uppercase-input" required placeholder="CONTOH: TABC1">
-       </div>
-       <div class="form-group"><label>Batch Number *</label> <input type="text" id="oeeBatch" class="input-field uppercase-input" required placeholder="CONTOH: TABC12345">
-       </div>
-      </div>
-      <div class="form-group"><label>ODT Items (dengan Waktu Aktual)</label>
-       <div class="dynamic-list" id="oeeODTList"></div>
-      </div>
-      <div class="form-group"><label>Line Stop Mesin</label>
-       <div class="dynamic-list" id="oeeLSMesinList"></div>
-       <div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px;"><strong>Custom Line Stop Mesin:</strong>
-        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field uppercase-input" placeholder="Nama Custom LS Mesin 1" id="customLSMesin1"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSMesinTime1">
-        </div>
-        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field uppercase-input" placeholder="Nama Custom LS Mesin 2" id="customLSMesin2"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSMesinTime2">
-        </div>
-       </div>
-      </div>
-      <div class="form-group"><label>Line Stop Non Mesin</label>
-       <div class="dynamic-list" id="oeeLSNonMesinList"></div>
-       <div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px;"><strong>Custom Line Stop Non Mesin:</strong>
-        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field uppercase-input" placeholder="Nama Custom LS Non Mesin 1" id="customLSNonMesin1"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSNonMesinTime1">
-        </div>
-        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field uppercase-input" placeholder="Nama Custom LS Non Mesin 2" id="customLSNonMesin2"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSNonMesinTime2">
-        </div>
-       </div>
-      </div>
-      <div class="form-group"><label>Minor Stop (Frekuensi dalam Kali)</label>
-       <div class="dynamic-list" id="oeeMinorStopList"></div>
-      </div>
-      <div id="wrSection" class="form-group hidden" style="padding: 16px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px;">
-       <h4 style="margin: 0 0 12px 0; color: #92400e;">⚠️ Line Stop Mesin &gt; 179 Menit - Isi WR (Work Request)</h4><label>Nomor WR *</label> <input type="text" id="oeeWRNumber" class="input-field uppercase-input" placeholder="Contoh: WR-2024-001">
-      </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Jumlah Output / shift (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 100000">
-       </div>
-       <div class="form-group"><label>Jumlah Reject / shift (butir) *</label> <input type="number" id="oeeReject" class="input-field" required placeholder="Contoh: 50">
-       </div>
-      </div>
-      <div id="targetOutputInfo" style="margin-top: 20px; padding: 16px; background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; display: none;">
-       <h4 style="margin: 0 0 12px 0; color: #1e40af;">📊 Perhitungan Target Output Otomatis</h4>
-       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-        <div><strong>Target per Menit:</strong> <span id="infoTargetPerMinute">0</span> butir/menit
-        </div>
-        <div><strong>Durasi Shift:</strong> <span id="infoShiftDuration">0</span> menit
-        </div>
-        <div><strong>Total ODT:</strong> <span id="infoTotalODT">0</span> menit
-        </div>
-        <div><strong>Total Line Stop:</strong> <span id="infoTotalLineStop">0</span> menit
-        </div>
-       </div>
-       <div style="padding: 12px; background: #f0fdf4; border-radius: 6px; border: 2px solid #22c55e; margin-bottom: 12px;"><strong style="color: #166534; font-size: 16px;">🎯 Target Output Aktual: <span id="infoTargetOutput">0</span> butir</strong>
-        <div style="margin-top: 4px; font-size: 12px; color: #166534;">
-         Rumus: Target/menit × (Durasi Shift - Total ODT - Total Line Stop)
-        </div>
-       </div>
-       <div id="oeePreview" style="padding: 16px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; display: none;">
-        <h4 style="margin: 0 0 12px 0; color: #92400e;">⚡ Preview Perhitungan OEE</h4>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px;">
-         <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
-          <div style="font-size: 24px; font-weight: 700; color: #667eea;" id="previewAvailability">
-           0%
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-           Availability
-          </div>
-         </div>
-         <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
-          <div style="font-size: 24px; font-weight: 700; color: #f093fb;" id="previewPerformance">
-           0%
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-           Performance
-          </div>
-         </div>
-         <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
-          <div style="font-size: 24px; font-weight: 700; color: #4facfe;" id="previewQuality">
-           0%
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-           Quality
-          </div>
-         </div>
-         <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
-          <div style="font-size: 28px; font-weight: 700; color: #22c55e;" id="previewOEE">
-           0%
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-           OEE
-          </div>
-         </div>
-        </div>
-        <div id="oeeWarning" style="padding: 12px; background: #fee2e2; border: 2px solid #ef4444; border-radius: 6px; display: none;"><strong style="color: #991b1b;">⚠️ PERINGATAN: OEE MELEBIHI 100%!</strong>
-         <div style="margin-top: 8px; font-size: 14px; color: #991b1b;">
-          Mohon periksa kembali data input Anda sebelum menyimpan!
-         </div>
-        </div>
-       </div>
-      </div><button type="submit" class="btn-primary">💾 Simpan Data OEE</button>
-     </form>
-    </div>
-   </div><!-- Download Tab -->
-   <div id="downloadTab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">💾 Download Data OEE</h2>
-     <div class="card" style="background: #f9fafb; margin-bottom: 20px;">
-      <h3 style="margin-top: 0;">🔍 Filter Data Download</h3>
-      <div class="grid-3">
-       <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="downloadFromDate" class="input-field">
-       </div>
-       <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="downloadToDate" class="input-field">
-       </div>
-       <div class="form-group"><label>Pilih Mesin</label> <select id="downloadFilterMesin" class="input-field"> <option value="">-- Semua Mesin --</option> </select>
-       </div>
-      </div>
-     </div>
-     <div style="display: flex; gap: 12px; flex-wrap: wrap;"><button class="btn-primary" onclick="downloadCSV()">📥 Download CSV</button> <button class="btn-primary" onclick="downloadExcel()">📊 Download Excel</button>
-     </div>
-     <div id="downloadPreview" style="margin-top: 24px; display: none;">
-      <h3>Preview Data (10 baris pertama)</h3>
-      <div class="table-container">
-       <table id="downloadPreviewTable">
-        <thead>
-         <tr>
-          <th>Tanggal</th>
-          <th>Mesin</th>
-          <th>Shift</th>
-          <th>PIC</th>
-          <th>Output</th>
-          <th>OEE (%)</th>
-         </tr>
-        </thead>
-        <tbody></tbody>
-       </table>
-      </div>
-     </div>
-    </div>
-   </div><!-- History Tab -->
-   <div id="historyTab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">📋 History Data OEE</h2>
-     <div class="card" style="background: #f9fafb; margin-bottom: 20px;">
-      <h3 style="margin-top: 0;">🔍 Filter History</h3>
-      <div class="grid-3">
-       <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="historyFromDate" class="input-field" onchange="applyHistoryFilter()">
-       </div>
-       <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="historyToDate" class="input-field" onchange="applyHistoryFilter()">
-       </div>
-      </div><button class="btn-secondary" onclick="resetHistoryFilter()">🔄 Reset Filter</button>
-     </div>
-     <div class="table-container">
-      <table id="historyTable">
-       <thead>
+       <tbody id="operatorPerformanceTable">
         <tr>
-         <th>Tanggal</th>
-         <th>Mesin</th>
-         <th>Shift</th>
-         <th>PIC</th>
-         <th>Output</th>
-         <th>Reject</th>
-         <th>OEE (%)</th>
-         <th>A (%)</th>
-         <th>P (%)</th>
-         <th>Q (%)</th>
-         <th>ODT</th>
-         <th>LS Mesin</th>
-         <th>LS Non Mesin</th>
-         <th>Minor Stop</th>
-         <th>Frek MS</th>
-         <th>WR</th>
+         <td colspan="6" class="text-center text-gray-500">Tidak ada data</td>
         </tr>
-       </thead>
-       <tbody></tbody>
+       </tbody>
       </table>
+     </div>
+    </div>
+   </div>
+  </div><!-- Input Mesin Tab -->
+  <div id="input-mesin" class="tab-content hidden">
+   <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">🏭 Input Data Mesin</h1><!-- Toggle Mode -->
+    <div class="mb-6"><label class="toggle-switch"> <input type="checkbox" id="editModeToggle" onchange="toggleEditMode()"> <span class="slider"> <span>Tambah Mesin Baru</span> <span>Edit Mesin</span> </span> </label>
+    </div><!-- Edit Mode Selector -->
+    <div id="editModeSelector" class="form-section hidden">
+     <h3>Pilih Mesin untuk Edit</h3>
+     <div class="input-group"><select id="editMachineSelect" onchange="loadMachineForEdit()"> <option value="">-- Pilih Mesin --</option> </select>
+     </div>
+    </div>
+    <form id="machineForm" onsubmit="saveMachine(event)"><!-- Basic Info -->
+     <div class="form-section">
+      <h3>📋 Informasi Dasar</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+       <div class="input-group"><label for="machinePassword">Kata Sandi *</label> <input type="password" id="machinePassword" required>
+       </div>
+       <div class="input-group"><label for="machineName">Nama Mesin *</label> <input type="text" id="machineName" required oninput="this.value = this.value.toUpperCase()">
+       </div>
+       <div class="input-group"><label for="machineArea">Area *</label> <select id="machineArea" required> <option value="">-- Pilih Area --</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
+       </div>
+       <div class="input-group"><label for="machineTarget">Target Output per Menit *</label> <input type="number" id="machineTarget" step="0.1" required>
+       </div>
+       <div class="input-group"><label for="machinePIC">Inisial PIC *</label> <input type="text" id="machinePIC" required oninput="this.value = this.value.toUpperCase()">
+       </div>
+      </div>
+     </div><!-- ODT Section -->
+     <div class="form-section">
+      <h3>⏱️ ODT (Operational Downtime)</h3>
+      <div id="odtContainer"></div><button type="button" onclick="addODTItem()" class="btn-secondary">+ Tambah ODT</button>
+     </div><!-- Line Stop Mesin Section -->
+     <div class="form-section">
+      <h3>🔧 Line Stop Mesin</h3>
+      <div id="lineStopMesinContainer"></div><button type="button" onclick="addLineStopMesinItem()" class="btn-secondary">+ Tambah Line Stop Mesin</button>
+     </div><!-- Line Stop Non Mesin Section -->
+     <div class="form-section">
+      <h3>⚠️ Line Stop Non Mesin</h3>
+      <div id="lineStopNonMesinContainer"></div><button type="button" onclick="addLineStopNonMesinItem()" class="btn-secondary">+ Tambah Line Stop Non Mesin</button>
+     </div><!-- Minor Stop Section -->
+     <div class="form-section">
+      <h3>🔄 Minor Stop</h3>
+      <div id="minorStopContainer"></div><button type="button" onclick="addMinorStopItem()" class="btn-secondary">+ Tambah Minor Stop</button>
+     </div>
+     <div class="text-center"><button type="submit" class="btn-primary text-lg px-8 py-3"> 💾 <span id="saveButtonText">Simpan Mesin</span> </button>
+     </div>
+    </form>
+   </div>
+  </div><!-- Input OEE Tab -->
+  <div id="input-oee" class="tab-content hidden">
+   <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">📝 Input Data OEE</h1>
+    <form id="oeeForm" onsubmit="saveOEE(event)"><!-- Basic Info -->
+     <div class="form-section">
+      <h3>📋 Informasi Dasar</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+       <div class="input-group"><label for="oeeDate">Tanggal Produksi *</label> <input type="date" id="oeeDate" required>
+       </div>
+       <div class="input-group"><label for="oeeShift">Shift *</label> <select id="oeeShift" required onchange="updateTargetCalculation()"> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (480 menit)</option> <option value="Shift 2">Shift 2 (480 menit)</option> <option value="Shift 3">Shift 3 (480 menit)</option> <option value="Long Shift">Long Shift (720 menit)</option> </select>
+       </div>
+       <div class="input-group"><label for="oeeMachine">Pilih Mesin *</label> <select id="oeeMachine" required onchange="loadMachineTemplate()"> <option value="">-- Pilih Mesin --</option> </select>
+       </div>
+       <div class="input-group"><label for="oeePIC">Inisial PIC *</label> <input type="text" id="oeePIC" required oninput="this.value = this.value.toUpperCase()">
+       </div>
+       <div class="input-group"><label for="oeeProduct">Kode Produk *</label> <input type="text" id="oeeProduct" required oninput="this.value = this.value.toUpperCase()">
+       </div>
+       <div class="input-group"><label for="oeeBatch">Batch Number *</label> <input type="text" id="oeeBatch" required oninput="this.value = this.value.toUpperCase()">
+       </div>
+      </div>
+     </div><!-- ODT Section -->
+     <div id="odtSection" class="form-section">
+      <h3>⏱️ ODT yang Digunakan</h3>
+      <div id="odtCheckboxContainer"></div>
+     </div><!-- Line Stop Mesin Section -->
+     <div id="lineStopMesinSection" class="form-section">
+      <h3>🔧 Line Stop Mesin (menit)</h3>
+      <div id="lineStopMesinInputContainer"></div>
+     </div><!-- Line Stop Non Mesin Section -->
+     <div id="lineStopNonMesinSection" class="form-section">
+      <h3>⚠️ Line Stop Non Mesin (menit)</h3>
+      <div id="lineStopNonMesinInputContainer"></div>
+     </div><!-- Minor Stop Section -->
+     <div id="minorStopSection" class="form-section">
+      <h3>🔄 Minor Stop (frekuensi)</h3>
+      <div id="minorStopInputContainer"></div>
+     </div><!-- Target Calculation -->
+     <div class="form-section">
+      <h3>🎯 Perhitungan Target</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+       <div class="input-group"><label>Target per Menit</label> <input type="text" id="targetPerMinute" readonly class="bg-gray-100">
+       </div>
+       <div class="input-group"><label>Durasi Shift (menit)</label> <input type="text" id="shiftDuration" readonly class="bg-gray-100">
+       </div>
+       <div class="input-group"><label>Total ODT (menit)</label> <input type="text" id="totalODT" readonly class="bg-gray-100">
+       </div>
+       <div class="input-group"><label>Total Line Stop (menit)</label> <input type="text" id="totalLineStop" readonly class="bg-gray-100">
+       </div>
+      </div>
+      <div class="input-group"><label>Target Output Aktual</label> <input type="text" id="targetOutput" readonly class="bg-gray-100 text-lg font-bold">
+      </div>
+     </div><!-- Output Section -->
+     <div class="form-section">
+      <h3>📊 Output &amp; Reject</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+       <div class="input-group"><label for="actualOutput">Jumlah Output (butir) *</label> <input type="number" id="actualOutput" required onchange="calculateOEE()">
+       </div>
+       <div class="input-group"><label for="rejectOutput">Jumlah Reject (butir) *</label> <input type="number" id="rejectOutput" required onchange="calculateOEE()">
+       </div>
+      </div>
+     </div><!-- OEE Preview -->
+     <div id="oeePreview" class="preview-box">
+      <h3 class="text-xl font-bold mb-4">🎯 Preview OEE</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+       <div class="preview-item"><span>Availability:</span> <span id="previewA">0%</span>
+       </div>
+       <div class="preview-item"><span>Performance:</span> <span id="previewP">0%</span>
+       </div>
+       <div class="preview-item"><span>Quality:</span> <span id="previewQ">0%</span>
+       </div>
+       <div class="preview-item"><span><strong>OEE:</strong></span> <span id="previewOEE"><strong>0%</strong></span>
+       </div>
+      </div>
+     </div><!-- WR Section (conditional) -->
+     <div id="wrSection" class="wr-section hidden">
+      <h3>📋 Work Request (WR)</h3>
+      <p class="text-sm text-amber-700 mb-3">⚠️ Total Line Stop Mesin lebih dari 179 menit. Nomor WR wajib diisi.</p>
+      <div class="input-group"><label for="wrNumber">Nomor WR *</label> <input type="text" id="wrNumber" oninput="this.value = this.value.toUpperCase()">
+      </div>
+     </div>
+     <div class="text-center"><button type="submit" class="btn-primary text-lg px-8 py-3">💾 Simpan Data OEE</button>
+     </div>
+    </form>
+   </div>
+  </div><!-- History Tab -->
+  <div id="history" class="tab-content hidden">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">📋 History Data OEE</h1><!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+     <h2 class="text-xl font-semibold mb-4">🔍 Filter Data</h2>
+     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Dari Tanggal</label> <input type="date" id="historyFromDate" class="w-full p-2 border border-gray-300 rounded-md">
+      </div>
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Sampai Tanggal</label> <input type="date" id="historyToDate" class="w-full p-2 border border-gray-300 rounded-md">
+      </div>
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Pilih Mesin</label> <select id="historyMachineFilter" class="w-full p-2 border border-gray-300 rounded-md"> <option value="all">Semua Mesin</option> </select>
+      </div>
+      <div class="flex items-end"><button onclick="resetHistoryFilter()" class="btn-primary w-full">Reset Filter</button>
+      </div>
+     </div>
+     <div class="mt-4">
+      <p class="text-sm text-gray-600" id="historyInfo">Menampilkan semua data</p>
+     </div>
+    </div><!-- History Table -->
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>Tanggal</th>
+        <th>Mesin</th>
+        <th>Shift</th>
+        <th>PIC</th>
+        <th>Output</th>
+        <th>Reject</th>
+        <th>OEE (%)</th>
+        <th>A (%)</th>
+        <th>P (%)</th>
+        <th>Q (%)</th>
+        <th>ODT</th>
+        <th>LS Mesin</th>
+        <th>LS Non Mesin</th>
+        <th>Minor Stop</th>
+        <th>Frek MS</th>
+        <th>WR</th>
+       </tr>
+      </thead>
+      <tbody id="historyTableBody">
+       <tr>
+        <td colspan="16" class="text-center text-gray-500">Tidak ada data</td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+  </div><!-- Download Tab -->
+  <div id="download" class="tab-content hidden">
+   <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">💾 Download Data</h1><!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+     <h2 class="text-xl font-semibold mb-4">🔍 Filter Data untuk Download</h2>
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Dari Tanggal</label> <input type="date" id="downloadFromDate" class="w-full p-2 border border-gray-300 rounded-md">
+      </div>
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Sampai Tanggal</label> <input type="date" id="downloadToDate" class="w-full p-2 border border-gray-300 rounded-md">
+      </div>
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Pilih Mesin</label> <select id="downloadMachineFilter" class="w-full p-2 border border-gray-300 rounded-md"> <option value="all">Semua Mesin</option> </select>
+      </div>
+     </div>
+     <div class="mt-4">
+      <p class="text-sm text-gray-600" id="downloadInfo">Siap untuk download semua data</p>
+     </div>
+    </div><!-- Download Buttons -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+     <h2 class="text-xl font-semibold mb-4">📥 Download Options</h2>
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><button onclick="downloadCSV()" class="btn-primary text-lg py-4"> 📄 Download CSV </button> <button onclick="downloadExcel()" class="btn-primary text-lg py-4"> 📊 Download Excel </button>
+     </div>
+     <div class="mt-4 text-sm text-gray-600">
+      <p>• CSV: Format universal yang bisa dibuka di Excel, Google Sheets, atau text editor</p>
+      <p>• Excel: Format khusus Excel dengan formatting yang preserved</p>
      </div>
     </div>
    </div>
   </div>
   <script>
-    // ===== PASSWORD CONFIGURATION =====
-    const MACHINE_PASSWORD = 'cimenG90'; // GANTI INI DI GITHUB!
-
-    // ===== DEMO MODE CONFIGURATION =====
-    const DEMO_MODE = false;
-    const SUPABASE_URL = 'https://xgnaukbzfxvenieavkmq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbmF1a2J6Znh2ZW5pZWF2a21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MjA3NjQsImV4cCI6MjA3ODQ5Njc2NH0.gASmwrimGIDCi3TK277DxZoEF-Nos8v8MFq9_cUuR0o';
-    
-    let supabase = null;
-    if (!DEMO_MODE && typeof window.supabase !== 'undefined') {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-
-    // ===== GLOBAL STATE =====
+    // Global variables
+    let machines = JSON.parse(localStorage.getItem('oee_machines') || '[]');
+    let oeeData = JSON.parse(localStorage.getItem('oee_data') || '[]');
     let currentTab = 'dashboard';
-    let mesinMode = 'create';
-    let editingMesinId = null;
-    let allMachines = [];
-    let allOEERecords = [];
-    let filteredOEERecords = [];
-    let odtCounter = 1;
-    let lsMesinCounter = 1;
-    let lsNonMesinCounter = 1;
-    let minorStopCounter = 1;
     let charts = {};
     
-    // ===== DEMO DATA =====
-    let demoMachines = [
-      {
-        id: '1',
-        mesin_nama: 'JCMCO 29',
-        area: 'INJEKSI',
-        target_output: 2,
-        pic_inisial: 'JD',
-        odt_items: [
-          { name: 'SETUP MESIN', time: 30 },
-          { name: 'GANTI MOLD', time: 45 }
-        ],
-        line_stop_mesin_items: ['KERUSAKAN HYDRAULIC', 'SENSOR ERROR'],
-        line_stop_non_mesin_items: ['LISTRIK MATI', 'MATERIAL HABIS'],
-        minor_stop_items: ['CLEANING', 'ADJUSTMENT'],
-        is_active: true
-      },
-      {
-        id: '2',
-        mesin_nama: 'INJECTION MOLDING 2',
-        area: 'INJEKSI',
-        target_output: 2.5,
-        pic_inisial: 'AS',
-        odt_items: [
-          { name: 'SETUP MESIN', time: 25 },
-          { name: 'GANTI MOLD', time: 40 }
-        ],
-        line_stop_mesin_items: ['KERUSAKAN MOTOR', 'HEATING ERROR'],
-        line_stop_non_mesin_items: ['MATERIAL DELAY', 'QC HOLD'],
-        minor_stop_items: ['CLEANING', 'INSPECTION'],
-        is_active: true
-      }
-    ];
+    // Password untuk input mesin
+    const MACHINE_PASSWORD = 'admin123';
     
-    let demoOEERecords = [
-      {
-        id: '1',
-        mesin_nama: 'JCMCO 29',
-        area: 'INJEKSI',
-        pic_inisial: 'JD',
-        shift: 'Shift 1',
-        shift_duration: 480,
-        kode_produk: 'PRD-001',
-        batch_number: 'BATCH-2024-001',
-        jumlah_output: 950,
-        jumlah_reject: 50,
-        target_output: 1000,
-        odt_items: [{ name: 'SETUP MESIN', standard: 30, actual: 30 }],
-        line_stop_mesin_items: [{ name: 'KERUSAKAN HYDRAULIC', time: 20 }],
-        line_stop_non_mesin_items: [{ name: 'MATERIAL HABIS', time: 15 }],
-        minor_stop_items: [{ name: 'CLEANING', frequency: 3 }],
-        minor_stop_frequency: null,
-        wr_number: null,
-        availability: '85.42',
-        performance: '95.00',
-        quality: '94.74',
-        oee: '76.88',
-        tanggal_produksi: '2024-01-15'
-      },
-      {
-        id: '2',
-        mesin_nama: 'INJECTION MOLDING 2',
-        area: 'INJEKSI',
-        pic_inisial: 'AS',
-        shift: 'Shift 2',
-        shift_duration: 480,
-        kode_produk: 'PRD-002',
-        batch_number: 'BATCH-2024-002',
-        jumlah_output: 1150,
-        jumlah_reject: 30,
-        target_output: 1200,
-        odt_items: [{ name: 'SETUP MESIN', standard: 25, actual: 25 }],
-        line_stop_mesin_items: [{ name: 'HEATING ERROR', time: 10 }],
-        line_stop_non_mesin_items: [{ name: 'QC HOLD', time: 12 }],
-        minor_stop_items: [{ name: 'INSPECTION', frequency: 2 }],
-        minor_stop_frequency: null,
-        wr_number: null,
-        availability: '90.21',
-        performance: '95.83',
-        quality: '97.39',
-        oee: '84.21',
-        tanggal_produksi: '2024-01-16'
-      },
-      {
-        id: '3',
-        mesin_nama: 'JCMCO 29',
-        area: 'INJEKSI',
-        pic_inisial: 'JD',
-        shift: 'Shift 1',
-        shift_duration: 480,
-        kode_produk: 'PRD-001',
-        batch_number: 'BATCH-2024-003',
-        jumlah_output: 980,
-        jumlah_reject: 20,
-        target_output: 1000,
-        odt_items: [{ name: 'GANTI MOLD', standard: 45, actual: 45 }],
-        line_stop_mesin_items: [{ name: 'SENSOR ERROR', time: 15 }],
-        line_stop_non_mesin_items: [{ name: 'LISTRIK MATI', time: 25 }],
-        minor_stop_items: [{ name: 'ADJUSTMENT', frequency: 4 }],
-        minor_stop_frequency: null,
-        wr_number: null,
-        availability: '82.29',
-        performance: '98.00',
-        quality: '97.96',
-        oee: '79.01',
-        tanggal_produksi: '2024-01-17'
-      }
-    ];
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://your-project.supabase.co';
+    const SUPABASE_ANON_KEY = 'your-anon-key';
     
-    let nextMachineId = 3;
-    let nextOEEId = 4;
-
-    // ===== AUTO UPPERCASE FUNCTION =====
-    function makeUppercase(event) {
-      event.target.value = event.target.value.toUpperCase();
+    // Supabase Client (Simple implementation)
+    const supabase = {
+      async insert(table, data) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(data)
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          console.log(`✅ Data berhasil disimpan ke Supabase table: ${table}`);
+          return { success: true };
+        } catch (error) {
+          console.error(`❌ Error saving to Supabase:`, error);
+          return { success: false, error: error.message };
+        }
+      },
+      
+      async select(table, query = '') {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log(`✅ Data berhasil diambil dari Supabase table: ${table}`);
+          return { success: true, data };
+        } catch (error) {
+          console.error(`❌ Error fetching from Supabase:`, error);
+          return { success: false, error: error.message };
+        }
+      }
+    };
+    
+    // Sync functions
+    async function syncToSupabase(type, data) {
+      if (type === 'machine') {
+        return await supabase.insert('machines', {
+          machine_id: data.id,
+          name: data.name,
+          area: data.area,
+          target_per_minute: data.targetPerMinute,
+          pic: data.pic,
+          odt: JSON.stringify(data.odt),
+          line_stop_mesin: JSON.stringify(data.lineStopMesin),
+          line_stop_non_mesin: JSON.stringify(data.lineStopNonMesin),
+          minor_stop: JSON.stringify(data.minorStop),
+          created_at: new Date().toISOString()
+        });
+      } else if (type === 'oee') {
+        return await supabase.insert('oee_records', {
+          record_id: data.id,
+          tanggal: data.tanggal,
+          mesin: data.mesin,
+          shift: data.shift,
+          pic: data.pic,
+          kode_produk: data.kodeProduk,
+          batch_number: data.batchNumber,
+          target_per_minute: data.targetPerMinute,
+          shift_duration: data.shiftDuration,
+          total_odt: data.totalODT,
+          total_line_stop: data.totalLineStop,
+          target_output: data.targetOutput,
+          actual_output: data.actualOutput,
+          reject_output: data.rejectOutput,
+          availability: data.availability,
+          performance: data.performance,
+          quality: data.quality,
+          oee: data.oee,
+          wr_number: data.wrNumber,
+          odt_data: JSON.stringify(data.odt),
+          line_stop_mesin_data: JSON.stringify(data.lineStopMesin),
+          line_stop_non_mesin_data: JSON.stringify(data.lineStopNonMesin),
+          minor_stop_data: JSON.stringify(data.minorStop),
+          created_at: new Date().toISOString()
+        });
+      }
     }
 
-    // Add event listeners to all uppercase inputs
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.uppercase-input').forEach(input => {
-        input.addEventListener('input', makeUppercase);
-      });
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default dates
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('oeeDate').value = today;
+      
+      // Load machines to dropdowns
+      loadMachinesToDropdowns();
+      
+      // Load dashboard
+      loadDashboard();
+      
+      // Event listeners untuk filter dashboard
+      document.getElementById('dashboardFromDate').addEventListener('change', loadDashboard);
+      document.getElementById('dashboardToDate').addEventListener('change', loadDashboard);
+      document.getElementById('dashboardMachineFilter').addEventListener('change', loadDashboard);
+      
+      // Event listeners untuk filter history
+      document.getElementById('historyFromDate').addEventListener('change', filterHistoryData);
+      document.getElementById('historyToDate').addEventListener('change', filterHistoryData);
+      document.getElementById('historyMachineFilter').addEventListener('change', filterHistoryData);
+      
+      // Event listeners untuk filter download
+      document.getElementById('downloadFromDate').addEventListener('change', updateDownloadInfo);
+      document.getElementById('downloadToDate').addEventListener('change', updateDownloadInfo);
+      document.getElementById('downloadMachineFilter').addEventListener('change', updateDownloadInfo);
+      
+      // Load history data
+      loadHistoryData();
     });
 
-    // ===== ELEMENT SDK CONFIGURATION =====
-    const defaultConfig = {
-      app_title: 'Sistem OEE Manufacturing',
-      company_name: 'PT. Manufacturing Indonesia',
-      primary_color: '#667eea',
-      secondary_color: '#764ba2',
-      accent_color: '#f093fb',
-      text_color: '#374151',
-      background_gradient_start: '#667eea',
-      background_gradient_end: '#764ba2'
-    };
-
-    async function onConfigChange(config) {
-      const appTitle = config.app_title || defaultConfig.app_title;
-      const companyName = config.company_name || defaultConfig.company_name;
-      
-      document.getElementById('appTitle').textContent = appTitle;
-      document.getElementById('companyName').textContent = companyName;
-      
-      const primaryColor = config.primary_color || defaultConfig.primary_color;
-      const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
-      
-      document.body.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
-    }
-
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig,
-        onConfigChange,
-        mapToCapabilities: (config) => ({
-          recolorables: [
-            {
-              get: () => config.primary_color || defaultConfig.primary_color,
-              set: (value) => {
-                config.primary_color = value;
-                window.elementSdk.setConfig({ primary_color: value });
-              }
-            },
-            {
-              get: () => config.secondary_color || defaultConfig.secondary_color,
-              set: (value) => {
-                config.secondary_color = value;
-                window.elementSdk.setConfig({ secondary_color: value });
-              }
-            }
-          ],
-          borderables: [],
-          fontEditable: undefined,
-          fontSizeable: undefined
-        }),
-        mapToEditPanelValues: (config) => new Map([
-          ['app_title', config.app_title || defaultConfig.app_title],
-          ['company_name', config.company_name || defaultConfig.company_name]
-        ])
-      });
-    }
-
-    // ===== TAB MANAGEMENT =====
-    function switchTab(tabName) {
-      console.log('Switching to tab:', tabName);
-      currentTab = tabName;
-      
+    // Tab Management
+    function showTab(tabName) {
       // Hide all tabs
-      const allTabs = ['dashboardTab', 'inputMesinTab', 'inputOEETab', 'historyTab', 'downloadTab'];
-      allTabs.forEach(tabId => {
-        const el = document.getElementById(tabId);
-        if (el) el.classList.add('hidden');
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
       });
       
-      // Remove active from all buttons
-      document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+      // Remove active class from all buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
       
       // Show selected tab
-      const tabElement = document.getElementById(tabName + 'Tab');
-      if (tabElement) {
-        tabElement.classList.remove('hidden');
-        console.log('Tab shown:', tabName + 'Tab');
-      } else {
-        console.error('Tab not found:', tabName + 'Tab');
-      }
+      document.getElementById(tabName).classList.remove('hidden');
       
-      // Activate button by finding the one that calls this tab
-      const buttons = document.querySelectorAll('.tab-button');
-      buttons.forEach(btn => {
-        const onclick = btn.getAttribute('onclick');
-        if (onclick && onclick.includes(`'${tabName}'`)) {
-          btn.classList.add('active');
-        }
-      });
+      // Add active class to clicked button
+      event.target.classList.add('active');
+      
+      currentTab = tabName;
       
       // Load data for specific tabs
       if (tabName === 'dashboard') {
         loadDashboard();
-      } else if (tabName === 'inputOEE') {
-        loadMachinesForOEE();
       } else if (tabName === 'history') {
-        loadHistory();
-      } else if (tabName === 'download') {
-        loadDownloadTab();
+        loadHistoryData();
+      } else if (tabName === 'input-mesin') {
+        loadEditMachineOptions();
+      } else if (tabName === 'input-oee') {
+        loadMachinesToDropdowns();
       }
     }
 
-    // ===== INPUT MESIN FUNCTIONS =====
-    function setMesinMode(mode) {
-      mesinMode = mode;
+    // Machine Management
+    function toggleEditMode() {
+      const toggle = document.getElementById('editModeToggle');
+      const selector = document.getElementById('editModeSelector');
+      const saveButton = document.getElementById('saveButtonText');
       
-      if (mode === 'create') {
-        document.getElementById('btnCreateMode').classList.add('active');
-        document.getElementById('btnEditMode').classList.remove('active');
-        document.getElementById('editMesinSelector').classList.add('hidden');
-        resetMesinForm();
-        document.getElementById('btnSaveMesin').textContent = '💾 Simpan Mesin';
+      if (toggle.checked) {
+        selector.classList.remove('hidden');
+        saveButton.textContent = 'Update Mesin';
+        loadEditMachineOptions();
       } else {
-        document.getElementById('btnEditMode').classList.add('active');
-        document.getElementById('btnCreateMode').classList.remove('active');
-        document.getElementById('editMesinSelector').classList.remove('hidden');
-        loadMachinesForEdit();
-        document.getElementById('btnSaveMesin').textContent = '✏️ Update Mesin';
+        selector.classList.add('hidden');
+        saveButton.textContent = 'Simpan Mesin';
+        resetMachineForm();
       }
     }
 
-    async function loadMachinesForEdit() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = demoMachines.filter(m => m.is_active);
-      } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
-        if (result.error) {
-          console.error('Error loading machines:', result.error);
-          return;
-        }
-        data = result.data;
-      }
-      
-      const select = document.getElementById('selectEditMesin');
+    function loadEditMachineOptions() {
+      const select = document.getElementById('editMachineSelect');
       select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
-      
-      data.forEach(machine => {
-        const option = document.createElement('option');
-        option.value = machine.id;
-        option.textContent = machine.mesin_nama;
-        select.appendChild(option);
-      });
-    }
-
-    async function loadMesinForEdit() {
-      const selectedId = document.getElementById('selectEditMesin').value;
-      
-      if (!selectedId) {
-        resetMesinForm();
-        return;
-      }
-      
-      let data;
-      
-      if (DEMO_MODE) {
-        data = demoMachines.find(m => m.id === selectedId);
-        if (!data) {
-          console.error('Machine not found');
-          return;
-        }
-      } else {
-        const result = await supabase.from('machines').select('*').eq('id', selectedId).single();
-        if (result.error) {
-          console.error('Error loading machine:', result.error);
-          return;
-        }
-        data = result.data;
-      }
-      
-      editingMesinId = data.id;
-      
-      document.getElementById('mesinNama').value = data.mesin_nama;
-      document.getElementById('mesinArea').value = data.area;
-      document.getElementById('mesinTarget').value = data.target_output;
-      document.getElementById('mesinPIC').value = data.pic_inisial;
-      
-      // Load ODT items
-      const odtList = document.getElementById('odtList');
-      odtList.innerHTML = '';
-      odtCounter = 0;
-      (data.odt_items || []).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'odt-item';
-        div.innerHTML = `
-          <input type="text" class="input-field uppercase-input" placeholder="Nama ODT" id="odtName${odtCounter}" value="${item.name}">
-          <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime${odtCounter}" value="${item.time}">
-          <span></span>
-          <button type="button" class="btn-danger" onclick="removeODT(${odtCounter})">❌</button>
-        `;
-        odtList.appendChild(div);
-        document.getElementById(`odtName${odtCounter}`).addEventListener('input', makeUppercase);
-        odtCounter++;
-      });
-      
-      // Load LS Mesin
-      const lsMesinList = document.getElementById('lsMesinList');
-      lsMesinList.innerHTML = '';
-      lsMesinCounter = 0;
-      (data.line_stop_mesin_items || []).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin${lsMesinCounter}" value="${item}">
-          <button type="button" class="btn-danger" onclick="removeLSMesin(${lsMesinCounter})">❌</button>
-        `;
-        lsMesinList.appendChild(div);
-        document.getElementById(`lsMesin${lsMesinCounter}`).addEventListener('input', makeUppercase);
-        lsMesinCounter++;
-      });
-      
-      // Load LS Non Mesin
-      const lsNonMesinList = document.getElementById('lsNonMesinList');
-      lsNonMesinList.innerHTML = '';
-      lsNonMesinCounter = 0;
-      (data.line_stop_non_mesin_items || []).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin${lsNonMesinCounter}" value="${item}">
-          <button type="button" class="btn-danger" onclick="removeLSNonMesin(${lsNonMesinCounter})">❌</button>
-        `;
-        lsNonMesinList.appendChild(div);
-        document.getElementById(`lsNonMesin${lsNonMesinCounter}`).addEventListener('input', makeUppercase);
-        lsNonMesinCounter++;
-      });
-      
-      // Load Minor Stop
-      const minorStopList = document.getElementById('minorStopList');
-      minorStopList.innerHTML = '';
-      minorStopCounter = 0;
-      (data.minor_stop_items || []).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Minor Stop" id="minorStop${minorStopCounter}" value="${item}">
-          <button type="button" class="btn-danger" onclick="removeMinorStop(${minorStopCounter})">❌</button>
-        `;
-        minorStopList.appendChild(div);
-        document.getElementById(`minorStop${minorStopCounter}`).addEventListener('input', makeUppercase);
-        minorStopCounter++;
-      });
-    }
-
-    function resetMesinForm() {
-      document.getElementById('formInputMesin').reset();
-      editingMesinId = null;
-      
-      // Reset ODT
-      document.getElementById('odtList').innerHTML = `
-        <div class="odt-item">
-          <input type="text" class="input-field uppercase-input" placeholder="Nama ODT" id="odtName0">
-          <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime0">
-          <span></span>
-          <button type="button" class="btn-danger" onclick="removeODT(0)">❌</button>
-        </div>
-      `;
-      document.getElementById('odtName0').addEventListener('input', makeUppercase);
-      odtCounter = 1;
-      
-      // Reset LS Mesin
-      document.getElementById('lsMesinList').innerHTML = `
-        <div class="dynamic-item">
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin0">
-          <button type="button" class="btn-danger" onclick="removeLSMesin(0)">❌</button>
-        </div>
-      `;
-      document.getElementById('lsMesin0').addEventListener('input', makeUppercase);
-      lsMesinCounter = 1;
-      
-      // Reset LS Non Mesin
-      document.getElementById('lsNonMesinList').innerHTML = `
-        <div class="dynamic-item">
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin0">
-          <button type="button" class="btn-danger" onclick="removeLSNonMesin(0)">❌</button>
-        </div>
-      `;
-      document.getElementById('lsNonMesin0').addEventListener('input', makeUppercase);
-      lsNonMesinCounter = 1;
-      
-      // Reset Minor Stop
-      document.getElementById('minorStopList').innerHTML = `
-        <div class="dynamic-item">
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Minor Stop" id="minorStop0">
-          <button type="button" class="btn-danger" onclick="removeMinorStop(0)">❌</button>
-        </div>
-      `;
-      document.getElementById('minorStop0').addEventListener('input', makeUppercase);
-      minorStopCounter = 1;
-    }
-
-    function addODT() {
-      const list = document.getElementById('odtList');
-      const div = document.createElement('div');
-      div.className = 'odt-item';
-      div.innerHTML = `
-        <input type="text" class="input-field uppercase-input" placeholder="Nama ODT" id="odtName${odtCounter}">
-        <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime${odtCounter}">
-        <span></span>
-        <button type="button" class="btn-danger" onclick="removeODT(${odtCounter})">❌</button>
-      `;
-      list.appendChild(div);
-      document.getElementById(`odtName${odtCounter}`).addEventListener('input', makeUppercase);
-      odtCounter++;
-    }
-
-    function removeODT(index) {
-      const element = document.getElementById(`odtName${index}`).parentElement;
-      element.remove();
-    }
-
-    function addLSMesin() {
-      const list = document.getElementById('lsMesinList');
-      const div = document.createElement('div');
-      div.className = 'dynamic-item';
-      div.innerHTML = `
-        <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin${lsMesinCounter}">
-        <button type="button" class="btn-danger" onclick="removeLSMesin(${lsMesinCounter})">❌</button>
-      `;
-      list.appendChild(div);
-      document.getElementById(`lsMesin${lsMesinCounter}`).addEventListener('input', makeUppercase);
-      lsMesinCounter++;
-    }
-
-    function removeLSMesin(index) {
-      const element = document.getElementById(`lsMesin${index}`).parentElement;
-      element.remove();
-    }
-
-    function addLSNonMesin() {
-      const list = document.getElementById('lsNonMesinList');
-      const div = document.createElement('div');
-      div.className = 'dynamic-item';
-      div.innerHTML = `
-        <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin${lsNonMesinCounter}">
-        <button type="button" class="btn-danger" onclick="removeLSNonMesin(${lsNonMesinCounter})">❌</button>
-      `;
-      list.appendChild(div);
-      document.getElementById(`lsNonMesin${lsNonMesinCounter}`).addEventListener('input', makeUppercase);
-      lsNonMesinCounter++;
-    }
-
-    function removeLSNonMesin(index) {
-      const element = document.getElementById(`lsNonMesin${index}`).parentElement;
-      element.remove();
-    }
-
-    function addMinorStop() {
-      const list = document.getElementById('minorStopList');
-      const div = document.createElement('div');
-      div.className = 'dynamic-item';
-      div.innerHTML = `
-        <input type="text" class="input-field uppercase-input" placeholder="Nama Minor Stop" id="minorStop${minorStopCounter}">
-        <button type="button" class="btn-danger" onclick="removeMinorStop(${minorStopCounter})">❌</button>
-      `;
-      list.appendChild(div);
-      document.getElementById(`minorStop${minorStopCounter}`).addEventListener('input', makeUppercase);
-      minorStopCounter++;
-    }
-
-    function removeMinorStop(index) {
-      const element = document.getElementById(`minorStop${index}`).parentElement;
-      element.remove();
-    }
-
-    async function saveMesin(event) {
-      event.preventDefault();
-      
-      // Check password
-      const password = document.getElementById('mesinPassword').value;
-      if (password !== MACHINE_PASSWORD) {
-        alert('❌ KATA SANDI SALAH! Akses ditolak.');
-        return;
-      }
-      
-      const mesinNama = document.getElementById('mesinNama').value.toUpperCase();
-      const mesinArea = document.getElementById('mesinArea').value;
-      const mesinTarget = parseFloat(document.getElementById('mesinTarget').value);
-      const mesinPIC = document.getElementById('mesinPIC').value.toUpperCase();
-      
-      // Collect ODT items - scan ALL possible indices
-      const odtItems = [];
-      const odtElements = document.querySelectorAll('[id^="odtName"]');
-      odtElements.forEach(nameEl => {
-        const index = nameEl.id.replace('odtName', '');
-        const timeEl = document.getElementById(`odtTime${index}`);
-        if (nameEl.value && timeEl && timeEl.value) {
-          odtItems.push({
-            name: nameEl.value.toUpperCase(),
-            time: parseInt(timeEl.value)
-          });
-        }
-      });
-      
-      // Collect LS Mesin - scan ALL possible indices
-      const lsMesinItems = [];
-      const lsMesinElements = document.querySelectorAll('[id^="lsMesin"]');
-      lsMesinElements.forEach(el => {
-        if (el.value) {
-          lsMesinItems.push(el.value.toUpperCase());
-        }
-      });
-      
-      // Collect LS Non Mesin - scan ALL possible indices
-      const lsNonMesinItems = [];
-      const lsNonMesinElements = document.querySelectorAll('[id^="lsNonMesin"]');
-      lsNonMesinElements.forEach(el => {
-        if (el.value) {
-          lsNonMesinItems.push(el.value.toUpperCase());
-        }
-      });
-      
-      // Collect Minor Stop - scan ALL possible indices
-      const minorStopItems = [];
-      const minorStopElements = document.querySelectorAll('[id^="minorStop"]');
-      minorStopElements.forEach(el => {
-        if (el.value) {
-          minorStopItems.push(el.value.toUpperCase());
-        }
-      });
-      
-      // Generate mesin_id from mesin_nama (remove spaces, uppercase)
-      const mesinId = mesinNama.replace(/\s+/g, '_').toUpperCase();
-      
-      const machineData = {
-        mesin_id: mesinId,
-        mesin_nama: mesinNama,
-        area: mesinArea,
-        target_output: mesinTarget,
-        pic_inisial: mesinPIC,
-        odt_items: odtItems,
-        line_stop_mesin_items: lsMesinItems,
-        line_stop_non_mesin_items: lsNonMesinItems,
-        minor_stop_items: minorStopItems,
-        is_active: true
-      };
-      
-      if (DEMO_MODE) {
-        if (mesinMode === 'edit' && editingMesinId) {
-          const index = demoMachines.findIndex(m => m.id === editingMesinId);
-          if (index !== -1) {
-            demoMachines[index] = { ...machineData, id: editingMesinId };
-          }
-        } else {
-          demoMachines.push({ ...machineData, id: String(nextMachineId++) });
-        }
-      } else {
-        let result;
-        if (mesinMode === 'edit' && editingMesinId) {
-          result = await supabase.from('machines').update(machineData).eq('id', editingMesinId);
-          console.log('Update result:', result);
-        } else {
-          result = await supabase.from('machines').insert([machineData]);
-          console.log('Insert result:', result);
-        }
-        
-        if (result.error) {
-          alert('Error menyimpan data mesin: ' + result.error.message);
-          console.error('Supabase error:', result.error);
-          return;
-        }
-      }
-      
-      alert(mesinMode === 'edit' ? '✅ Mesin berhasil diupdate!' : '✅ Mesin berhasil disimpan!');
-      resetMesinForm();
-      
-      if (mesinMode === 'edit') {
-        loadMachinesForEdit();
-      }
-    }
-
-    // ===== INPUT OEE FUNCTIONS =====
-    async function loadMachinesForOEE() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = demoMachines.filter(m => m.is_active);
-      } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
-        if (result.error) {
-          console.error('Error loading machines:', result.error);
-          return;
-        }
-        data = result.data;
-      }
-      
-      allMachines = data;
-      
-      const select = document.getElementById('oeeSelectMesin');
-      select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
-      
-      data.forEach(machine => {
-        const option = document.createElement('option');
-        option.value = machine.id;
-        option.textContent = machine.mesin_nama;
-        select.appendChild(option);
-      });
-    }
-
-    function loadMesinData() {
-      const selectedId = document.getElementById('oeeSelectMesin').value;
-      
-      if (!selectedId) {
-        document.getElementById('oeeODTList').innerHTML = '';
-        document.getElementById('oeeLSMesinList').innerHTML = '';
-        document.getElementById('oeeLSNonMesinList').innerHTML = '';
-        document.getElementById('oeeMinorStopList').innerHTML = '';
-        document.getElementById('targetOutputInfo').style.display = 'none';
-        return;
-      }
-      
-      const machine = allMachines.find(m => m.id === selectedId);
-      
-      if (!machine) return;
-      
-      // Load ODT with actual time
-      const odtList = document.getElementById('oeeODTList');
-      odtList.innerHTML = '';
-      (machine.odt_items || []).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'odt-item';
-        div.innerHTML = `
-          <input type="checkbox" id="odtCheck${index}" style="width: auto;">
-          <span style="flex: 1;">${item.name} (${item.time} menit)</span>
-          <input type="number" class="input-field" placeholder="Waktu Aktual" id="odtActual${index}" style="width: 120px;">
-          <span></span>
-        `;
-        odtList.appendChild(div);
-      });
-      
-      // Load LS Mesin
-      const lsMesinList = document.getElementById('oeeLSMesinList');
-      lsMesinList.innerHTML = '';
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <span style="flex: 1;">${item}</span>
-          <input type="number" class="input-field" placeholder="Waktu (menit)" id="lsMesinTime${index}" style="width: 150px;">
-        `;
-        lsMesinList.appendChild(div);
-      });
-      
-      // Load LS Non Mesin
-      const lsNonMesinList = document.getElementById('oeeLSNonMesinList');
-      lsNonMesinList.innerHTML = '';
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <span style="flex: 1;">${item}</span>
-          <input type="number" class="input-field" placeholder="Waktu (menit)" id="lsNonMesinTime${index}" style="width: 150px;">
-        `;
-        lsNonMesinList.appendChild(div);
-      });
-      
-      // Load Minor Stop
-      const minorStopList = document.getElementById('oeeMinorStopList');
-      minorStopList.innerHTML = '';
-      (machine.minor_stop_items || []).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <span style="flex: 1;">${item}</span>
-          <input type="number" class="input-field" placeholder="Berapa kali?" id="minorStopFreq${index}" style="width: 150px;" min="0">
-        `;
-        minorStopList.appendChild(div);
-      });
-      
-      // Add event listeners for auto calculation
-      setTimeout(() => {
-        document.getElementById('oeeShift').addEventListener('change', calculateTargetOutput);
-        
-        // Add listeners to all ODT checkboxes and actual time inputs
-        (machine.odt_items || []).forEach((item, index) => {
-          const checkbox = document.getElementById(`odtCheck${index}`);
-          const actualInput = document.getElementById(`odtActual${index}`);
-          if (checkbox) checkbox.addEventListener('change', calculateTargetOutput);
-          if (actualInput) actualInput.addEventListener('input', calculateTargetOutput);
-        });
-        
-        // Add listeners to all LS Mesin time inputs
-        (machine.line_stop_mesin_items || []).forEach((item, index) => {
-          const timeInput = document.getElementById(`lsMesinTime${index}`);
-          if (timeInput) {
-            timeInput.addEventListener('input', calculateTargetOutput);
-            timeInput.addEventListener('input', checkWRRequirement);
-          }
-        });
-        
-        // Add listeners to all LS Non Mesin time inputs
-        (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-          const timeInput = document.getElementById(`lsNonMesinTime${index}`);
-          if (timeInput) timeInput.addEventListener('input', calculateTargetOutput);
-        });
-        
-        // Add listeners to custom LS inputs
-        document.getElementById('customLSMesinTime1').addEventListener('input', calculateTargetOutput);
-        document.getElementById('customLSMesinTime1').addEventListener('input', checkWRRequirement);
-        document.getElementById('customLSMesinTime2').addEventListener('input', calculateTargetOutput);
-        document.getElementById('customLSMesinTime2').addEventListener('input', checkWRRequirement);
-        document.getElementById('customLSNonMesinTime1').addEventListener('input', calculateTargetOutput);
-        document.getElementById('customLSNonMesinTime2').addEventListener('input', calculateTargetOutput);
-        
-        // Add listeners to output and reject for OEE preview
-        document.getElementById('oeeOutput').addEventListener('input', calculateOEEPreview);
-        document.getElementById('oeeReject').addEventListener('input', calculateOEEPreview);
-        
-        // Add listener to check WR requirement
-        setTimeout(() => {
-          checkWRRequirement();
-        }, 200);
-      }, 100);
-    }
-    
-    function checkWRRequirement() {
-      const selectedId = document.getElementById('oeeSelectMesin').value;
-      if (!selectedId) return;
-      
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
-      
-      // Calculate total LS Mesin
-      let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSMesin += time;
-      });
-      
-      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1')?.value || 0);
-      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2')?.value || 0);
-      totalLSMesin += customLSMesinTime1 + customLSMesinTime2;
-      
-      // Show/hide WR section
-      const wrSection = document.getElementById('wrSection');
-      const wrInput = document.getElementById('oeeWRNumber');
-      
-      if (totalLSMesin > 179) {
-        wrSection.classList.remove('hidden');
-        wrInput.required = true;
-      } else {
-        wrSection.classList.add('hidden');
-        wrInput.required = false;
-        wrInput.value = '';
-      }
-    }
-    
-    function calculateTargetOutput() {
-      const selectedId = document.getElementById('oeeSelectMesin').value;
-      if (!selectedId) return;
-      
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
-      
-      const shift = document.getElementById('oeeShift').value;
-      if (!shift) return;
-      
-      // Get shift duration
-      let durasi = 480;
-      if (shift === 'Shift 1') durasi = 510;
-      else if (shift === 'Shift 2') durasi = 450;
-      else if (shift === 'Shift 3') durasi = 510;
-      else if (shift === 'Long Shift Pagi' || shift === 'Long Shift Malam') durasi = 720;
-      
-      // Calculate total ODT
-      let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        if (checked && actual > 0) {
-          totalODT += Math.min(actual, item.time);
-        }
-      });
-      
-      // Calculate total LS Mesin
-      let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSMesin += time;
-      });
-      
-      // Add custom LS Mesin
-      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1')?.value || 0);
-      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2')?.value || 0);
-      totalLSMesin += customLSMesinTime1 + customLSMesinTime2;
-      
-      // Calculate total LS Non Mesin
-      let totalLSNonMesin = 0;
-      
-      // Add ODT overtime
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        if (checked && actual > item.time) {
-          totalLSNonMesin += (actual - item.time);
-        }
-      });
-      
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSNonMesin += time;
-      });
-      
-      // Add custom LS Non Mesin
-      const customLSNonMesinTime1 = parseInt(document.getElementById('customLSNonMesinTime1')?.value || 0);
-      const customLSNonMesinTime2 = parseInt(document.getElementById('customLSNonMesinTime2')?.value || 0);
-      totalLSNonMesin += customLSNonMesinTime1 + customLSNonMesinTime2;
-      
-      // Calculate target output
-      const totalLineStop = totalLSMesin + totalLSNonMesin;
-      const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
-      
-      // Update display
-      document.getElementById('infoTargetPerMinute').textContent = machine.target_output;
-      document.getElementById('infoShiftDuration').textContent = durasi;
-      document.getElementById('infoTotalODT').textContent = totalODT;
-      document.getElementById('infoTotalLineStop').textContent = totalLineStop;
-      document.getElementById('infoTargetOutput').textContent = targetOutput.toLocaleString();
-      document.getElementById('targetOutputInfo').style.display = 'block';
-      
-      // Trigger OEE preview calculation
-      calculateOEEPreview();
-    }
-    
-    function calculateOEEPreview() {
-      const selectedId = document.getElementById('oeeSelectMesin').value;
-      if (!selectedId) return;
-      
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
-      
-      const shift = document.getElementById('oeeShift').value;
-      if (!shift) return;
-      
-      const output = parseInt(document.getElementById('oeeOutput').value || 0);
-      const reject = parseInt(document.getElementById('oeeReject').value || 0);
-      
-      if (output === 0) {
-        document.getElementById('oeePreview').style.display = 'none';
-        return;
-      }
-      
-      // Get shift duration
-      let durasi = 480;
-      if (shift === 'Shift 1') durasi = 510;
-      else if (shift === 'Shift 2') durasi = 450;
-      else if (shift === 'Shift 3') durasi = 510;
-      else if (shift === 'Long Shift Pagi' || shift === 'Long Shift Malam') durasi = 720;
-      
-      // Calculate total ODT
-      let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        if (checked && actual > 0) {
-          totalODT += Math.min(actual, item.time);
-        }
-      });
-      
-      // Calculate total LS Mesin
-      let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSMesin += time;
-      });
-      
-      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1')?.value || 0);
-      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2')?.value || 0);
-      totalLSMesin += customLSMesinTime1 + customLSMesinTime2;
-      
-      // Calculate total LS Non Mesin
-      let totalLSNonMesin = 0;
-      
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        if (checked && actual > item.time) {
-          totalLSNonMesin += (actual - item.time);
-        }
-      });
-      
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSNonMesin += time;
-      });
-      
-      const customLSNonMesinTime1 = parseInt(document.getElementById('customLSNonMesinTime1')?.value || 0);
-      const customLSNonMesinTime2 = parseInt(document.getElementById('customLSNonMesinTime2')?.value || 0);
-      totalLSNonMesin += customLSNonMesinTime1 + customLSNonMesinTime2;
-      
-      // Calculate target output
-      const totalLineStop = totalLSMesin + totalLSNonMesin;
-      const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
-      
-      // Calculate OEE components
-      const runTime = durasi - totalODT - totalLSMesin - totalLSNonMesin;
-      const availability = (runTime / durasi) * 100;
-      
-      const performance = (output / targetOutput) * 100;
-      
-      const goodOutput = output - reject;
-      const quality = output > 0 ? (goodOutput / output) * 100 : 0;
-      
-      const oee = (availability * performance * quality) / 10000;
-      
-      // Update preview display
-      document.getElementById('previewAvailability').textContent = availability.toFixed(2) + '%';
-      document.getElementById('previewPerformance').textContent = performance.toFixed(2) + '%';
-      document.getElementById('previewQuality').textContent = quality.toFixed(2) + '%';
-      document.getElementById('previewOEE').textContent = oee.toFixed(2) + '%';
-      
-      // Show/hide warning
-      if (oee > 100) {
-        document.getElementById('oeeWarning').style.display = 'block';
-        document.getElementById('previewOEE').style.color = '#ef4444';
-      } else {
-        document.getElementById('oeeWarning').style.display = 'none';
-        document.getElementById('previewOEE').style.color = '#22c55e';
-      }
-      
-      document.getElementById('oeePreview').style.display = 'block';
-    }
-
-    async function saveOEE(event) {
-      event.preventDefault();
-      
-      document.getElementById('oeeErrorNotice').classList.add('hidden');
-      
-      const selectedMesinId = document.getElementById('oeeSelectMesin').value;
-      const machine = allMachines.find(m => m.id === selectedMesinId);
-      
-      if (!machine) {
-        alert('Pilih mesin terlebih dahulu');
-        return;
-      }
-      
-      const tanggal = document.getElementById('oeeTanggal').value;
-      const shift = document.getElementById('oeeShift').value;
-      const picInisial = document.getElementById('oeePIC').value.toUpperCase();
-      
-      // Durasi shift otomatis berdasarkan pilihan shift
-      let durasi = 480;
-      if (shift === 'Shift 1') {
-        durasi = 510;
-      } else if (shift === 'Shift 2') {
-        durasi = 450;
-      } else if (shift === 'Shift 3') {
-        durasi = 510;
-      } else if (shift === 'Long Shift Pagi' || shift === 'Long Shift Malam') {
-        durasi = 720;
-      }
-      
-      const kodeProduk = document.getElementById('oeeKodeProduk').value.toUpperCase();
-      const batch = document.getElementById('oeeBatch').value.toUpperCase();
-      const output = parseInt(document.getElementById('oeeOutput').value);
-      const reject = parseInt(document.getElementById('oeeReject').value);
-      
-      // Collect ODT with actual time
-      const odtItems = [];
-      let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        
-        if (checked && actual > 0) {
-          odtItems.push({
-            name: item.name,
-            standard: item.time,
-            actual: actual
-          });
-          totalODT += Math.min(actual, item.time);
-        }
-      });
-      
-      // Collect LS Mesin
-      const lsMesinItems = [];
-      let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
-        if (time > 0) {
-          lsMesinItems.push({ name: item, time: time });
-          totalLSMesin += time;
-        }
-      });
-      
-      // Add custom LS Mesin
-      const customLSMesin1 = document.getElementById('customLSMesin1').value.toUpperCase();
-      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1').value || 0);
-      if (customLSMesin1 && customLSMesinTime1 > 0) {
-        lsMesinItems.push({ name: customLSMesin1, time: customLSMesinTime1 });
-        totalLSMesin += customLSMesinTime1;
-      }
-      
-      const customLSMesin2 = document.getElementById('customLSMesin2').value.toUpperCase();
-      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2').value || 0);
-      if (customLSMesin2 && customLSMesinTime2 > 0) {
-        lsMesinItems.push({ name: customLSMesin2, time: customLSMesinTime2 });
-        totalLSMesin += customLSMesinTime2;
-      }
-      
-      // Collect LS Non Mesin + auto from ODT overtime
-      const lsNonMesinItems = [];
-      let totalLSNonMesin = 0;
-      
-      // Add ODT overtime to LS Non Mesin
-      odtItems.forEach(odt => {
-        if (odt.actual > odt.standard) {
-          const overtime = odt.actual - odt.standard;
-          lsNonMesinItems.push({ name: odt.name, time: overtime });
-          totalLSNonMesin += overtime;
-        }
-      });
-      
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
-        if (time > 0) {
-          lsNonMesinItems.push({ name: item, time: time });
-          totalLSNonMesin += time;
-        }
-      });
-      
-      // Add custom LS Non Mesin
-      const customLSNonMesin1 = document.getElementById('customLSNonMesin1').value.toUpperCase();
-      const customLSNonMesinTime1 = parseInt(document.getElementById('customLSNonMesinTime1').value || 0);
-      if (customLSNonMesin1 && customLSNonMesinTime1 > 0) {
-        lsNonMesinItems.push({ name: customLSNonMesin1, time: customLSNonMesinTime1 });
-        totalLSNonMesin += customLSNonMesinTime1;
-      }
-      
-      const customLSNonMesin2 = document.getElementById('customLSNonMesin2').value.toUpperCase();
-      const customLSNonMesinTime2 = parseInt(document.getElementById('customLSNonMesinTime2').value || 0);
-      if (customLSNonMesin2 && customLSNonMesinTime2 > 0) {
-        lsNonMesinItems.push({ name: customLSNonMesin2, time: customLSNonMesinTime2 });
-        totalLSNonMesin += customLSNonMesinTime2;
-      }
-      
-      // Collect Minor Stop with frequency
-      const minorStopItems = [];
-      (machine.minor_stop_items || []).forEach((item, index) => {
-        const freq = parseInt(document.getElementById(`minorStopFreq${index}`)?.value || 0);
-        if (freq > 0) {
-          minorStopItems.push({ name: item, frequency: freq });
-        }
-      });
-      
-      // Check WR requirement (validation only, not saved to database)
-      if (totalLSMesin > 179) {
-        const wrNumber = document.getElementById('oeeWRNumber').value.toUpperCase();
-        if (!wrNumber) {
-          alert('⚠️ Line Stop Mesin > 179 menit. Nomor WR wajib diisi!');
-          return;
-        }
-      }
-      
-      // Calculate target output automatically
-      const totalLineStop = totalLSMesin + totalLSNonMesin;
-      const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
-      
-      // Calculate OEE
-      const runTime = durasi - totalODT - totalLSMesin - totalLSNonMesin;
-      const availability = (runTime / durasi) * 100;
-      
-      const performance = (output / targetOutput) * 100;
-      
-      const goodOutput = output - reject;
-      const quality = (goodOutput / output) * 100;
-      
-      const oee = (availability * performance * quality) / 10000;
-      
-      // Validate OEE > 100%
-      if (oee > 100) {
-        document.getElementById('oeeErrorNotice').innerHTML = `
-          <strong>⚠️ ERROR: OEE MELEBIHI 100%!</strong><br>
-          OEE Anda: <strong>${oee.toFixed(2)}%</strong><br><br>
-          Kemungkinan penyebab:<br>
-          • Output melebihi target terlalu banyak<br>
-          • Durasi downtime terlalu kecil<br>
-          • Reject terlalu sedikit dibanding output<br><br>
-          <strong>Mohon periksa kembali data input Anda!</strong>
-        `;
-        document.getElementById('oeeErrorNotice').classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      
-      // Get WR Number if applicable
-      const wrNumber = totalLSMesin > 179 ? document.getElementById('oeeWRNumber').value.toUpperCase() : null;
-      
-      const oeeData = {
-        mesin_id: machine.mesin_id,
-        mesin_nama: machine.mesin_nama,
-        area: machine.area,
-        pic_inisial: picInisial,
-        shift: shift,
-        shift_duration: durasi,
-        kode_produk: kodeProduk,
-        batch_number: batch,
-        jumlah_output: output,
-        jumlah_reject: reject,
-        target_output: targetOutput,
-        odt_items: odtItems,
-        line_stop_mesin_items: lsMesinItems,
-        line_stop_non_mesin_items: lsNonMesinItems,
-        minor_stop_items: minorStopItems,
-        wr_number: wrNumber,
-        availability: availability.toFixed(2),
-        performance: performance.toFixed(2),
-        quality: quality.toFixed(2),
-        oee: oee.toFixed(2),
-        tanggal_produksi: tanggal
-      };
-      
-      if (DEMO_MODE) {
-        demoOEERecords.unshift({ ...oeeData, id: String(nextOEEId++) });
-      } else {
-        const { error } = await supabase.from('oee_records').insert([oeeData]);
-        
-        if (error) {
-          alert('Error menyimpan data OEE: ' + error.message);
-          return;
-        }
-      }
-      
-      alert('✅ Data OEE berhasil disimpan!');
-      document.getElementById('formInputOEE').reset();
-      document.getElementById('targetOutputInfo').style.display = 'none';
-      loadMesinData();
-    }
-
-    // ===== DASHBOARD FUNCTIONS =====
-    async function loadDashboard() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = [...demoOEERecords].sort((a, b) => b.tanggal_produksi.localeCompare(a.tanggal_produksi));
-      } else {
-        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
-        if (result.error) {
-          console.error('Error loading OEE records:', result.error);
-          return;
-        }
-        data = result.data;
-      }
-      
-      allOEERecords = data;
-      
-      // Load machines for filter
-      await loadMachinesForDashboardFilter();
-      
-      // Apply filter
-      applyDashboardFilter();
-    }
-    
-    async function loadMachinesForDashboardFilter() {
-      let machines;
-      
-      if (DEMO_MODE) {
-        machines = demoMachines.filter(m => m.is_active);
-      } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
-        if (result.error) {
-          console.error('Error loading machines:', result.error);
-          return;
-        }
-        machines = result.data;
-      }
-      
-      const select = document.getElementById('dashboardFilterMesin');
-      select.innerHTML = '<option value="">-- Semua Mesin --</option>';
       
       machines.forEach(machine => {
         const option = document.createElement('option');
-        option.value = machine.mesin_nama;
-        option.textContent = machine.mesin_nama;
+        option.value = machine.id;
+        option.textContent = machine.name;
         select.appendChild(option);
       });
     }
-    
-    function applyDashboardFilter() {
-      const fromDate = document.getElementById('dashboardFromDate').value;
-      const toDate = document.getElementById('dashboardToDate').value;
-      const mesinFilter = document.getElementById('dashboardFilterMesin').value;
+
+    function loadMachineForEdit() {
+      const machineId = document.getElementById('editMachineSelect').value;
+      if (!machineId) {
+        resetMachineForm();
+        return;
+      }
       
-      let data = [...allOEERecords];
+      const machine = machines.find(m => m.id === machineId);
+      if (!machine) return;
+      
+      // Load basic info
+      document.getElementById('machineName').value = machine.name;
+      document.getElementById('machineArea').value = machine.area;
+      document.getElementById('machineTarget').value = machine.targetPerMinute;
+      document.getElementById('machinePIC').value = machine.pic;
+      
+      // Load ODT items
+      const odtContainer = document.getElementById('odtContainer');
+      odtContainer.innerHTML = '';
+      machine.odt.forEach(item => {
+        addODTItem(item.name, item.standardTime);
+      });
+      
+      // Load Line Stop Mesin items
+      const lsMesinContainer = document.getElementById('lineStopMesinContainer');
+      lsMesinContainer.innerHTML = '';
+      machine.lineStopMesin.forEach(item => {
+        addLineStopMesinItem(item);
+      });
+      
+      // Load Line Stop Non Mesin items
+      const lsNonMesinContainer = document.getElementById('lineStopNonMesinContainer');
+      lsNonMesinContainer.innerHTML = '';
+      machine.lineStopNonMesin.forEach(item => {
+        addLineStopNonMesinItem(item);
+      });
+      
+      // Load Minor Stop items
+      const minorStopContainer = document.getElementById('minorStopContainer');
+      minorStopContainer.innerHTML = '';
+      machine.minorStop.forEach(item => {
+        addMinorStopItem(item);
+      });
+    }
+
+    function resetMachineForm() {
+      document.getElementById('machineForm').reset();
+      document.getElementById('odtContainer').innerHTML = '';
+      document.getElementById('lineStopMesinContainer').innerHTML = '';
+      document.getElementById('lineStopNonMesinContainer').innerHTML = '';
+      document.getElementById('minorStopContainer').innerHTML = '';
+    }
+
+    function addODTItem(name = '', standardTime = '') {
+      const container = document.getElementById('odtContainer');
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 items-end';
+      div.innerHTML = `
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama ODT</label>
+          <input type="text" class="odt-name w-full p-2 border border-gray-300 rounded-md" value="${name}" oninput="this.value = this.value.toUpperCase()">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Waktu Standar (menit)</label>
+          <input type="number" class="odt-time w-full p-2 border border-gray-300 rounded-md" value="${standardTime}">
+        </div>
+        <div>
+          <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-danger">❌</button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    function addLineStopMesinItem(name = '') {
+      const container = document.getElementById('lineStopMesinContainer');
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 items-end';
+      div.innerHTML = `
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Line Stop Mesin</label>
+          <input type="text" class="ls-mesin-name w-full p-2 border border-gray-300 rounded-md" value="${name}" oninput="this.value = this.value.toUpperCase()">
+        </div>
+        <div>
+          <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-danger">❌</button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    function addLineStopNonMesinItem(name = '') {
+      const container = document.getElementById('lineStopNonMesinContainer');
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 items-end';
+      div.innerHTML = `
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Line Stop Non Mesin</label>
+          <input type="text" class="ls-non-mesin-name w-full p-2 border border-gray-300 rounded-md" value="${name}" oninput="this.value = this.value.toUpperCase()">
+        </div>
+        <div>
+          <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-danger">❌</button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    function addMinorStopItem(name = '') {
+      const container = document.getElementById('minorStopContainer');
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 items-end';
+      div.innerHTML = `
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Minor Stop</label>
+          <input type="text" class="minor-stop-name w-full p-2 border border-gray-300 rounded-md" value="${name}" oninput="this.value = this.value.toUpperCase()">
+        </div>
+        <div>
+          <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-danger">❌</button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    function saveMachine(event) {
+      event.preventDefault();
+      
+      const password = document.getElementById('machinePassword').value;
+      if (password !== MACHINE_PASSWORD) {
+        alert('Password salah!');
+        return;
+      }
+      
+      const isEditMode = document.getElementById('editModeToggle').checked;
+      const machineId = isEditMode ? document.getElementById('editMachineSelect').value : Date.now().toString();
+      const machineName = document.getElementById('machineName').value.toUpperCase();
+      
+      // Check for duplicate machine name (only for new machines or when changing name in edit mode)
+      if (!isEditMode) {
+        // New machine - check if name already exists
+        const existingMachine = machines.find(m => m.name === machineName);
+        if (existingMachine) {
+          alert(`Error: Mesin dengan nama "${machineName}" sudah ada!\n\nSilakan gunakan nama yang berbeda atau edit mesin yang sudah ada.`);
+          return;
+        }
+      } else {
+        // Edit mode - check if name exists in other machines (not the current one being edited)
+        const existingMachine = machines.find(m => m.name === machineName && m.id !== machineId);
+        if (existingMachine) {
+          alert(`Error: Mesin dengan nama "${machineName}" sudah ada!\n\nSilakan gunakan nama yang berbeda.`);
+          return;
+        }
+      }
+      
+      // Collect basic info
+      const machineData = {
+        id: machineId,
+        name: document.getElementById('machineName').value.toUpperCase(),
+        area: document.getElementById('machineArea').value,
+        targetPerMinute: parseFloat(document.getElementById('machineTarget').value),
+        pic: document.getElementById('machinePIC').value.toUpperCase(),
+        odt: [],
+        lineStopMesin: [],
+        lineStopNonMesin: [],
+        minorStop: []
+      };
+      
+      // Collect ODT items
+      document.querySelectorAll('#odtContainer > div').forEach(div => {
+        const name = div.querySelector('.odt-name').value.trim().toUpperCase();
+        const time = parseFloat(div.querySelector('.odt-time').value);
+        if (name && time) {
+          machineData.odt.push({ name, standardTime: time });
+        }
+      });
+      
+      // Collect Line Stop Mesin items
+      document.querySelectorAll('#lineStopMesinContainer > div').forEach(div => {
+        const name = div.querySelector('.ls-mesin-name').value.trim().toUpperCase();
+        if (name) {
+          machineData.lineStopMesin.push(name);
+        }
+      });
+      
+      // Collect Line Stop Non Mesin items
+      document.querySelectorAll('#lineStopNonMesinContainer > div').forEach(div => {
+        const name = div.querySelector('.ls-non-mesin-name').value.trim().toUpperCase();
+        if (name) {
+          machineData.lineStopNonMesin.push(name);
+        }
+      });
+      
+      // Collect Minor Stop items
+      document.querySelectorAll('#minorStopContainer > div').forEach(div => {
+        const name = div.querySelector('.minor-stop-name').value.trim().toUpperCase();
+        if (name) {
+          machineData.minorStop.push(name);
+        }
+      });
+      
+      // Save or update machine
+      if (isEditMode) {
+        const index = machines.findIndex(m => m.id === machineId);
+        if (index !== -1) {
+          machines[index] = machineData;
+        }
+      } else {
+        machines.push(machineData);
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('oee_machines', JSON.stringify(machines));
+      
+      // Sync to Supabase
+      if (!isEditMode) {
+        syncToSupabase('machine', machineData).then(result => {
+          if (result.success) {
+            console.log('✅ Mesin berhasil disync ke Supabase');
+          } else {
+            console.log('⚠️ Gagal sync ke Supabase, data tersimpan di localStorage');
+          }
+        });
+      }
+      
+      // Update dropdowns
+      loadMachinesToDropdowns();
+      
+      // Reset form
+      resetMachineForm();
+      document.getElementById('machinePassword').value = '';
+      
+      alert(isEditMode ? 'Mesin berhasil diupdate!' : 'Mesin berhasil disimpan!');
+    }
+
+    // OEE Input Management
+    function loadMachinesToDropdowns() {
+      const selects = [
+        'oeeMachine',
+        'dashboardMachineFilter', 
+        'historyMachineFilter',
+        'historyFilterMesin',  // Added this for history tab
+        'downloadMachineFilter'
+      ];
+      
+      selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        
+        // Save current value
+        const currentValue = select.value;
+        
+        // Clear and add default option
+        if (selectId === 'oeeMachine') {
+          select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
+        } else if (selectId === 'historyFilterMesin') {
+          select.innerHTML = '<option value="">-- Semua Mesin --</option>';
+        } else {
+          select.innerHTML = '<option value="all">Semua Mesin</option>';
+        }
+        
+        // Add machine options
+        machines.forEach(machine => {
+          const option = document.createElement('option');
+          option.value = machine.name;
+          option.textContent = machine.name;
+          select.appendChild(option);
+        });
+        
+        // Restore previous value if still exists
+        if (currentValue) {
+          select.value = currentValue;
+        }
+      });
+    }
+
+    function loadMachineTemplate() {
+      const machineName = document.getElementById('oeeMachine').value;
+      if (!machineName) return;
+      
+      const machine = machines.find(m => m.name === machineName);
+      if (!machine) return;
+      
+      // Set PIC default
+      document.getElementById('oeePIC').value = machine.pic;
+      
+      // Load ODT checkboxes
+      const odtContainer = document.getElementById('odtCheckboxContainer');
+      odtContainer.innerHTML = '';
+      machine.odt.forEach(odt => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 items-center';
+        div.innerHTML = `
+          <div class="flex items-center">
+            <input type="checkbox" id="odt_${odt.name}" class="odt-checkbox mr-2" onchange="updateTargetCalculation()">
+            <label for="odt_${odt.name}" class="text-sm">${odt.name}</label>
+          </div>
+          <div class="text-sm text-gray-600">Standar: ${odt.standardTime} menit</div>
+          <div>
+            <input type="number" id="odt_time_${odt.name}" class="odt-actual-time w-full p-2 border border-gray-300 rounded-md text-sm" 
+                   placeholder="Waktu aktual" onchange="updateTargetCalculation()" disabled>
+          </div>
+        `;
+        odtContainer.appendChild(div);
+        
+        // Enable/disable actual time input based on checkbox
+        document.getElementById(`odt_${odt.name}`).addEventListener('change', function() {
+          document.getElementById(`odt_time_${odt.name}`).disabled = !this.checked;
+          if (!this.checked) {
+            document.getElementById(`odt_time_${odt.name}`).value = '';
+          }
+        });
+      });
+      
+      // Load Line Stop Mesin inputs
+      const lsMesinContainer = document.getElementById('lineStopMesinInputContainer');
+      lsMesinContainer.innerHTML = '';
+      machine.lineStopMesin.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
+        div.innerHTML = `
+          <label class="text-sm font-medium text-gray-700 flex items-center">${item}</label>
+          <input type="number" id="ls_mesin_${item}" class="ls-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm" 
+                 placeholder="0" onchange="updateTargetCalculation()">
+        `;
+        lsMesinContainer.appendChild(div);
+      });
+      
+      // Add custom Line Stop Mesin inputs
+      for (let i = 1; i <= 2; i++) {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
+        div.innerHTML = `
+          <input type="text" id="ls_mesin_custom_name_${i}" class="w-full p-2 border border-gray-300 rounded-md text-sm" 
+                 placeholder="Custom Line Stop Mesin ${i}" oninput="this.value = this.value.toUpperCase()">
+          <input type="number" id="ls_mesin_custom_time_${i}" class="ls-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm" 
+                 placeholder="0" onchange="updateTargetCalculation()">
+        `;
+        lsMesinContainer.appendChild(div);
+      }
+      
+      // Load Line Stop Non Mesin inputs
+      const lsNonMesinContainer = document.getElementById('lineStopNonMesinInputContainer');
+      lsNonMesinContainer.innerHTML = '';
+      
+      // Add ODT Overtime inputs for each ODT
+      machine.odt.forEach(odt => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
+        div.innerHTML = `
+          <label class="text-sm font-medium text-gray-700 flex items-center">${odt.name} OVERTIME</label>
+          <input type="number" id="odt_overtime_${odt.name}" class="ls-non-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm bg-gray-100" 
+                 placeholder="0" readonly>
+        `;
+        lsNonMesinContainer.appendChild(div);
+      });
+      
+      machine.lineStopNonMesin.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
+        div.innerHTML = `
+          <label class="text-sm font-medium text-gray-700 flex items-center">${item}</label>
+          <input type="number" id="ls_non_mesin_${item}" class="ls-non-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm" 
+                 placeholder="0" onchange="updateTargetCalculation()">
+        `;
+        lsNonMesinContainer.appendChild(div);
+      });
+      
+      // Add custom Line Stop Non Mesin inputs
+      for (let i = 1; i <= 2; i++) {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
+        div.innerHTML = `
+          <input type="text" id="ls_non_mesin_custom_name_${i}" class="w-full p-2 border border-gray-300 rounded-md text-sm" 
+                 placeholder="Custom Line Stop Non Mesin ${i}" oninput="this.value = this.value.toUpperCase()">
+          <input type="number" id="ls_non_mesin_custom_time_${i}" class="ls-non-mesin-input w-full p-2 border border-gray-300 rounded-md text-sm" 
+                 placeholder="0" onchange="updateTargetCalculation()">
+        `;
+        lsNonMesinContainer.appendChild(div);
+      }
+      
+      // Load Minor Stop inputs
+      const minorStopContainer = document.getElementById('minorStopInputContainer');
+      minorStopContainer.innerHTML = '';
+      machine.minorStop.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 mb-2';
+        div.innerHTML = `
+          <label class="text-sm font-medium text-gray-700 flex items-center">${item}</label>
+          <input type="number" id="minor_stop_${item}" class="minor-stop-input w-full p-2 border border-gray-300 rounded-md text-sm" 
+                 placeholder="0">
+        `;
+        minorStopContainer.appendChild(div);
+      });
+      
+      // Set target per minute
+      document.getElementById('targetPerMinute').value = machine.targetPerMinute;
+      
+      // Update calculations
+      updateTargetCalculation();
+    }
+
+    function updateTargetCalculation() {
+      const shift = document.getElementById('oeeShift').value;
+      const targetPerMinute = parseFloat(document.getElementById('targetPerMinute').value) || 0;
+      
+      console.log('=== UPDATE TARGET CALCULATION ===');
+      console.log('Shift:', shift);
+      console.log('Target per minute:', targetPerMinute);
+      
+      let shiftDuration = 0;
+      
+      if (shift.includes('480')) shiftDuration = 480;
+      else if (shift.includes('720')) shiftDuration = 720;
+      
+      document.getElementById('shiftDuration').value = shiftDuration;
+      console.log('Shift duration:', shiftDuration);
+      
+      // Calculate total ODT and collect overtime data
+      let totalODT = 0;
+      let odtOvertimeData = [];
+      
+      document.querySelectorAll('.odt-checkbox:checked').forEach(checkbox => {
+        const odtName = checkbox.id.replace('odt_', '');
+        const actualTimeInput = document.getElementById(`odt_time_${odtName}`);
+        const actualTime = parseFloat(actualTimeInput.value) || 0;
+        
+        // Find standard time
+        const machineName = document.getElementById('oeeMachine').value;
+        const machine = machines.find(m => m.name === machineName);
+        const odtItem = machine?.odt.find(o => o.name === odtName);
+        const standardTime = odtItem?.standardTime || 0;
+        
+        totalODT += standardTime;
+        
+        // Calculate overtime - add to line stop non mesin with ODT name
+        if (actualTime > standardTime) {
+          const overtimeMinutes = actualTime - standardTime;
+          odtOvertimeData.push({
+            name: odtName,
+            overtime: overtimeMinutes
+          });
+        }
+      });
+      
+      document.getElementById('totalODT').value = totalODT;
+      console.log('Total ODT:', totalODT);
+      
+      // Update ODT overtime fields with specific ODT names
+      const totalOdtOvertime = odtOvertimeData.reduce((sum, odt) => sum + odt.overtime, 0);
+      
+      // Clear all ODT overtime inputs first
+      document.querySelectorAll('[id^="odt_overtime_"]').forEach(input => {
+        input.value = 0;
+      });
+      
+      // Update specific ODT overtime inputs
+      odtOvertimeData.forEach(odt => {
+        const overtimeInput = document.getElementById(`odt_overtime_${odt.name}`);
+        if (overtimeInput) {
+          overtimeInput.value = odt.overtime;
+        }
+      });
+      
+      // Calculate total Line Stop Mesin (excluding ODT overtime)
+      let totalLSMesin = 0;
+      document.querySelectorAll('.ls-mesin-input').forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        totalLSMesin += value;
+      });
+      
+      // Calculate total Line Stop Non Mesin (including ODT overtime)
+      let totalLSNonMesin = totalOdtOvertime;
+      document.querySelectorAll('.ls-non-mesin-input:not([id*="odt_overtime"])').forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        totalLSNonMesin += value;
+      });
+      
+      const totalLineStop = totalLSMesin + totalLSNonMesin;
+      document.getElementById('totalLineStop').value = totalLineStop;
+      console.log('Total Line Stop Mesin:', totalLSMesin);
+      console.log('Total Line Stop Non Mesin:', totalLSNonMesin);
+      console.log('Total Line Stop:', totalLineStop);
+      
+      // Calculate target output - FIXED CALCULATION
+      if (shiftDuration > 0 && targetPerMinute > 0) {
+        const runTime = Math.max(0, shiftDuration - totalODT - totalLineStop);
+        const targetOutput = Math.max(0, runTime * targetPerMinute);
+        
+        console.log('Run time calculation:', shiftDuration, '-', totalODT, '-', totalLineStop, '=', runTime);
+        console.log('Target output calculation:', runTime, 'x', targetPerMinute, '=', targetOutput);
+        
+        document.getElementById('targetOutput').value = Math.round(targetOutput);
+      } else {
+        document.getElementById('targetOutput').value = 0;
+      }
+      
+      // Check if WR is needed (Line Stop Mesin > 179 menit)
+      const wrSection = document.getElementById('wrSection');
+      const wrNumber = document.getElementById('wrNumber');
+      
+      if (totalLSMesin > 179) {
+        wrSection.classList.remove('hidden');
+        wrNumber.required = true;
+      } else {
+        wrSection.classList.add('hidden');
+        wrNumber.required = false;
+        wrNumber.value = '';
+      }
+      
+      console.log('=== END TARGET CALCULATION ===');
+      
+      // Calculate OEE preview
+      calculateOEE();
+    }
+
+    function calculateOEE() {
+      const shiftDuration = parseFloat(document.getElementById('shiftDuration').value) || 0;
+      const totalODT = parseFloat(document.getElementById('totalODT').value) || 0;
+      const totalLineStop = parseFloat(document.getElementById('totalLineStop').value) || 0;
+      const targetOutput = parseFloat(document.getElementById('targetOutput').value) || 0;
+      const actualOutput = parseFloat(document.getElementById('actualOutput').value) || 0;
+      const rejectOutput = parseFloat(document.getElementById('rejectOutput').value) || 0;
+      
+      console.log('=== CALCULATE OEE DEBUG ===');
+      console.log('Shift Duration:', shiftDuration);
+      console.log('Total ODT:', totalODT);
+      console.log('Total Line Stop:', totalLineStop);
+      console.log('Target Output:', targetOutput);
+      console.log('Actual Output:', actualOutput);
+      console.log('Reject Output:', rejectOutput);
+      
+      if (shiftDuration === 0) {
+        console.log('ERROR: Shift duration is 0');
+        // Reset preview to 0
+        document.getElementById('previewA').textContent = '0%';
+        document.getElementById('previewP').textContent = '0%';
+        document.getElementById('previewQ').textContent = '0%';
+        document.getElementById('previewOEE').textContent = '0%';
+        return;
+      }
+      
+      // Calculate Availability - FIXED: Ensure positive values
+      const runTime = Math.max(0, shiftDuration - totalODT - totalLineStop);
+      const availability = Math.max(0, Math.min(100, (runTime / shiftDuration) * 100));
+      
+      // Calculate Performance - FIXED: Handle division by zero
+      let performance = 0;
+      if (targetOutput > 0 && actualOutput >= 0) {
+        performance = Math.max(0, (actualOutput / targetOutput) * 100);
+      }
+      
+      // Calculate Quality - FIXED: Handle negative reject and division by zero
+      let quality = 100; // Default to 100% if no output yet
+      if (actualOutput > 0) {
+        const validReject = Math.max(0, Math.min(rejectOutput, actualOutput));
+        const goodOutput = Math.max(0, actualOutput - validReject);
+        quality = Math.max(0, Math.min(100, (goodOutput / actualOutput) * 100));
+      }
+      
+      // Calculate OEE - FIXED: Proper percentage calculation
+      const oee = (availability * performance * quality) / 10000;
+      
+      console.log('Run Time:', runTime);
+      console.log('Availability calculation:', runTime, '/', shiftDuration, '=', availability.toFixed(2) + '%');
+      console.log('Performance calculation:', actualOutput, '/', targetOutput, '=', performance.toFixed(2) + '%');
+      console.log('Quality calculation:', (actualOutput - Math.min(rejectOutput, actualOutput)), '/', actualOutput, '=', quality.toFixed(2) + '%');
+      console.log('OEE calculation:', availability.toFixed(2), 'x', performance.toFixed(2), 'x', quality.toFixed(2), '/ 10000 =', oee.toFixed(2) + '%');
+      console.log('=== END DEBUG ===');
+      
+      // Update preview elements
+      const previewA = document.getElementById('previewA');
+      const previewP = document.getElementById('previewP');
+      const previewQ = document.getElementById('previewQ');
+      const previewOEE = document.getElementById('previewOEE');
+      
+      if (previewA) previewA.textContent = availability.toFixed(2) + '%';
+      if (previewP) previewP.textContent = performance.toFixed(2) + '%';
+      if (previewQ) previewQ.textContent = quality.toFixed(2) + '%';
+      if (previewOEE) previewOEE.textContent = oee.toFixed(2) + '%';
+      
+      // Add visual feedback for invalid values
+      const previewBox = document.getElementById('oeePreview');
+      if (previewBox) {
+        // Remove any existing warning
+        const existingWarning = previewBox.querySelector('.warning-message');
+        if (existingWarning) {
+          existingWarning.remove();
+        }
+        
+        if (oee > 100 || availability > 100 || performance > 100 || quality > 100) {
+          previewBox.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+          const warningDiv = document.createElement('div');
+          warningDiv.className = 'mt-2 text-sm warning-message';
+          warningDiv.textContent = '⚠️ Ada nilai yang tidak valid! Cek input data.';
+          previewBox.appendChild(warningDiv);
+        } else {
+          previewBox.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        }
+      }
+    }
+
+    function saveOEE(event) {
+      event.preventDefault();
+      
+      // Validate OEE
+      const oeeValue = parseFloat(document.getElementById('previewOEE').textContent);
+      if (oeeValue > 100) {
+        alert('Error: OEE tidak boleh lebih dari 100%!\n\nSilakan cek kembali:\n- Jumlah output\n- Total downtime\n- Jumlah reject\n- Target per menit mesin');
+        return;
+      }
+      
+      // Check WR requirement
+      const wrSection = document.getElementById('wrSection');
+      const wrNumber = document.getElementById('wrNumber');
+      if (!wrSection.classList.contains('hidden') && !wrNumber.value.trim()) {
+        alert('Nomor WR wajib diisi karena Line Stop Mesin > 179 menit');
+        return;
+      }
+      
+      // Collect basic data
+      const oeeRecord = {
+        id: Date.now().toString(),
+        tanggal: document.getElementById('oeeDate').value,
+        mesin: document.getElementById('oeeMachine').value,
+        shift: document.getElementById('oeeShift').value,
+        pic: document.getElementById('oeePIC').value.toUpperCase(),
+        kodeProduk: document.getElementById('oeeProduct').value.toUpperCase(),
+        batchNumber: document.getElementById('oeeBatch').value.toUpperCase(),
+        targetPerMinute: parseFloat(document.getElementById('targetPerMinute').value),
+        shiftDuration: parseFloat(document.getElementById('shiftDuration').value),
+        totalODT: parseFloat(document.getElementById('totalODT').value),
+        totalLineStop: parseFloat(document.getElementById('totalLineStop').value),
+        targetOutput: parseFloat(document.getElementById('targetOutput').value),
+        actualOutput: parseFloat(document.getElementById('actualOutput').value),
+        rejectOutput: parseFloat(document.getElementById('rejectOutput').value),
+        availability: parseFloat(document.getElementById('previewA').textContent),
+        performance: parseFloat(document.getElementById('previewP').textContent),
+        quality: parseFloat(document.getElementById('previewQ').textContent),
+        oee: parseFloat(document.getElementById('previewOEE').textContent),
+        wrNumber: wrNumber.value.trim().toUpperCase(),
+        odt: [],
+        lineStopMesin: [],
+        lineStopNonMesin: [],
+        minorStop: []
+      };
+      
+      // Collect ODT data
+      document.querySelectorAll('.odt-checkbox:checked').forEach(checkbox => {
+        const odtName = checkbox.id.replace('odt_', '');
+        const actualTime = parseFloat(document.getElementById(`odt_time_${odtName}`).value) || 0;
+        oeeRecord.odt.push({ name: odtName, actualTime });
+      });
+      
+      // Collect Line Stop Mesin data
+      document.querySelectorAll('.ls-mesin-input').forEach(input => {
+        const time = parseFloat(input.value) || 0;
+        if (time > 0) {
+          let name = '';
+          if (input.id.includes('custom')) {
+            const customNameId = input.id.replace('time', 'name');
+            name = document.getElementById(customNameId).value.trim().toUpperCase();
+          } else {
+            name = input.id.replace('ls_mesin_', '').toUpperCase();
+          }
+          if (name) {
+            oeeRecord.lineStopMesin.push({ name, time });
+          }
+        }
+      });
+      
+      // Collect Line Stop Non Mesin data (including ODT overtime with specific names)
+      document.querySelectorAll('.ls-non-mesin-input').forEach(input => {
+        const time = parseFloat(input.value) || 0;
+        if (time > 0) {
+          let name = '';
+          if (input.id.includes('odt_overtime_')) {
+            name = input.id.replace('odt_overtime_', '').toUpperCase() + ' OVERTIME';
+          } else if (input.id.includes('custom')) {
+            const customNameId = input.id.replace('time', 'name');
+            name = document.getElementById(customNameId).value.trim().toUpperCase();
+          } else {
+            name = input.id.replace('ls_non_mesin_', '').toUpperCase();
+          }
+          if (name) {
+            oeeRecord.lineStopNonMesin.push({ name, time });
+          }
+        }
+      });
+      
+      // Collect Minor Stop data
+      document.querySelectorAll('.minor-stop-input').forEach(input => {
+        const frequency = parseInt(input.value) || 0;
+        if (frequency > 0) {
+          const name = input.id.replace('minor_stop_', '').toUpperCase();
+          oeeRecord.minorStop.push({ name, frequency });
+        }
+      });
+      
+      // Save to array
+      oeeData.push(oeeRecord);
+      localStorage.setItem('oee_data', JSON.stringify(oeeData));
+      
+      // Sync to Supabase
+      syncToSupabase('oee', oeeRecord).then(result => {
+        if (result.success) {
+          console.log('✅ Data OEE berhasil disync ke Supabase');
+          alert('Data OEE berhasil disimpan dan disync ke database! 🎉');
+        } else {
+          console.log('⚠️ Gagal sync ke Supabase, data tersimpan di localStorage');
+          alert('Data OEE berhasil disimpan! (Offline mode - akan sync otomatis nanti)');
+        }
+      });
+      
+      // Reset form
+      document.getElementById('oeeForm').reset();
+      document.getElementById('odtCheckboxContainer').innerHTML = '';
+      document.getElementById('lineStopMesinInputContainer').innerHTML = '';
+      document.getElementById('lineStopNonMesinInputContainer').innerHTML = '';
+      document.getElementById('minorStopInputContainer').innerHTML = '';
+      document.getElementById('wrSection').classList.add('hidden');
+      
+      // Clear preview
+      document.getElementById('previewA').textContent = '0%';
+      document.getElementById('previewP').textContent = '0%';
+      document.getElementById('previewQ').textContent = '0%';
+      document.getElementById('previewOEE').textContent = '0%';
+      
+      // Clear preview box styling
+      const previewBox = document.getElementById('oeePreview');
+      previewBox.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      previewBox.innerHTML = `
+        <h3 class="text-xl font-bold mb-4">🎯 Preview OEE</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="preview-item">
+            <span>Availability:</span>
+            <span id="previewA">0%</span>
+          </div>
+          <div class="preview-item">
+            <span>Performance:</span>
+            <span id="previewP">0%</span>
+          </div>
+          <div class="preview-item">
+            <span>Quality:</span>
+            <span id="previewQ">0%</span>
+          </div>
+          <div class="preview-item">
+            <span><strong>OEE:</strong></span>
+            <span id="previewOEE"><strong>0%</strong></span>
+          </div>
+        </div>
+      `;
+      
+      // Refresh dashboard if currently viewing
+      if (currentTab === 'dashboard') {
+        loadDashboard();
+      }
+    }
+
+    // Dashboard Functions
+    function loadDashboard() {
+      const filteredData = getFilteredData('dashboard');
+      
+      // Update metrics
+      updateMetrics(filteredData);
+      
+      // Update charts
+      updateCharts(filteredData);
+      
+      // Update operator performance table
+      updateOperatorPerformance(filteredData);
+    }
+
+    function getFilteredData(source) {
+      const fromDate = document.getElementById(`${source}FromDate`).value;
+      const toDate = document.getElementById(`${source}ToDate`).value;
+      const selectedMachine = document.getElementById(`${source}MachineFilter`).value;
+      
+      let filtered = [...oeeData];
       
       if (fromDate) {
-        data = data.filter(r => r.tanggal_produksi >= fromDate);
+        filtered = filtered.filter(item => item.tanggal >= fromDate);
       }
       
       if (toDate) {
-        data = data.filter(r => r.tanggal_produksi <= toDate);
+        filtered = filtered.filter(item => item.tanggal <= toDate);
       }
       
-      if (mesinFilter) {
-        data = data.filter(r => r.mesin_nama === mesinFilter);
+      if (selectedMachine && selectedMachine !== 'all') {
+        filtered = filtered.filter(item => item.mesin === selectedMachine);
       }
       
-      filteredOEERecords = data;
-      
-      // Calculate metrics
-      const avgOEE = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.oee), 0) / data.length).toFixed(2) : 0;
-      const totalOutput = data.reduce((sum, r) => sum + r.jumlah_output, 0);
-      
-      document.getElementById('avgOEE').textContent = avgOEE + '%';
-      document.getElementById('totalOutput').textContent = totalOutput.toLocaleString();
-      document.getElementById('totalRecords').textContent = data.length;
-      
-      // Render charts
-      renderOEEChart(data);
-      renderAPQChart(data);
-      renderLineStopMesinChart(data);
-      renderLineStopNonMesinChart(data);
-      renderMinorStopChart(data);
-      renderOEEPerMesinChart(data);
-      renderOperatorTable(data);
-    }
-    
-    function resetDashboardFilter() {
-      document.getElementById('dashboardFromDate').value = '';
-      document.getElementById('dashboardToDate').value = '';
-      document.getElementById('dashboardFilterMesin').value = '';
-      applyDashboardFilter();
+      return filtered;
     }
 
-    function renderOEEChart(data) {
-      const ctx = document.getElementById('oeeChart');
+    function updateMetrics(data) {
+      const avgOEE = data.length > 0 ? data.reduce((sum, item) => sum + item.oee, 0) / data.length : 0;
+      const totalOutput = data.reduce((sum, item) => sum + item.actualOutput, 0);
+      const totalRecords = data.length;
       
-      if (charts.oeeChart) {
-        charts.oeeChart.destroy();
-      }
+      document.getElementById('avgOEE').textContent = avgOEE.toFixed(2) + '%';
+      document.getElementById('totalOutput').textContent = totalOutput.toLocaleString();
+      document.getElementById('totalRecords').textContent = totalRecords;
+    }
+
+    function updateCharts(data) {
+      // Destroy existing charts
+      Object.values(charts).forEach(chart => {
+        if (chart) chart.destroy();
+      });
       
-      const last10 = data.slice(0, 10).reverse();
+      if (data.length === 0) return;
       
-      charts.oeeChart = new Chart(ctx, {
+      // Trend OEE Chart
+      const last10Data = data.slice(-10);
+      charts.trend = new Chart(document.getElementById('trendChart'), {
         type: 'line',
         data: {
-          labels: last10.map(r => r.tanggal_produksi),
+          labels: last10Data.map(item => `${item.tanggal} ${item.shift}`),
           datasets: [{
             label: 'OEE (%)',
-            data: last10.map(r => parseFloat(r.oee)),
+            data: last10Data.map(item => item.oee),
             borderColor: '#667eea',
             backgroundColor: 'rgba(102, 126, 234, 0.1)',
-            tension: 0.4,
-            fill: true
+            tension: 0.4
           }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true }
-          },
           scales: {
-            y: { beginAtZero: true, max: 100 }
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
           }
         }
       });
-    }
-
-    function renderAPQChart(data) {
-      const ctx = document.getElementById('apqChart');
       
-      if (charts.apqChart) {
-        charts.apqChart.destroy();
-      }
+      // A vs P vs Q Chart
+      const avgA = data.reduce((sum, item) => sum + item.availability, 0) / data.length;
+      const avgP = data.reduce((sum, item) => sum + item.performance, 0) / data.length;
+      const avgQ = data.reduce((sum, item) => sum + item.quality, 0) / data.length;
       
-      const avgA = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.availability), 0) / data.length).toFixed(2) : 0;
-      const avgP = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.performance), 0) / data.length).toFixed(2) : 0;
-      const avgQ = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.quality), 0) / data.length).toFixed(2) : 0;
-      
-      charts.apqChart = new Chart(ctx, {
+      charts.apq = new Chart(document.getElementById('apqChart'), {
         type: 'bar',
         data: {
           labels: ['Availability', 'Performance', 'Quality'],
           datasets: [{
-            label: 'Average (%)',
             data: [avgA, avgP, avgQ],
-            backgroundColor: ['#667eea', '#f093fb', '#4facfe']
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
           }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
           scales: {
-            y: { beginAtZero: true, max: 100 }
-          }
-        }
-      });
-    }
-
-    function renderLineStopMesinChart(data) {
-      const ctx = document.getElementById('lineStopMesinChart');
-      
-      if (charts.lineStopMesinChart) {
-        charts.lineStopMesinChart.destroy();
-      }
-      
-      const lsMap = {};
-      data.forEach(record => {
-        (record.line_stop_mesin_items || []).forEach(item => {
-          lsMap[item.name] = (lsMap[item.name] || 0) + item.time;
-        });
-      });
-      
-      const labels = Object.keys(lsMap).slice(0, 10);
-      const values = labels.map(l => lsMap[l]);
-      
-      charts.lineStopMesinChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Total Waktu (menit)',
-            data: values,
-            backgroundColor: '#ef4444'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'y',
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-    }
-
-    function renderLineStopNonMesinChart(data) {
-      const ctx = document.getElementById('lineStopNonMesinChart');
-      
-      if (charts.lineStopNonMesinChart) {
-        charts.lineStopNonMesinChart.destroy();
-      }
-      
-      const lsMap = {};
-      data.forEach(record => {
-        (record.line_stop_non_mesin_items || []).forEach(item => {
-          lsMap[item.name] = (lsMap[item.name] || 0) + item.time;
-        });
-      });
-      
-      const labels = Object.keys(lsMap).slice(0, 10);
-      const values = labels.map(l => lsMap[l]);
-      
-      charts.lineStopNonMesinChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Total Waktu (menit)',
-            data: values,
-            backgroundColor: '#f59e0b'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'y',
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-    }
-
-    function renderMinorStopChart(data) {
-      const ctx = document.getElementById('minorStopChart');
-      
-      if (charts.minorStopChart) {
-        charts.minorStopChart.destroy();
-      }
-      
-      const msMap = {};
-      data.forEach(record => {
-        (record.minor_stop_items || []).forEach(item => {
-          msMap[item] = (msMap[item] || 0) + 1;
-        });
-      });
-      
-      const labels = Object.keys(msMap).slice(0, 10);
-      const values = labels.map(l => msMap[l]);
-      
-      charts.minorStopChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'right' }
-          }
-        }
-      });
-    }
-
-    function renderOEEPerMesinChart(data) {
-      const ctx = document.getElementById('oeePerMesinChart');
-      
-      if (charts.oeePerMesinChart) {
-        charts.oeePerMesinChart.destroy();
-      }
-      
-      const mesinMap = {};
-      data.forEach(record => {
-        if (!mesinMap[record.mesin_nama]) {
-          mesinMap[record.mesin_nama] = { total: 0, count: 0 };
-        }
-        mesinMap[record.mesin_nama].total += parseFloat(record.oee);
-        mesinMap[record.mesin_nama].count += 1;
-      });
-      
-      const labels = Object.keys(mesinMap);
-      const values = labels.map(l => (mesinMap[l].total / mesinMap[l].count).toFixed(2));
-      
-      charts.oeePerMesinChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Rata-rata OEE (%)',
-            data: values,
-            backgroundColor: '#667eea'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
           },
-          scales: {
-            y: { beginAtZero: true, max: 100 }
+          plugins: {
+            legend: {
+              display: false
+            }
           }
         }
       });
+      
+      // Line Stop Mesin Chart
+      const lineStopMesinData = {};
+      data.forEach(item => {
+        item.lineStopMesin.forEach(ls => {
+          lineStopMesinData[ls.name] = (lineStopMesinData[ls.name] || 0) + ls.time;
+        });
+      });
+      
+      const topLineStopMesin = Object.entries(lineStopMesinData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+      
+      if (topLineStopMesin.length > 0) {
+        charts.lineStopMesin = new Chart(document.getElementById('lineStopMesinChart'), {
+          type: 'bar',
+          data: {
+            labels: topLineStopMesin.map(item => item[0]),
+            datasets: [{
+              label: 'Waktu (menit)',
+              data: topLineStopMesin.map(item => item[1]),
+              backgroundColor: '#ef4444'
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      }
+      
+      // Line Stop Non Mesin Chart
+      const lineStopNonMesinData = {};
+      data.forEach(item => {
+        item.lineStopNonMesin.forEach(ls => {
+          lineStopNonMesinData[ls.name] = (lineStopNonMesinData[ls.name] || 0) + ls.time;
+        });
+      });
+      
+      const topLineStopNonMesin = Object.entries(lineStopNonMesinData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+      
+      if (topLineStopNonMesin.length > 0) {
+        charts.lineStopNonMesin = new Chart(document.getElementById('lineStopNonMesinChart'), {
+          type: 'bar',
+          data: {
+            labels: topLineStopNonMesin.map(item => item[0]),
+            datasets: [{
+              label: 'Waktu (menit)',
+              data: topLineStopNonMesin.map(item => item[1]),
+              backgroundColor: '#f59e0b'
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      }
+      
+      // Minor Stop Chart - Changed from doughnut to bar
+      const minorStopData = {};
+      data.forEach(item => {
+        item.minorStop.forEach(ms => {
+          minorStopData[ms.name] = (minorStopData[ms.name] || 0) + ms.frequency;
+        });
+      });
+      
+      const topMinorStop = Object.entries(minorStopData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+      
+      if (topMinorStop.length > 0) {
+        charts.minorStop = new Chart(document.getElementById('minorStopChart'), {
+          type: 'bar',
+          data: {
+            labels: topMinorStop.map(item => item[0]),
+            datasets: [{
+              label: 'Frekuensi',
+              data: topMinorStop.map(item => item[1]),
+              backgroundColor: '#8b5cf6'
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      }
+      
+      // OEE per Mesin Chart
+      const oeePerMesin = {};
+      const countPerMesin = {};
+      
+      data.forEach(item => {
+        if (!oeePerMesin[item.mesin]) {
+          oeePerMesin[item.mesin] = 0;
+          countPerMesin[item.mesin] = 0;
+        }
+        oeePerMesin[item.mesin] += item.oee;
+        countPerMesin[item.mesin]++;
+      });
+      
+      const avgOeePerMesin = Object.keys(oeePerMesin).map(mesin => ({
+        mesin,
+        avgOee: oeePerMesin[mesin] / countPerMesin[mesin]
+      }));
+      
+      if (avgOeePerMesin.length > 0) {
+        charts.oeePerMesin = new Chart(document.getElementById('oeePerMesinChart'), {
+          type: 'bar',
+          data: {
+            labels: avgOeePerMesin.map(item => item.mesin),
+            datasets: [{
+              label: 'Rata-rata OEE (%)',
+              data: avgOeePerMesin.map(item => item.avgOee),
+              backgroundColor: '#667eea'
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      }
     }
 
-    function renderOperatorTable(data) {
-      const picMap = {};
+    function updateOperatorPerformance(data) {
+      const operatorData = {};
       
-      data.forEach(record => {
-        if (!picMap[record.pic_inisial]) {
-          picMap[record.pic_inisial] = {
+      data.forEach(item => {
+        if (!operatorData[item.pic]) {
+          operatorData[item.pic] = {
             totalOutput: 0,
             totalTarget: 0,
             totalOEE: 0,
-            count: 0
+            shiftCount: 0
           };
         }
         
-        picMap[record.pic_inisial].totalOutput += record.jumlah_output;
-        picMap[record.pic_inisial].totalTarget += record.target_output;
-        picMap[record.pic_inisial].totalOEE += parseFloat(record.oee);
-        picMap[record.pic_inisial].count += 1;
+        operatorData[item.pic].totalOutput += item.actualOutput;
+        operatorData[item.pic].totalTarget += item.targetOutput;
+        operatorData[item.pic].totalOEE += item.oee;
+        operatorData[item.pic].shiftCount++;
       });
       
-      const tbody = document.querySelector('#operatorTable tbody');
+      const tbody = document.getElementById('operatorPerformanceTable');
       tbody.innerHTML = '';
       
-      Object.keys(picMap).forEach(pic => {
-        const stats = picMap[pic];
-        const achievement = ((stats.totalOutput / stats.totalTarget) * 100).toFixed(2);
-        const avgOEE = (stats.totalOEE / stats.count).toFixed(2);
+      if (Object.keys(operatorData).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Tidak ada data</td></tr>';
+        return;
+      }
+      
+      Object.entries(operatorData).forEach(([pic, data]) => {
+        const achievement = data.totalTarget > 0 ? (data.totalOutput / data.totalTarget) * 100 : 0;
+        const avgOEE = data.totalOEE / data.shiftCount;
         
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td><strong>${pic}</strong></td>
-          <td>${stats.totalOutput.toLocaleString()}</td>
-          <td>${stats.totalTarget.toLocaleString()}</td>
-          <td><strong>${achievement}%</strong></td>
-          <td><strong>${avgOEE}%</strong></td>
-          <td>${stats.count}</td>
+          <td class="font-medium">${pic}</td>
+          <td>${data.totalOutput.toLocaleString()}</td>
+          <td>${data.totalTarget.toLocaleString()}</td>
+          <td>${achievement.toFixed(2)}%</td>
+          <td>${avgOEE.toFixed(2)}%</td>
+          <td>${data.shiftCount}</td>
         `;
         tbody.appendChild(row);
       });
     }
 
-    // ===== DOWNLOAD FUNCTIONS =====
-    async function loadDownloadTab() {
-      let machines;
-      
-      if (DEMO_MODE) {
-        machines = demoMachines.filter(m => m.is_active);
-      } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
-        if (result.error) {
-          console.error('Error loading machines:', result.error);
-          return;
-        }
-        machines = result.data;
-      }
-      
-      const select = document.getElementById('downloadFilterMesin');
-      select.innerHTML = '<option value="">-- Semua Mesin --</option>';
-      
-      machines.forEach(machine => {
-        const option = document.createElement('option');
-        option.value = machine.mesin_nama;
-        option.textContent = machine.mesin_nama;
-        select.appendChild(option);
-      });
+    function resetDashboardFilter() {
+      document.getElementById('dashboardFromDate').value = '';
+      document.getElementById('dashboardToDate').value = '';
+      document.getElementById('dashboardMachineFilter').value = 'all';
+      loadDashboard();
     }
-    
-    async function getFilteredDownloadData() {
-      let data;
+
+    // History Functions
+    function loadHistoryData() {
+      filterHistoryData();
+    }
+
+    function filterHistoryData() {
+      const fromDate = document.getElementById('historyFromDate').value;
+      const toDate = document.getElementById('historyToDate').value;
+      const selectedMachine = document.getElementById('historyMachineFilter').value;
       
-      if (DEMO_MODE) {
-        data = [...demoOEERecords];
-      } else {
-        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
-        if (result.error) {
-          console.error('Error loading data:', result.error);
-          return [];
-        }
-        data = result.data;
-      }
-      
-      const fromDate = document.getElementById('downloadFromDate').value;
-      const toDate = document.getElementById('downloadToDate').value;
-      const mesinFilter = document.getElementById('downloadFilterMesin').value;
+      let filtered = [...oeeData];
       
       if (fromDate) {
-        data = data.filter(r => r.tanggal_produksi >= fromDate);
+        filtered = filtered.filter(item => item.tanggal >= fromDate);
       }
       
       if (toDate) {
-        data = data.filter(r => r.tanggal_produksi <= toDate);
+        filtered = filtered.filter(item => item.tanggal <= toDate);
       }
       
-      if (mesinFilter) {
-        data = data.filter(r => r.mesin_nama === mesinFilter);
+      if (selectedMachine && selectedMachine !== 'all') {
+        filtered = filtered.filter(item => item.mesin === selectedMachine);
       }
       
-      return data;
+      renderHistoryTable(filtered);
+      document.getElementById('historyInfo').textContent = `Menampilkan ${filtered.length} dari ${oeeData.length} data`;
     }
-    
-    async function downloadCSV() {
-      const data = await getFilteredDownloadData();
+
+    function renderHistoryTable(data) {
+      const tbody = document.getElementById('historyTableBody');
+      tbody.innerHTML = '';
       
       if (data.length === 0) {
-        alert('Tidak ada data untuk didownload!');
+        tbody.innerHTML = '<tr><td colspan="16" class="text-center text-gray-500">Tidak ada data</td></tr>';
         return;
       }
       
-      // CSV Header
-      let csv = 'Tanggal,Mesin,Area,Shift,PIC,Kode Produk,Batch Number,Output,Reject,Target Output,Availability (%),Performance (%),Quality (%),OEE (%),ODT Items,LS Mesin,LS Non Mesin,Minor Stop,WR Number\n';
-      
-      // CSV Rows
-      data.forEach(record => {
-        const odtText = (record.odt_items || []).map(item => `${item.name}(${item.actual}m)`).join('; ');
-        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
-        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
-        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name}(${item.frequency}x)`).join('; ');
-        const wrNumber = record.wr_number || '-';
+      data.forEach(item => {
+        const row = document.createElement('tr');
         
-        csv += `${record.tanggal_produksi},${record.mesin_nama},${record.area},${record.shift},${record.pic_inisial},${record.kode_produk},${record.batch_number},${record.jumlah_output},${record.jumlah_reject},${record.target_output},${record.availability},${record.performance},${record.quality},${record.oee},"${odtText}","${lsMesinText}","${lsNonMesinText}","${minorStopText}",${wrNumber}\n`;
+        // Add low OEE class if OEE < 86%
+        if (item.oee < 86) {
+          row.classList.add('low-oee');
+        }
+        
+        // Format ODT
+        const odtText = item.odt.map(odt => `${odt.name}: ${odt.actualTime}`).join(', ') || '-';
+        
+        // Format Line Stop Mesin
+        const lsMesinText = item.lineStopMesin.map(ls => `${ls.name}: ${ls.time}`).join(', ') || '-';
+        
+        // Format Line Stop Non Mesin
+        const lsNonMesinText = item.lineStopNonMesin.map(ls => `${ls.name}: ${ls.time}`).join(', ') || '-';
+        
+        // Format Minor Stop
+        const minorStopText = item.minorStop.map(ms => `${ms.name}: ${ms.frequency}`).join(', ') || '-';
+        
+        // Calculate total minor stop frequency
+        const totalMinorStopFreq = item.minorStop.reduce((sum, ms) => sum + ms.frequency, 0);
+        
+        row.innerHTML = `
+          <td>${item.tanggal}</td>
+          <td>${item.mesin}</td>
+          <td>${item.shift}</td>
+          <td>${item.pic}</td>
+          <td>${item.actualOutput.toLocaleString()}</td>
+          <td>${item.rejectOutput.toLocaleString()}</td>
+          <td><strong>${item.oee.toFixed(2)}%</strong></td>
+          <td>${item.availability.toFixed(2)}%</td>
+          <td>${item.performance.toFixed(2)}%</td>
+          <td>${item.quality.toFixed(2)}%</td>
+          <td class="text-xs">${odtText}</td>
+          <td class="text-xs">${lsMesinText}</td>
+          <td class="text-xs">${lsNonMesinText}</td>
+          <td class="text-xs">${minorStopText}</td>
+          <td>${totalMinorStopFreq}</td>
+          <td>${item.wrNumber || '-'}</td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    function resetHistoryFilter() {
+      document.getElementById('historyFromDate').value = '';
+      document.getElementById('historyToDate').value = '';
+      
+      // Reset both possible filter elements
+      const historyMachineFilter = document.getElementById('historyMachineFilter');
+      const historyFilterMesin = document.getElementById('historyFilterMesin');
+      
+      if (historyMachineFilter) historyMachineFilter.value = 'all';
+      if (historyFilterMesin) historyFilterMesin.value = '';
+      
+      filterHistoryData();
+    }
+
+    // Download Functions
+    function updateDownloadInfo() {
+      const filteredData = getFilteredData('download');
+      document.getElementById('downloadInfo').textContent = `Siap untuk download ${filteredData.length} data`;
+    }
+
+    function downloadCSV() {
+      const filteredData = getFilteredData('download');
+      
+      if (filteredData.length === 0) {
+        alert('Tidak ada data untuk didownload');
+        return;
+      }
+      
+      // Create CSV content
+      const headers = [
+        'Tanggal', 'Mesin', 'Shift', 'PIC', 'Kode Produk', 'Batch Number',
+        'Output', 'Reject', 'OEE (%)', 'Availability (%)', 'Performance (%)', 'Quality (%)',
+        'ODT', 'Line Stop Mesin', 'Line Stop Non Mesin', 'Minor Stop', 'Total Frek Minor Stop', 'WR Number'
+      ];
+      
+      let csvContent = headers.join(',') + '\n';
+      
+      filteredData.forEach(item => {
+        const odtText = item.odt.map(odt => `${odt.name}: ${odt.actualTime}`).join('; ');
+        const lsMesinText = item.lineStopMesin.map(ls => `${ls.name}: ${ls.time}`).join('; ');
+        const lsNonMesinText = item.lineStopNonMesin.map(ls => `${ls.name}: ${ls.time}`).join('; ');
+        const minorStopText = item.minorStop.map(ms => `${ms.name}: ${ms.frequency}`).join('; ');
+        const totalMinorStopFreq = item.minorStop.reduce((sum, ms) => sum + ms.frequency, 0);
+        
+        const row = [
+          item.tanggal,
+          item.mesin,
+          item.shift,
+          item.pic,
+          item.kodeProduk,
+          item.batchNumber,
+          item.actualOutput,
+          item.rejectOutput,
+          item.oee.toFixed(2),
+          item.availability.toFixed(2),
+          item.performance.toFixed(2),
+          item.quality.toFixed(2),
+          `"${odtText}"`,
+          `"${lsMesinText}"`,
+          `"${lsNonMesinText}"`,
+          `"${minorStopText}"`,
+          totalMinorStopFreq,
+          item.wrNumber || ''
+        ];
+        
+        csvContent += row.join(',') + '\n';
       });
       
-      // Download
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -2222,57 +1970,84 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      alert(`✅ ${data.length} baris data berhasil didownload!`);
     }
-    
-    async function downloadExcel() {
-      const data = await getFilteredDownloadData();
+
+    function downloadExcel() {
+      const filteredData = getFilteredData('download');
       
-      if (data.length === 0) {
-        alert('Tidak ada data untuk didownload!');
+      if (filteredData.length === 0) {
+        alert('Tidak ada data untuk didownload');
         return;
       }
       
       // Create HTML table for Excel
-      let html = '<table><thead><tr>';
-      html += '<th>Tanggal</th><th>Mesin</th><th>Area</th><th>Shift</th><th>PIC</th><th>Kode Produk</th><th>Batch Number</th><th>Output</th><th>Reject</th><th>Target Output</th><th>Availability (%)</th><th>Performance (%)</th><th>Quality (%)</th><th>OEE (%)</th><th>ODT Items</th><th>LS Mesin</th><th>LS Non Mesin</th><th>Minor Stop</th><th>WR Number</th>';
-      html += '</tr></thead><tbody>';
+      let htmlContent = `
+        <table border="1">
+          <thead>
+            <tr style="background-color: #667eea; color: white;">
+              <th>Tanggal</th>
+              <th>Mesin</th>
+              <th>Shift</th>
+              <th>PIC</th>
+              <th>Kode Produk</th>
+              <th>Batch Number</th>
+              <th>Output</th>
+              <th>Reject</th>
+              <th>OEE (%)</th>
+              <th>Availability (%)</th>
+              <th>Performance (%)</th>
+              <th>Quality (%)</th>
+              <th>ODT</th>
+              <th>Line Stop Mesin</th>
+              <th>Line Stop Non Mesin</th>
+              <th>Minor Stop</th>
+              <th>Total Frek Minor Stop</th>
+              <th>WR Number</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
       
-      data.forEach(record => {
-        const odtText = (record.odt_items || []).map(item => `${item.name}(${item.actual}m)`).join('; ');
-        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
-        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
-        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name}(${item.frequency}x)`).join('; ');
-        const wrNumber = record.wr_number || '-';
+      filteredData.forEach(item => {
+        const odtText = item.odt.map(odt => `${odt.name}: ${odt.actualTime}`).join('; ');
+        const lsMesinText = item.lineStopMesin.map(ls => `${ls.name}: ${ls.time}`).join('; ');
+        const lsNonMesinText = item.lineStopNonMesin.map(ls => `${ls.name}: ${ls.time}`).join('; ');
+        const minorStopText = item.minorStop.map(ms => `${ms.name}: ${ms.frequency}`).join('; ');
+        const totalMinorStopFreq = item.minorStop.reduce((sum, ms) => sum + ms.frequency, 0);
         
-        html += '<tr>';
-        html += `<td>${record.tanggal_produksi}</td>`;
-        html += `<td>${record.mesin_nama}</td>`;
-        html += `<td>${record.area}</td>`;
-        html += `<td>${record.shift}</td>`;
-        html += `<td>${record.pic_inisial}</td>`;
-        html += `<td>${record.kode_produk}</td>`;
-        html += `<td>${record.batch_number}</td>`;
-        html += `<td>${record.jumlah_output}</td>`;
-        html += `<td>${record.jumlah_reject}</td>`;
-        html += `<td>${record.target_output}</td>`;
-        html += `<td>${record.availability}</td>`;
-        html += `<td>${record.performance}</td>`;
-        html += `<td>${record.quality}</td>`;
-        html += `<td>${record.oee}</td>`;
-        html += `<td>${odtText}</td>`;
-        html += `<td>${lsMesinText}</td>`;
-        html += `<td>${lsNonMesinText}</td>`;
-        html += `<td>${minorStopText}</td>`;
-        html += `<td>${wrNumber}</td>`;
-        html += '</tr>';
+        const rowStyle = item.oee < 86 ? 'background-color: #fee2e2; color: #991b1b; font-weight: bold;' : '';
+        
+        htmlContent += `
+          <tr style="${rowStyle}">
+            <td>${item.tanggal}</td>
+            <td>${item.mesin}</td>
+            <td>${item.shift}</td>
+            <td>${item.pic}</td>
+            <td>${item.kodeProduk}</td>
+            <td>${item.batchNumber}</td>
+            <td>${item.actualOutput}</td>
+            <td>${item.rejectOutput}</td>
+            <td>${item.oee.toFixed(2)}%</td>
+            <td>${item.availability.toFixed(2)}%</td>
+            <td>${item.performance.toFixed(2)}%</td>
+            <td>${item.quality.toFixed(2)}%</td>
+            <td>${odtText}</td>
+            <td>${lsMesinText}</td>
+            <td>${lsNonMesinText}</td>
+            <td>${minorStopText}</td>
+            <td>${totalMinorStopFreq}</td>
+            <td>${item.wrNumber || ''}</td>
+          </tr>
+        `;
       });
       
-      html += '</tbody></table>';
+      htmlContent += `
+          </tbody>
+        </table>
+      `;
       
-      // Download as Excel
-      const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+      // Download file
+      const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -2281,88 +2056,7 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      alert(`✅ ${data.length} baris data berhasil didownload!`);
     }
-
-    // ===== HISTORY FUNCTIONS =====
-    async function loadHistory() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = [...demoOEERecords].sort((a, b) => b.tanggal_produksi.localeCompare(a.tanggal_produksi));
-      } else {
-        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
-        if (result.error) {
-          console.error('Error loading history:', result.error);
-          return;
-        }
-        data = result.data;
-      }
-      
-      const tbody = document.querySelector('#historyTable tbody');
-      tbody.innerHTML = '';
-      
-      data.forEach(record => {
-        const row = document.createElement('tr');
-        const oeeValue = parseFloat(record.oee);
-        const oeeClass = oeeValue < 86 ? 'low-oee' : '';
-        
-        // Format ODT
-        const odtText = (record.odt_items || []).map(item => `${item.name} (${item.actual}m)`).join(', ') || '-';
-        
-        // Format LS Mesin
-        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name} (${item.time}m)`).join(', ') || '-';
-        
-        // Format LS Non Mesin
-        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name} (${item.time}m)`).join(', ') || '-';
-        
-        // Format Minor Stop
-        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name} (${item.frequency}x)`).join(', ') || '-';
-        
-        // Calculate total Minor Stop frequency
-        const totalMinorStopFreq = (record.minor_stop_items || []).reduce((sum, item) => sum + item.frequency, 0);
-        
-        // WR Number
-        const wrNumber = record.wr_number || '-';
-        
-        row.innerHTML = `
-          <td>${record.tanggal_produksi}</td>
-          <td>${record.mesin_nama}</td>
-          <td>${record.shift}</td>
-          <td>${record.pic_inisial}</td>
-          <td>${record.jumlah_output}</td>
-          <td>${record.jumlah_reject}</td>
-          <td class="${oeeClass}"><strong>${record.oee}%</strong></td>
-          <td>${record.availability}%</td>
-          <td>${record.performance}%</td>
-          <td>${record.quality}%</td>
-          <td style="font-size: 11px;">${odtText}</td>
-          <td style="font-size: 11px;">${lsMesinText}</td>
-          <td style="font-size: 11px;">${lsNonMesinText}</td>
-          <td style="font-size: 11px;">${minorStopText}</td>
-          <td>${totalMinorStopFreq}</td>
-          <td>${wrNumber}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-
-
-    // ===== INITIALIZATION =====
-    document.addEventListener('DOMContentLoaded', () => {
-      loadDashboard();
-      
-      // Set default date to today
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('oeeTanggal').value = today;
-      
-      // Add uppercase event listeners to all uppercase inputs
-      document.querySelectorAll('.uppercase-input').forEach(input => {
-        input.addEventListener('input', makeUppercase);
-      });
-    });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d48163946cfd6f',t:'MTc2MjkzNDUyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99e2a0ec4353e778',t:'MTc2MzA4MjYyMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
