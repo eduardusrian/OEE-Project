@@ -1,2370 +1,1746 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem OEE Manufacturing</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
-  <script src="/_sdk/element_sdk.js"></script>
+  <title>OEE Manufacturing System v30</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
   <style>
-    body {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100%;
-    }
-    
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-    
-    .tab-button {
-      padding: 12px 24px;
-      border: none;
-      background: #e5e7eb;
-      color: #4b5563;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s;
-      margin-right: 8px;
-    }
-    
-    .tab-button.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-    
-    .input-field {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: border 0.3s;
-    }
-    
-    .input-field:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 12px 32px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    }
-    
-    .btn-secondary {
-      background: #f3f4f6;
-      color: #374151;
-      padding: 10px 24px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .btn-secondary:hover {
-      background: #e5e7eb;
-    }
-    
-    .btn-danger {
-      background: #ef4444;
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    
-    .metric-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-    }
-    
-    .metric-value {
-      font-size: 36px;
-      font-weight: 700;
-      margin: 8px 0;
-    }
-    
-    .metric-label {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-    
-    .table-container {
-      overflow-x: auto;
-      margin-top: 16px;
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    
-    th {
-      background: #f9fafb;
-      padding: 12px;
-      text-align: left;
-      font-weight: 600;
-      color: #374151;
-      border-bottom: 2px solid #e5e7eb;
-    }
-    
-    td {
-      padding: 12px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .chart-container {
-      position: relative;
-      height: 300px;
-      margin-top: 20px;
-    }
-    
-    .notice-error {
-      background: #fee2e2;
-      border: 2px solid #ef4444;
-      color: #991b1b;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-weight: 600;
-    }
-    
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #6b7280;
-    }
-    
-    .hidden {
-      display: none;
-    }
-    
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-    }
-    
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-    }
-    
-    .form-group {
-      margin-bottom: 16px;
-    }
-    
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #374151;
-    }
-    
-    .dynamic-list {
-      border: 2px dashed #e5e7eb;
-      padding: 16px;
-      border-radius: 8px;
-      margin-top: 8px;
-    }
-    
-    .dynamic-item {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-    
-    .odt-item {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr auto;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-    
-    @keyframes blink-red {
-      0%, 100% { background-color: #fee2e2; }
-      50% { background-color: #fecaca; }
-    }
-    
-    .low-oee {
-      animation: blink-red 1.5s infinite;
-      font-weight: 700;
-      color: #991b1b;
-    }
-
-    .uppercase-input {
-      text-transform: uppercase;
-    }
-  </style>
+        body {
+            box-sizing: border-box;
+        }
+        .pulse-red {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0%, 100% { background-color: #fecaca; }
+            50% { background-color: #ef4444; }
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
   <style>@view-transition { navigation: auto; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
- <body>
-  <div class="container"><!-- Header -->
-   <div class="card" style="text-align: center; margin-bottom: 24px;">
-    <h1 id="appTitle" style="margin: 0; font-size: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sistem OEE Manufacturing</h1>
-    <p id="companyName" style="margin: 8px 0 0 0; color: #6b7280;">by Eduardus Rian</p>
-   </div><!-- Tabs -->
-   <div class="card">
-    <div style="display: flex; flex-wrap: wrap; gap: 8px;"><button class="tab-button active" onclick="switchTab('dashboard')">📊 Dashboard</button> <button class="tab-button" onclick="switchTab('inputMesin')">⚙️ Input Mesin</button> <button class="tab-button" onclick="switchTab('inputOEE')">📝 Input OEE</button> <button class="tab-button" onclick="switchTab('history')">📋 History</button> <button class="tab-button" onclick="switchTab('download')">💾 Download</button>
+ <body class="min-h-full bg-gray-50">
+  <div id="app" class="min-h-full"><!-- Header -->
+   <header class="bg-blue-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+     <h1 id="system-title" class="text-3xl font-bold">OEE Manufacturing System v30</h1>
+     <p id="company-name" class="text-blue-200 mt-1">Manufacturing Company</p>
     </div>
-   </div><!-- Dashboard Tab -->
-   <div id="dashboardTab" class="tab-content">
-    <div class="card" style="margin-bottom: 20px;">
-     <h3 style="margin-top: 0;">🔍 Filter Dashboard</h3>
-     <div class="grid-3">
-      <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="dashboardFromDate" class="input-field" onchange="applyDashboardFilter()">
-      </div>
-      <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="dashboardToDate" class="input-field" onchange="applyDashboardFilter()">
-      </div>
-      <div class="form-group"><label>Pilih Mesin</label> <select id="dashboardFilterMesin" class="input-field" onchange="applyDashboardFilter()"> <option value="">-- Semua Mesin --</option> </select>
-      </div>
-     </div><button class="btn-secondary" onclick="resetDashboardFilter()">🔄 Reset Filter</button>
-    </div>
-    <div class="grid-3" style="margin-bottom: 20px;">
-     <div class="metric-card">
-      <div class="metric-label">
-       Rata-rata OEE
-      </div>
-      <div class="metric-value" id="avgOEE">
-       0%
-      </div>
-     </div>
-     <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-      <div class="metric-label">
-       Total Output
-      </div>
-      <div class="metric-value" id="totalOutput">
-       0
-      </div>
-     </div>
-     <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-      <div class="metric-label">
-       Total Records
-      </div>
-      <div class="metric-value" id="totalRecords">
-       0
-      </div>
+   </header><!-- Navigation -->
+   <nav class="bg-blue-800 text-white">
+    <div class="max-w-7xl mx-auto px-4">
+     <div class="flex space-x-8"><button onclick="showSection('dashboard')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="dashboard">Dashboard</button> <button onclick="showSection('input')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="input">OEE Input</button> <button onclick="showSection('machines')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="machines">Machine Management</button> <button onclick="showSection('history')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="history">History</button> <button onclick="showSection('export')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="export">Export</button>
      </div>
     </div>
-    <div class="grid-2">
-     <div class="card">
-      <h3 style="margin-top: 0;">📈 Trend OEE</h3>
-      <div class="chart-container">
-       <canvas id="oeeChart"></canvas>
-      </div>
-     </div>
-     <div class="card">
-      <h3 style="margin-top: 0;">⚡ Availability vs Performance vs Quality</h3>
-      <div class="chart-container">
-       <canvas id="apqChart"></canvas>
-      </div>
-     </div>
-    </div>
-    <div class="grid-2">
-     <div class="card">
-      <h3 style="margin-top: 0;">🔧 Line Stop Mesin</h3>
-      <div class="chart-container">
-       <canvas id="lineStopMesinChart"></canvas>
-      </div>
-     </div>
-     <div class="card">
-      <h3 style="margin-top: 0;">⚠️ Line Stop Non Mesin</h3>
-      <div class="chart-container">
-       <canvas id="lineStopNonMesinChart"></canvas>
-      </div>
-     </div>
-    </div>
-    <div class="grid-2">
-     <div class="card">
-      <h3 style="margin-top: 0;">⏸️ Minor Stop</h3>
-      <div class="chart-container">
-       <canvas id="minorStopChart"></canvas>
-      </div>
-     </div>
-     <div class="card">
-      <h3 style="margin-top: 0;">🏭 OEE per Mesin</h3>
-      <div class="chart-container">
-       <canvas id="oeePerMesinChart"></canvas>
-      </div>
-     </div>
-    </div>
-    <div class="card">
-     <h3 style="margin-top: 0;">👤 Performa Operator (PIC)</h3>
-     <div class="table-container">
-      <table id="operatorTable">
-       <thead>
-        <tr>
-         <th>PIC</th>
-         <th>Total Output</th>
-         <th>Target Total</th>
-         <th>Achievement (%)</th>
-         <th>Rata-rata OEE (%)</th>
-         <th>Jumlah Shift</th>
-        </tr>
-       </thead>
-       <tbody></tbody>
-      </table>
-     </div>
-    </div>
-   </div><!-- Input Mesin Tab -->
-   <div id="inputMesinTab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">⚙️ Input Data Mesin</h2><!-- Mode Selection -->
-     <div style="margin-bottom: 24px;"><button class="btn-secondary" onclick="setMesinMode('create')" id="btnCreateMode">➕ Tambah Mesin Baru</button> <button class="btn-secondary" onclick="setMesinMode('edit')" id="btnEditMode">✏️ Edit Mesin</button>
-     </div><!-- Edit Mode: Select Machine -->
-     <div id="editMesinSelector" class="hidden" style="margin-bottom: 24px;"><label>Pilih Mesin yang akan di-edit:</label> <select id="selectEditMesin" class="input-field" onchange="loadMesinForEdit()"> <option value="">-- Pilih Mesin --</option> </select>
-     </div><!-- Form Input Mesin -->
-     <form id="formInputMesin" onsubmit="saveMesin(event)">
-      <div class="form-group"><label>🔐 Kata Sandi *</label> <input type="password" id="mesinPassword" class="input-field" required placeholder="Masukkan kata sandi">
-      </div>
-      <div class="form-group"><label>Nama Mesin *</label> <input type="text" id="mesinNama" class="input-field uppercase-input" required placeholder="Contoh: JCMCO 29">
-      </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Area *</label> <select id="mesinArea" class="input-field" required> <option value="">-- Pilih Area --</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
+   </nav><!-- Dashboard Section -->
+   <section id="dashboard-section" class="section max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-6">
+     <h2 class="text-2xl font-bold text-gray-800 mb-4">Dashboard Analytics</h2><!-- Filters -->
+     <div class="bg-white p-6 rounded-lg shadow mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label> <input type="date" id="filter-start-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
        </div>
-       <div class="form-group"><label>Target Output per Menit (butir) *</label> <input type="number" id="mesinTarget" class="input-field" required placeholder="CONTOH: 100" step="0.01">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">End Date</label> <input type="date" id="filter-end-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine</label> <select id="filter-machine" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Machines</option> </select>
+       </div>
+       <div class="flex items-end"><button onclick="applyDashboardFilters()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Apply Filters</button>
        </div>
       </div>
-      <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="mesinPIC" class="input-field uppercase-input" required placeholder="CONTOH: ABC">
+     </div><!-- Key Metrics -->
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700">Average OEE</h3>
+       <p id="avg-oee" class="text-3xl font-bold text-blue-600">0%</p>
       </div>
-      <div class="form-group"><label>ODT (Operational Downtime) Items</label>
-       <div class="dynamic-list" id="odtList">
-        <div class="odt-item"><input type="text" class="input-field uppercase-input" placeholder="Nama ODT" id="odtName0"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime0"> <span></span> <button type="button" class="btn-danger" onclick="removeODT(0)">❌</button>
-        </div>
-       </div><button type="button" class="btn-secondary" onclick="addODT()" style="margin-top: 8px;">➕ Tambah ODT</button>
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700">Total Output</h3>
+       <p id="total-output" class="text-3xl font-bold text-green-600">0</p>
       </div>
-      <div class="form-group"><label>Line Stop Mesin</label>
-       <div class="dynamic-list" id="lsMesinList">
-        <div class="dynamic-item"><input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin0"> <button type="button" class="btn-danger" onclick="removeLSMesin(0)">❌</button>
-        </div>
-       </div><button type="button" class="btn-secondary" onclick="addLSMesin()" style="margin-top: 8px;">➕ Tambah LS Mesin</button>
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700">Total Records</h3>
+       <p id="total-records" class="text-3xl font-bold text-purple-600">0</p>
       </div>
-      <div class="form-group"><label>Line Stop Non Mesin</label>
-       <div class="dynamic-list" id="lsNonMesinList">
-        <div class="dynamic-item"><input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin0"> <button type="button" class="btn-danger" onclick="removeLSNonMesin(0)">❌</button>
-        </div>
-       </div><button type="button" class="btn-secondary" onclick="addLSNonMesin()" style="margin-top: 8px;">➕ Tambah LS Non Mesin</button>
-      </div>
-      <div class="form-group"><label>Minor Stop Items</label>
-       <div class="dynamic-list" id="minorStopList">
-        <div class="dynamic-item"><input type="text" class="input-field uppercase-input" placeholder="Nama Minor Stop" id="minorStop0"> <button type="button" class="btn-danger" onclick="removeMinorStop(0)">❌</button>
-        </div>
-       </div><button type="button" class="btn-secondary" onclick="addMinorStop()" style="margin-top: 8px;">➕ Tambah Minor Stop</button>
-      </div><button type="submit" class="btn-primary" id="btnSaveMesin">💾 Simpan Mesin</button>
-     </form>
-    </div>
-   </div><!-- Input OEE Tab -->
-   <div id="inputOEETab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">📝 Input Data OEE</h2>
-     <div id="oeeErrorNotice" class="notice-error hidden"></div>
-     <form id="formInputOEE" onsubmit="saveOEE(event)">
-      <div class="grid-2">
-       <div class="form-group"><label>Pilih Mesin *</label> <select id="oeeSelectMesin" class="input-field" required onchange="loadMesinData()"> <option value="">-- Pilih Mesin --</option> </select>
-       </div>
-       <div class="form-group"><label>Tanggal Produksi *</label> <input type="date" id="oeeTanggal" class="input-field" required>
+     </div><!-- Charts -->
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">OEE Trend (Last 10 Records)</h3>
+       <div class="chart-container">
+        <canvas id="oee-trend-chart"></canvas>
        </div>
       </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Shift *</label> <select id="oeeShift" class="input-field" required> <option value="">-- Pilih Shift --</option> <option value="Shift 1">Shift 1 (07.00 - 15.30 | 510 menit)</option> <option value="Shift 2">Shift 2 (15.20 - 22.50 | 450 menit)</option> <option value="Shift 3">Shift 3 (22.40 - 07.10 | 510 menit)</option> <option value="Long Shift Pagi">Long Shift Pagi (07.00 - 19.00 | 720 menit)</option> <option value="Long Shift Malam">Long Shift Malam (19.00 - 07.00 | 720 menit)</option> </select>
-       </div>
-       <div class="form-group"><label>Inisial PIC *</label> <input type="text" id="oeePIC" class="input-field uppercase-input" required placeholder="CONTOH: ABC">
-       </div>
-      </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Kode Produk *</label> <input type="text" id="oeeKodeProduk" class="input-field uppercase-input" required placeholder="CONTOH: TABC1">
-       </div>
-       <div class="form-group"><label>Batch Number *</label> <input type="text" id="oeeBatch" class="input-field uppercase-input" required placeholder="CONTOH: TABC12345">
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">A vs P vs Q Comparison</h3>
+       <div class="chart-container">
+        <canvas id="apq-chart"></canvas>
        </div>
       </div>
-      <div class="form-group"><label>ODT Items (dengan Waktu Aktual)</label>
-       <div class="dynamic-list" id="oeeODTList"></div>
-      </div>
-      <div class="form-group"><label>Line Stop Mesin</label>
-       <div class="dynamic-list" id="oeeLSMesinList"></div>
-       <div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px;"><strong>Custom Line Stop Mesin:</strong>
-        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field uppercase-input" placeholder="Nama Custom LS Mesin 1" id="customLSMesin1"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSMesinTime1">
-        </div>
-        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field uppercase-input" placeholder="Nama Custom LS Mesin 2" id="customLSMesin2"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSMesinTime2">
-        </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">Line Stop Mesin (Top 10)</h3>
+       <div class="chart-container">
+        <canvas id="line-stop-mesin-chart"></canvas>
        </div>
       </div>
-      <div class="form-group"><label>Line Stop Non Mesin</label>
-       <div class="dynamic-list" id="oeeLSNonMesinList"></div>
-       <div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px;"><strong>Custom Line Stop Non Mesin:</strong>
-        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field uppercase-input" placeholder="Nama Custom LS Non Mesin 1" id="customLSNonMesin1"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSNonMesinTime1">
-        </div>
-        <div class="dynamic-item" style="margin-top: 8px;"><input type="text" class="input-field uppercase-input" placeholder="Nama Custom LS Non Mesin 2" id="customLSNonMesin2"> <input type="number" class="input-field" placeholder="Waktu (menit)" id="customLSNonMesinTime2">
-        </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">Line Stop Non Mesin (Top 10)</h3>
+       <div class="chart-container">
+        <canvas id="line-stop-non-mesin-chart"></canvas>
        </div>
       </div>
-      <div class="form-group"><label>Minor Stop (Frekuensi dalam Kali)</label>
-       <div class="dynamic-list" id="oeeMinorStopList"></div>
-      </div>
-      <div id="wrSection" class="form-group hidden" style="padding: 16px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px;">
-       <h4 style="margin: 0 0 12px 0; color: #92400e;">⚠️ Line Stop Mesin &gt; 179 Menit - Isi WR (Work Request)</h4><label>Nomor WR *</label> <input type="text" id="oeeWRNumber" class="input-field uppercase-input" placeholder="Contoh: WR-2024-001">
-      </div>
-      <div class="grid-2">
-       <div class="form-group"><label>Jumlah Output / shift (butir) *</label> <input type="number" id="oeeOutput" class="input-field" required placeholder="Contoh: 100000">
-       </div>
-       <div class="form-group"><label>Jumlah Reject / shift (butir) *</label> <input type="number" id="oeeReject" class="input-field" required placeholder="Contoh: 50">
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">Minor Stop Frequency (Top 10)</h3>
+       <div class="chart-container">
+        <canvas id="minor-stop-chart"></canvas>
        </div>
       </div>
-      <div id="targetOutputInfo" style="margin-top: 20px; padding: 16px; background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; display: none;">
-       <h4 style="margin: 0 0 12px 0; color: #1e40af;">📊 Perhitungan Target Output Otomatis</h4>
-       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-        <div><strong>Target per Menit:</strong> <span id="infoTargetPerMinute">0</span> butir/menit
-        </div>
-        <div><strong>Durasi Shift:</strong> <span id="infoShiftDuration">0</span> menit
-        </div>
-        <div><strong>Total ODT:</strong> <span id="infoTotalODT">0</span> menit
-        </div>
-        <div><strong>Total Line Stop:</strong> <span id="infoTotalLineStop">0</span> menit
-        </div>
-       </div>
-       <div style="padding: 12px; background: #f0fdf4; border-radius: 6px; border: 2px solid #22c55e; margin-bottom: 12px;"><strong style="color: #166534; font-size: 16px;">🎯 Target Output Aktual: <span id="infoTargetOutput">0</span> butir</strong>
-        <div style="margin-top: 4px; font-size: 12px; color: #166534;">
-         Rumus: Target/menit × (Durasi Shift - Total ODT - Total Line Stop)
-        </div>
-       </div>
-       <div id="oeePreview" style="padding: 16px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; display: none;">
-        <h4 style="margin: 0 0 12px 0; color: #92400e;">⚡ Preview Perhitungan OEE</h4>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px;">
-         <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
-          <div style="font-size: 24px; font-weight: 700; color: #667eea;" id="previewAvailability">
-           0%
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-           Availability
-          </div>
-         </div>
-         <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
-          <div style="font-size: 24px; font-weight: 700; color: #f093fb;" id="previewPerformance">
-           0%
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-           Performance
-          </div>
-         </div>
-         <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
-          <div style="font-size: 24px; font-weight: 700; color: #4facfe;" id="previewQuality">
-           0%
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-           Quality
-          </div>
-         </div>
-         <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
-          <div style="font-size: 28px; font-weight: 700; color: #22c55e;" id="previewOEE">
-           0%
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-           OEE
-          </div>
-         </div>
-        </div>
-        <div id="oeeWarning" style="padding: 12px; background: #fee2e2; border: 2px solid #ef4444; border-radius: 6px; display: none;"><strong style="color: #991b1b;">⚠️ PERINGATAN: OEE MELEBIHI 100%!</strong>
-         <div style="margin-top: 8px; font-size: 14px; color: #991b1b;">
-          Mohon periksa kembali data input Anda sebelum menyimpan!
-         </div>
-        </div>
-       </div>
-      </div><button type="submit" class="btn-primary">💾 Simpan Data OEE</button>
-     </form>
-    </div>
-   </div><!-- Download Tab -->
-   <div id="downloadTab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">💾 Download Data OEE</h2>
-     <div class="card" style="background: #f9fafb; margin-bottom: 20px;">
-      <h3 style="margin-top: 0;">🔍 Filter Data Download</h3>
-      <div class="grid-3">
-       <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="downloadFromDate" class="input-field">
-       </div>
-       <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="downloadToDate" class="input-field">
-       </div>
-       <div class="form-group"><label>Pilih Mesin</label> <select id="downloadFilterMesin" class="input-field"> <option value="">-- Semua Mesin --</option> </select>
+      <div class="bg-white p-6 rounded-lg shadow">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">OEE per Machine</h3>
+       <div class="chart-container">
+        <canvas id="oee-per-machine-chart"></canvas>
        </div>
       </div>
-     </div>
-     <div style="display: flex; gap: 12px; flex-wrap: wrap;"><button class="btn-primary" onclick="downloadCSV()">📥 Download CSV</button> <button class="btn-primary" onclick="downloadExcel()">📊 Download Excel</button>
-     </div>
-     <div id="downloadPreview" style="margin-top: 24px; display: none;">
-      <h3>Preview Data (10 baris pertama)</h3>
-      <div class="table-container">
-       <table id="downloadPreviewTable">
-        <thead>
+     </div><!-- Operator Performance Table -->
+     <div class="bg-white p-6 rounded-lg shadow mt-6">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Operator Performance</h3>
+      <div class="overflow-x-auto">
+       <table class="min-w-full table-auto">
+        <thead class="bg-gray-50">
          <tr>
-          <th>Tanggal</th>
-          <th>Mesin</th>
-          <th>Shift</th>
-          <th>PIC</th>
-          <th>Output</th>
-          <th>OEE (%)</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">PIC</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Records</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Avg OEE</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Achievement</th>
          </tr>
         </thead>
-        <tbody></tbody>
+        <tbody id="operator-performance-table">
+        </tbody>
        </table>
       </div>
      </div>
     </div>
-   </div><!-- History Tab -->
-   <div id="historyTab" class="tab-content hidden">
-    <div class="card">
-     <h2 style="margin-top: 0;">📋 History Data OEE</h2>
-     <div class="card" style="background: #f9fafb; margin-bottom: 20px;">
-      <h3 style="margin-top: 0;">🔍 Filter History</h3>
-      <div class="grid-3">
-       <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="historyFromDate" class="input-field" onchange="applyHistoryFilter()">
+   </section><!-- OEE Input Section -->
+   <section id="input-section" class="section hidden max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white p-6 rounded-lg shadow">
+     <h2 class="text-2xl font-bold text-gray-800 mb-6">OEE Data Input</h2>
+     <form id="oee-form" class="space-y-6"><!-- Basic Information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Date</label> <input type="date" id="input-date" required class="w-full border border-gray-300 rounded-md px-3 py-2">
        </div>
-       <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="historyToDate" class="input-field" onchange="applyHistoryFilter()">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Shift</label> <select id="input-shift" required class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">Select Shift</option> <option value="1">Shift 1</option> <option value="2">Shift 2</option> <option value="3">Shift 3</option> </select>
        </div>
-       <div class="form-group"><label>Pilih Mesin</label> <select id="historyFilterMesin" class="input-field" onchange="applyHistoryFilter()"> <option value="">-- Semua Mesin --</option> </select>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine</label> <select id="input-machine" required class="w-full border border-gray-300 rounded-md px-3 py-2" onchange="loadMachineTemplate()"> <option value="">Select Machine</option> </select>
        </div>
-      </div><button class="btn-secondary" onclick="resetHistoryFilter()">🔄 Reset Filter</button>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">PIC</label> <input type="text" id="input-pic" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Product</label> <input type="text" id="input-product" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Batch</label> <input type="text" id="input-batch" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+       </div>
+      </div><!-- Output Data -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Actual Output</label> <input type="number" id="input-actual-output" required class="w-full border border-gray-300 rounded-md px-3 py-2" onchange="calculateOEE()">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Reject</label> <input type="number" id="input-reject" required class="w-full border border-gray-300 rounded-md px-3 py-2" onchange="calculateOEE()">
+       </div>
+      </div><!-- Dynamic Template Fields -->
+      <div id="template-fields"></div><!-- WR Number -->
+      <div id="wr-section" class="hidden"><label class="block text-sm font-medium text-gray-700 mb-2">WR Number (Required for Line Stop Mesin &gt; 179 minutes)</label> <input type="text" id="input-wr" class="w-full border border-gray-300 rounded-md px-3 py-2">
+      </div><!-- Calculated Results -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">Calculated Results</h3>
+       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div><label class="block text-sm font-medium text-gray-600">Availability</label> <span id="calc-availability" class="text-lg font-bold text-blue-600">0%</span>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-600">Performance</label> <span id="calc-performance" class="text-lg font-bold text-green-600">0%</span>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-600">Quality</label> <span id="calc-quality" class="text-lg font-bold text-purple-600">0%</span>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-600">OEE</label> <span id="calc-oee" class="text-lg font-bold text-red-600">0%</span>
+        </div>
+       </div>
+      </div>
+      <div class="flex space-x-4"><button type="submit" id="submit-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">Save OEE Data</button> <button type="button" onclick="resetForm()" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors">Reset</button>
+      </div>
+     </form>
+    </div>
+   </section><!-- Machine Management Section -->
+   <section id="machines-section" class="section hidden max-w-6xl mx-auto px-4 py-8">
+    <div class="bg-white p-6 rounded-lg shadow">
+     <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Machine Management</h2><button onclick="showMachineForm()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Add Machine</button>
+     </div><!-- Password Protection -->
+     <div id="password-protection" class="mb-6">
+      <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg"><label class="block text-sm font-medium text-gray-700 mb-2">Enter Admin Password</label>
+       <div class="flex space-x-2"><input type="password" id="admin-password" placeholder="Enter password" class="flex-1 border border-gray-300 rounded-md px-3 py-2"> <button onclick="checkPassword()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Access</button>
+       </div>
+      </div>
+     </div><!-- Machine Form -->
+     <div id="machine-form-container" class="hidden mb-6">
+      <form id="machine-form" class="space-y-6"><input type="hidden" id="edit-machine-id">
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine Name</label> <input type="text" id="machine-name" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">Area</label> <input type="text" id="machine-area" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">Target per Minute</label> <input type="number" id="machine-target" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">PIC</label> <input type="text" id="machine-pic" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+       </div><!-- ODT Items -->
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">ODT Items</label>
+        <div id="odt-items" class="space-y-2">
+         <div class="flex space-x-2"><input type="text" placeholder="ODT Name" class="flex-1 border border-gray-300 rounded-md px-3 py-2 odt-name"> <input type="number" placeholder="Standard Time (min)" class="w-32 border border-gray-300 rounded-md px-3 py-2 odt-time"> <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600">Remove</button>
+         </div>
+        </div><button type="button" onclick="addODTItem()" class="mt-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600">Add ODT Item</button>
+       </div><!-- Line Stop Categories -->
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">Line Stop Mesin</label>
+         <div id="line-stop-mesin" class="space-y-2"><input type="text" placeholder="Line Stop Mesin Item" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-item">
+         </div><button type="button" onclick="addLineStopMesin()" class="mt-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600">Add Item</button>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">Line Stop Non Mesin</label>
+         <div id="line-stop-non-mesin" class="space-y-2"><input type="text" placeholder="Line Stop Non Mesin Item" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-item">
+         </div><button type="button" onclick="addLineStopNonMesin()" class="mt-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600">Add Item</button>
+        </div>
+       </div><!-- Minor Stop Items -->
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Minor Stop Items</label>
+        <div id="minor-stop-items" class="space-y-2"><input type="text" placeholder="Minor Stop Item" class="w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-item">
+        </div><button type="button" onclick="addMinorStopItem()" class="mt-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600">Add Item</button>
+       </div>
+       <div class="flex space-x-4"><button type="submit" id="machine-submit-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">Save Machine</button> <button type="button" onclick="cancelMachineForm()" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors">Cancel</button>
+       </div>
+      </form>
+     </div><!-- Machine List -->
+     <div id="machine-list-container" class="hidden">
+      <div class="overflow-x-auto">
+       <table class="min-w-full table-auto">
+        <thead class="bg-gray-50">
+         <tr>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Name</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Area</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Target/Min</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">PIC</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+         </tr>
+        </thead>
+        <tbody id="machine-list">
+        </tbody>
+       </table>
+      </div>
      </div>
-     <div class="table-container">
-      <table id="historyTable">
-       <thead>
+    </div>
+   </section><!-- History Section -->
+   <section id="history-section" class="section hidden max-w-7xl mx-auto px-4 py-8">
+    <div class="bg-white p-6 rounded-lg shadow">
+     <h2 class="text-2xl font-bold text-gray-800 mb-6">OEE History</h2><!-- History Filters -->
+     <div class="bg-gray-50 p-4 rounded-lg mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label> <input type="date" id="history-start-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">End Date</label> <input type="date" id="history-end-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine</label> <select id="history-machine" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Machines</option> </select>
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Shift</label> <select id="history-shift" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Shifts</option> <option value="1">Shift 1</option> <option value="2">Shift 2</option> <option value="3">Shift 3</option> </select>
+       </div>
+       <div class="flex items-end"><button onclick="applyHistoryFilters()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Apply Filters</button>
+       </div>
+      </div>
+     </div><!-- History Table -->
+     <div class="overflow-x-auto">
+      <table class="min-w-full table-auto">
+       <thead class="bg-gray-50">
         <tr>
-         <th>Tanggal</th>
-         <th>Mesin</th>
-         <th>Shift</th>
-         <th>PIC</th>
-         <th>Output</th>
-         <th>Reject</th>
-         <th>OEE (%)</th>
-         <th>A (%)</th>
-         <th>P (%)</th>
-         <th>Q (%)</th>
-         <th>ODT</th>
-         <th>LS Mesin</th>
-         <th>LS Non Mesin</th>
-         <th>Minor Stop</th>
-         <th>Frek MS</th>
-         <th>WR</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Date</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Shift</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Machine</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">PIC</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Product</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Batch</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Output</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Reject</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">A%</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">P%</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Q%</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">OEE%</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">WR</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">ODT</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Line Stop</th>
+         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Minor Stop</th>
         </tr>
        </thead>
-       <tbody></tbody>
+       <tbody id="history-table">
+       </tbody>
       </table>
      </div>
     </div>
-   </div>
+   </section><!-- Export Section -->
+   <section id="export-section" class="section hidden max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white p-6 rounded-lg shadow">
+     <h2 class="text-2xl font-bold text-gray-800 mb-6">Export Data</h2><!-- Export Filters -->
+     <div class="bg-gray-50 p-4 rounded-lg mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label> <input type="date" id="export-start-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">End Date</label> <input type="date" id="export-end-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine</label> <select id="export-machine" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Machines</option> </select>
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">Format</label> <select id="export-format" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="csv">CSV</option> <option value="excel">Excel</option> </select>
+       </div>
+      </div>
+     </div>
+     <div class="flex space-x-4"><button onclick="exportData()" id="export-btn" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors">Export Data</button> <button onclick="previewExport()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">Preview</button>
+     </div><!-- Export Preview -->
+     <div id="export-preview" class="mt-6 hidden">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Export Preview</h3>
+      <div class="bg-gray-50 p-4 rounded-lg">
+       <p id="preview-info" class="text-sm text-gray-600 mb-4"></p>
+       <div class="overflow-x-auto max-h-96">
+        <table class="min-w-full table-auto text-xs">
+         <thead class="bg-gray-100">
+          <tr id="preview-header"></tr>
+         </thead>
+         <tbody id="preview-body"></tbody>
+        </table>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
   </div>
   <script>
-    // ===== PASSWORD CONFIGURATION =====
-    const MACHINE_PASSWORD = 'cimenG90'; // GANTI INI DI GITHUB!
+        // Global variables
+        let currentData = [];
+        let machines = [];
+        let oeeRecords = [];
+        let charts = {};
+        let isAuthenticated = false;
+        let supabaseClient = null;
 
-    // ===== DEMO MODE CONFIGURATION =====
-    const DEMO_MODE = false;
-    const SUPABASE_URL = 'https://xgnaukbzfxvenieavkmq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbmF1a2J6Znh2ZW5pZWF2a21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MjA3NjQsImV4cCI6MjA3ODQ5Njc2NH0.gASmwrimGIDCi3TK277DxZoEF-Nos8v8MFq9_cUuR0o';
-    
-    let supabase = null;
-    if (!DEMO_MODE && typeof window.supabase !== 'undefined') {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
+        // Default configuration
+        const defaultConfig = {
+            system_title: "OEE Manufacturing System v30",
+            company_name: "Manufacturing Company"
+        };
 
-    // ===== GLOBAL STATE =====
-    let currentTab = 'dashboard';
-    let mesinMode = 'create';
-    let editingMesinId = null;
-    let allMachines = [];
-    let allOEERecords = [];
-    let filteredOEERecords = [];
-    let odtCounter = 1;
-    let lsMesinCounter = 1;
-    let lsNonMesinCounter = 1;
-    let minorStopCounter = 1;
-    let charts = {};
-    
-    // ===== DEMO DATA =====
-    let demoMachines = [
-      {
-        id: '1',
-        mesin_nama: 'JCMCO 29',
-        area: 'INJEKSI',
-        target_output: 2,
-        pic_inisial: 'JD',
-        odt_items: [
-          { name: 'SETUP MESIN', time: 30 },
-          { name: 'GANTI MOLD', time: 45 }
-        ],
-        line_stop_mesin_items: ['KERUSAKAN HYDRAULIC', 'SENSOR ERROR'],
-        line_stop_non_mesin_items: ['LISTRIK MATI', 'MATERIAL HABIS'],
-        minor_stop_items: ['CLEANING', 'ADJUSTMENT'],
-        is_active: true
-      },
-      {
-        id: '2',
-        mesin_nama: 'INJECTION MOLDING 2',
-        area: 'INJEKSI',
-        target_output: 2.5,
-        pic_inisial: 'AS',
-        odt_items: [
-          { name: 'SETUP MESIN', time: 25 },
-          { name: 'GANTI MOLD', time: 40 }
-        ],
-        line_stop_mesin_items: ['KERUSAKAN MOTOR', 'HEATING ERROR'],
-        line_stop_non_mesin_items: ['MATERIAL DELAY', 'QC HOLD'],
-        minor_stop_items: ['CLEANING', 'INSPECTION'],
-        is_active: true
-      }
-    ];
-    
-    let demoOEERecords = [
-      {
-        id: '1',
-        mesin_nama: 'JCMCO 29',
-        area: 'INJEKSI',
-        pic_inisial: 'JD',
-        shift: 'Shift 1',
-        shift_duration: 480,
-        kode_produk: 'PRD-001',
-        batch_number: 'BATCH-2024-001',
-        jumlah_output: 950,
-        jumlah_reject: 50,
-        target_output: 1000,
-        odt_items: [{ name: 'SETUP MESIN', standard: 30, actual: 30 }],
-        line_stop_mesin_items: [{ name: 'KERUSAKAN HYDRAULIC', time: 20 }],
-        line_stop_non_mesin_items: [{ name: 'MATERIAL HABIS', time: 15 }],
-        minor_stop_items: [{ name: 'CLEANING', frequency: 3 }],
-        minor_stop_frequency: null,
-        wr_number: null,
-        availability: '85.42',
-        performance: '95.00',
-        quality: '94.74',
-        oee: '76.88',
-        tanggal_produksi: '2024-01-15'
-      },
-      {
-        id: '2',
-        mesin_nama: 'INJECTION MOLDING 2',
-        area: 'INJEKSI',
-        pic_inisial: 'AS',
-        shift: 'Shift 2',
-        shift_duration: 480,
-        kode_produk: 'PRD-002',
-        batch_number: 'BATCH-2024-002',
-        jumlah_output: 1150,
-        jumlah_reject: 30,
-        target_output: 1200,
-        odt_items: [{ name: 'SETUP MESIN', standard: 25, actual: 25 }],
-        line_stop_mesin_items: [{ name: 'HEATING ERROR', time: 10 }],
-        line_stop_non_mesin_items: [{ name: 'QC HOLD', time: 12 }],
-        minor_stop_items: [{ name: 'INSPECTION', frequency: 2 }],
-        minor_stop_frequency: null,
-        wr_number: null,
-        availability: '90.21',
-        performance: '95.83',
-        quality: '97.39',
-        oee: '84.21',
-        tanggal_produksi: '2024-01-16'
-      },
-      {
-        id: '3',
-        mesin_nama: 'JCMCO 29',
-        area: 'INJEKSI',
-        pic_inisial: 'JD',
-        shift: 'Shift 1',
-        shift_duration: 480,
-        kode_produk: 'PRD-001',
-        batch_number: 'BATCH-2024-003',
-        jumlah_output: 980,
-        jumlah_reject: 20,
-        target_output: 1000,
-        odt_items: [{ name: 'GANTI MOLD', standard: 45, actual: 45 }],
-        line_stop_mesin_items: [{ name: 'SENSOR ERROR', time: 15 }],
-        line_stop_non_mesin_items: [{ name: 'LISTRIK MATI', time: 25 }],
-        minor_stop_items: [{ name: 'ADJUSTMENT', frequency: 4 }],
-        minor_stop_frequency: null,
-        wr_number: null,
-        availability: '82.29',
-        performance: '98.00',
-        quality: '97.96',
-        oee: '79.01',
-        tanggal_produksi: '2024-01-17'
-      }
-    ];
-    
-    let nextMachineId = 3;
-    let nextOEEId = 4;
+        // Initialize Supabase
+        function initSupabase() {
+            const SUPABASE_URL = 'https://krmsrtlbxoqkuxdbdccw.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybXNydGxieG9xa3V4ZGJkY2N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwODYxMTAsImV4cCI6MjA3ODY2MjExMH0.8bMZpbJxfw8FGZ36AtUXEjHdbxbO9Vjkd4W0y8FM5E4';
+            
+            // Simple Supabase client implementation
+            supabaseClient = {
+                url: SUPABASE_URL,
+                key: SUPABASE_ANON_KEY,
+                
+                async from(table) {
+                    return {
+                        async select(columns = '*') {
+                            try {
+                                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${columns}`, {
+                                    headers: {
+                                        'apikey': SUPABASE_ANON_KEY,
+                                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                const data = await response.json();
+                                return { data, error: null };
+                            } catch (error) {
+                                return { data: null, error };
+                            }
+                        },
+                        
+                        async insert(data) {
+                            try {
+                                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'apikey': SUPABASE_ANON_KEY,
+                                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                                        'Content-Type': 'application/json',
+                                        'Prefer': 'return=minimal'
+                                    },
+                                    body: JSON.stringify(data)
+                                });
+                                return { data: null, error: null };
+                            } catch (error) {
+                                return { data: null, error };
+                            }
+                        },
+                        
+                        async update(data) {
+                            return {
+                                async eq(column, value) {
+                                    try {
+                                        const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${value}`, {
+                                            method: 'PATCH',
+                                            headers: {
+                                                'apikey': SUPABASE_ANON_KEY,
+                                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: JSON.stringify(data)
+                                        });
+                                        return { data: null, error: null };
+                                    } catch (error) {
+                                        return { data: null, error };
+                                    }
+                                }
+                            };
+                        },
+                        
+                        async delete() {
+                            return {
+                                async eq(column, value) {
+                                    try {
+                                        const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${value}`, {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'apikey': SUPABASE_ANON_KEY,
+                                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                                            }
+                                        });
+                                        return { data: null, error: null };
+                                    } catch (error) {
+                                        return { data: null, error };
+                                    }
+                                }
+                            };
+                        }
+                    };
+                }
+            };
+        }
 
-    // ===== AUTO UPPERCASE FUNCTION =====
-    function makeUppercase(event) {
-      event.target.value = event.target.value.toUpperCase();
-    }
-
-    // Add event listeners to all uppercase inputs
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.uppercase-input').forEach(input => {
-        input.addEventListener('input', makeUppercase);
-      });
-    });
-
-    // ===== ELEMENT SDK CONFIGURATION =====
-    const defaultConfig = {
-      app_title: 'Sistem OEE Manufacturing',
-      company_name: 'PT. Manufacturing Indonesia',
-      primary_color: '#667eea',
-      secondary_color: '#764ba2',
-      accent_color: '#f093fb',
-      text_color: '#374151',
-      background_gradient_start: '#667eea',
-      background_gradient_end: '#764ba2'
-    };
-
-    async function onConfigChange(config) {
-      const appTitle = config.app_title || defaultConfig.app_title;
-      const companyName = config.company_name || defaultConfig.company_name;
-      
-      document.getElementById('appTitle').textContent = appTitle;
-      document.getElementById('companyName').textContent = companyName;
-      
-      const primaryColor = config.primary_color || defaultConfig.primary_color;
-      const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
-      
-      document.body.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
-    }
-
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig,
-        onConfigChange,
-        mapToCapabilities: (config) => ({
-          recolorables: [
-            {
-              get: () => config.primary_color || defaultConfig.primary_color,
-              set: (value) => {
-                config.primary_color = value;
-                window.elementSdk.setConfig({ primary_color: value });
-              }
-            },
-            {
-              get: () => config.secondary_color || defaultConfig.secondary_color,
-              set: (value) => {
-                config.secondary_color = value;
-                window.elementSdk.setConfig({ secondary_color: value });
-              }
+        // Data SDK Handler
+        const dataHandler = {
+            onDataChanged(data) {
+                currentData = data;
+                
+                // Separate machines and OEE records
+                machines = data.filter(item => item.type === 'machine');
+                oeeRecords = data.filter(item => item.type === 'oee_record');
+                
+                // Update UI
+                updateMachineSelects();
+                updateMachineList();
+                updateHistoryTable();
+                updateDashboard();
             }
-          ],
-          borderables: [],
-          fontEditable: undefined,
-          fontSizeable: undefined
-        }),
-        mapToEditPanelValues: (config) => new Map([
-          ['app_title', config.app_title || defaultConfig.app_title],
-          ['company_name', config.company_name || defaultConfig.company_name]
-        ])
-      });
-    }
+        };
 
-    // ===== TAB MANAGEMENT =====
-    function switchTab(tabName) {
-      console.log('Switching to tab:', tabName);
-      currentTab = tabName;
-      
-      // Hide all tabs
-      const allTabs = ['dashboardTab', 'inputMesinTab', 'inputOEETab', 'historyTab', 'downloadTab'];
-      allTabs.forEach(tabId => {
-        const el = document.getElementById(tabId);
-        if (el) el.classList.add('hidden');
-      });
-      
-      // Remove active from all buttons
-      document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
-      
-      // Show selected tab
-      const tabElement = document.getElementById(tabName + 'Tab');
-      if (tabElement) {
-        tabElement.classList.remove('hidden');
-        console.log('Tab shown:', tabName + 'Tab');
-      } else {
-        console.error('Tab not found:', tabName + 'Tab');
-      }
-      
-      // Activate button by finding the one that calls this tab
-      const buttons = document.querySelectorAll('.tab-button');
-      buttons.forEach(btn => {
-        const onclick = btn.getAttribute('onclick');
-        if (onclick && onclick.includes(`'${tabName}'`)) {
-          btn.classList.add('active');
-        }
-      });
-      
-      // Load data for specific tabs
-      if (tabName === 'dashboard') {
-        loadDashboard();
-      } else if (tabName === 'inputOEE') {
-        loadMachinesForOEE();
-      } else if (tabName === 'history') {
-        loadHistory();
-      } else if (tabName === 'download') {
-        loadDownloadTab();
-      }
-    }
+        // Initialize application
+        async function init() {
+            // Initialize SDKs
+            if (window.dataSdk) {
+                const initResult = await window.dataSdk.init(dataHandler);
+                if (!initResult.isOk) {
+                    console.error("Failed to initialize data SDK");
+                }
+            }
 
-    // ===== INPUT MESIN FUNCTIONS =====
-    function setMesinMode(mode) {
-      mesinMode = mode;
-      
-      if (mode === 'create') {
-        document.getElementById('btnCreateMode').classList.add('active');
-        document.getElementById('btnEditMode').classList.remove('active');
-        document.getElementById('editMesinSelector').classList.add('hidden');
-        resetMesinForm();
-        document.getElementById('btnSaveMesin').textContent = '💾 Simpan Mesin';
-      } else {
-        document.getElementById('btnEditMode').classList.add('active');
-        document.getElementById('btnCreateMode').classList.remove('active');
-        document.getElementById('editMesinSelector').classList.remove('hidden');
-        loadMachinesForEdit();
-        document.getElementById('btnSaveMesin').textContent = '✏️ Update Mesin';
-      }
-    }
+            if (window.elementSdk) {
+                await window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange: async (config) => {
+                        document.getElementById('system-title').textContent = config.system_title || defaultConfig.system_title;
+                        document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
+                    },
+                    mapToCapabilities: (config) => ({
+                        recolorables: [],
+                        borderables: [],
+                        fontEditable: undefined,
+                        fontSizeable: undefined
+                    }),
+                    mapToEditPanelValues: (config) => new Map([
+                        ["system_title", config.system_title || defaultConfig.system_title],
+                        ["company_name", config.company_name || defaultConfig.company_name]
+                    ])
+                });
+            }
 
-    async function loadMachinesForEdit() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = demoMachines.filter(m => m.is_active);
-      } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
-        if (result.error) {
-          console.error('Error loading machines:', result.error);
-          return;
+            // Initialize Supabase
+            initSupabase();
+            
+            // Load data from localStorage as backup
+            loadLocalData();
+            
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('input-date').value = today;
+            document.getElementById('filter-start-date').value = today;
+            document.getElementById('filter-end-date').value = today;
+            document.getElementById('history-start-date').value = today;
+            document.getElementById('history-end-date').value = today;
+            document.getElementById('export-start-date').value = today;
+            document.getElementById('export-end-date').value = today;
+            
+            // Show dashboard by default
+            showSection('dashboard');
+            
+            // Setup form handlers
+            setupFormHandlers();
         }
-        data = result.data;
-      }
-      
-      const select = document.getElementById('selectEditMesin');
-      select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
-      
-      data.forEach(machine => {
-        const option = document.createElement('option');
-        option.value = machine.id;
-        option.textContent = machine.mesin_nama;
-        select.appendChild(option);
-      });
-    }
 
-    async function loadMesinForEdit() {
-      const selectedId = document.getElementById('selectEditMesin').value;
-      
-      if (!selectedId) {
-        resetMesinForm();
-        return;
-      }
-      
-      let data;
-      
-      if (DEMO_MODE) {
-        data = demoMachines.find(m => m.id === selectedId);
-        if (!data) {
-          console.error('Machine not found');
-          return;
+        // Load data from localStorage
+        function loadLocalData() {
+            const localMachines = JSON.parse(localStorage.getItem('oee_machines') || '[]');
+            const localRecords = JSON.parse(localStorage.getItem('oee_records') || '[]');
+            
+            machines = localMachines;
+            oeeRecords = localRecords;
+            
+            updateMachineSelects();
+            updateMachineList();
+            updateHistoryTable();
+            updateDashboard();
         }
-      } else {
-        const result = await supabase.from('machines').select('*').eq('id', selectedId).single();
-        if (result.error) {
-          console.error('Error loading machine:', result.error);
-          return;
-        }
-        data = result.data;
-      }
-      
-      editingMesinId = data.id;
-      
-      document.getElementById('mesinNama').value = data.mesin_nama;
-      document.getElementById('mesinArea').value = data.area;
-      document.getElementById('mesinTarget').value = data.target_output;
-      document.getElementById('mesinPIC').value = data.pic_inisial;
-      
-      // Load ODT items
-      const odtList = document.getElementById('odtList');
-      odtList.innerHTML = '';
-      odtCounter = 0;
-      (data.odt_items || []).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'odt-item';
-        div.innerHTML = `
-          <input type="text" class="input-field uppercase-input" placeholder="Nama ODT" id="odtName${odtCounter}" value="${item.name}">
-          <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime${odtCounter}" value="${item.time}">
-          <span></span>
-          <button type="button" class="btn-danger" onclick="removeODT(${odtCounter})">❌</button>
-        `;
-        odtList.appendChild(div);
-        document.getElementById(`odtName${odtCounter}`).addEventListener('input', makeUppercase);
-        odtCounter++;
-      });
-      
-      // Load LS Mesin
-      const lsMesinList = document.getElementById('lsMesinList');
-      lsMesinList.innerHTML = '';
-      lsMesinCounter = 0;
-      (data.line_stop_mesin_items || []).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin${lsMesinCounter}" value="${item}">
-          <button type="button" class="btn-danger" onclick="removeLSMesin(${lsMesinCounter})">❌</button>
-        `;
-        lsMesinList.appendChild(div);
-        document.getElementById(`lsMesin${lsMesinCounter}`).addEventListener('input', makeUppercase);
-        lsMesinCounter++;
-      });
-      
-      // Load LS Non Mesin
-      const lsNonMesinList = document.getElementById('lsNonMesinList');
-      lsNonMesinList.innerHTML = '';
-      lsNonMesinCounter = 0;
-      (data.line_stop_non_mesin_items || []).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin${lsNonMesinCounter}" value="${item}">
-          <button type="button" class="btn-danger" onclick="removeLSNonMesin(${lsNonMesinCounter})">❌</button>
-        `;
-        lsNonMesinList.appendChild(div);
-        document.getElementById(`lsNonMesin${lsNonMesinCounter}`).addEventListener('input', makeUppercase);
-        lsNonMesinCounter++;
-      });
-      
-      // Load Minor Stop
-      const minorStopList = document.getElementById('minorStopList');
-      minorStopList.innerHTML = '';
-      minorStopCounter = 0;
-      (data.minor_stop_items || []).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Minor Stop" id="minorStop${minorStopCounter}" value="${item}">
-          <button type="button" class="btn-danger" onclick="removeMinorStop(${minorStopCounter})">❌</button>
-        `;
-        minorStopList.appendChild(div);
-        document.getElementById(`minorStop${minorStopCounter}`).addEventListener('input', makeUppercase);
-        minorStopCounter++;
-      });
-    }
 
-    function resetMesinForm() {
-      document.getElementById('formInputMesin').reset();
-      editingMesinId = null;
-      
-      // Reset ODT
-      document.getElementById('odtList').innerHTML = `
-        <div class="odt-item">
-          <input type="text" class="input-field uppercase-input" placeholder="Nama ODT" id="odtName0">
-          <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime0">
-          <span></span>
-          <button type="button" class="btn-danger" onclick="removeODT(0)">❌</button>
-        </div>
-      `;
-      document.getElementById('odtName0').addEventListener('input', makeUppercase);
-      odtCounter = 1;
-      
-      // Reset LS Mesin
-      document.getElementById('lsMesinList').innerHTML = `
-        <div class="dynamic-item">
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin0">
-          <button type="button" class="btn-danger" onclick="removeLSMesin(0)">❌</button>
-        </div>
-      `;
-      document.getElementById('lsMesin0').addEventListener('input', makeUppercase);
-      lsMesinCounter = 1;
-      
-      // Reset LS Non Mesin
-      document.getElementById('lsNonMesinList').innerHTML = `
-        <div class="dynamic-item">
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin0">
-          <button type="button" class="btn-danger" onclick="removeLSNonMesin(0)">❌</button>
-        </div>
-      `;
-      document.getElementById('lsNonMesin0').addEventListener('input', makeUppercase);
-      lsNonMesinCounter = 1;
-      
-      // Reset Minor Stop
-      document.getElementById('minorStopList').innerHTML = `
-        <div class="dynamic-item">
-          <input type="text" class="input-field uppercase-input" placeholder="Nama Minor Stop" id="minorStop0">
-          <button type="button" class="btn-danger" onclick="removeMinorStop(0)">❌</button>
-        </div>
-      `;
-      document.getElementById('minorStop0').addEventListener('input', makeUppercase);
-      minorStopCounter = 1;
-    }
+        // Save data to localStorage and Supabase
+        async function saveData() {
+            // Save to localStorage
+            localStorage.setItem('oee_machines', JSON.stringify(machines));
+            localStorage.setItem('oee_records', JSON.stringify(oeeRecords));
+            
+            // Sync to Supabase if available
+            if (supabaseClient) {
+                try {
+                    // Save machines
+                    for (const machine of machines) {
+                        await supabaseClient.from('oee_data').insert({
+                            ...machine,
+                            created_at: new Date().toISOString()
+                        });
+                    }
+                    
+                    // Save records
+                    for (const record of oeeRecords) {
+                        await supabaseClient.from('oee_data').insert({
+                            ...record,
+                            created_at: new Date().toISOString()
+                        });
+                    }
+                } catch (error) {
+                    console.log('Supabase sync failed, using localStorage only');
+                }
+            }
+        }
 
-    function addODT() {
-      const list = document.getElementById('odtList');
-      const div = document.createElement('div');
-      div.className = 'odt-item';
-      div.innerHTML = `
-        <input type="text" class="input-field uppercase-input" placeholder="Nama ODT" id="odtName${odtCounter}">
-        <input type="number" class="input-field" placeholder="Waktu (menit)" id="odtTime${odtCounter}">
-        <span></span>
-        <button type="button" class="btn-danger" onclick="removeODT(${odtCounter})">❌</button>
-      `;
-      list.appendChild(div);
-      document.getElementById(`odtName${odtCounter}`).addEventListener('input', makeUppercase);
-      odtCounter++;
-    }
+        // Setup form handlers
+        function setupFormHandlers() {
+            // OEE Form
+            document.getElementById('oee-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await submitOEEData();
+            });
+            
+            // Machine Form
+            document.getElementById('machine-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await submitMachineData();
+            });
+        }
 
-    function removeODT(index) {
-      const element = document.getElementById(`odtName${index}`).parentElement;
-      element.remove();
-    }
+        // Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-700');
+            });
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('bg-blue-700');
+            
+            // Load section-specific data
+            if (sectionName === 'dashboard') {
+                updateDashboard();
+            }
+        }
 
-    function addLSMesin() {
-      const list = document.getElementById('lsMesinList');
-      const div = document.createElement('div');
-      div.className = 'dynamic-item';
-      div.innerHTML = `
-        <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Mesin" id="lsMesin${lsMesinCounter}">
-        <button type="button" class="btn-danger" onclick="removeLSMesin(${lsMesinCounter})">❌</button>
-      `;
-      list.appendChild(div);
-      document.getElementById(`lsMesin${lsMesinCounter}`).addEventListener('input', makeUppercase);
-      lsMesinCounter++;
-    }
+        // Password protection
+        function checkPassword() {
+            const password = document.getElementById('admin-password').value;
+            if (password === 'admin123') {
+                isAuthenticated = true;
+                document.getElementById('password-protection').classList.add('hidden');
+                document.getElementById('machine-list-container').classList.remove('hidden');
+                updateMachineList();
+            } else {
+                showToast('Invalid password', 'error');
+            }
+        }
 
-    function removeLSMesin(index) {
-      const element = document.getElementById(`lsMesin${index}`).parentElement;
-      element.remove();
-    }
+        // Machine Management
+        function showMachineForm() {
+            if (!isAuthenticated) {
+                showToast('Please authenticate first', 'error');
+                return;
+            }
+            document.getElementById('machine-form-container').classList.remove('hidden');
+            document.getElementById('edit-machine-id').value = '';
+            document.getElementById('machine-form').reset();
+            resetMachineForm();
+        }
 
-    function addLSNonMesin() {
-      const list = document.getElementById('lsNonMesinList');
-      const div = document.createElement('div');
-      div.className = 'dynamic-item';
-      div.innerHTML = `
-        <input type="text" class="input-field uppercase-input" placeholder="Nama Line Stop Non Mesin" id="lsNonMesin${lsNonMesinCounter}">
-        <button type="button" class="btn-danger" onclick="removeLSNonMesin(${lsNonMesinCounter})">❌</button>
-      `;
-      list.appendChild(div);
-      document.getElementById(`lsNonMesin${lsNonMesinCounter}`).addEventListener('input', makeUppercase);
-      lsNonMesinCounter++;
-    }
+        function cancelMachineForm() {
+            document.getElementById('machine-form-container').classList.add('hidden');
+        }
 
-    function removeLSNonMesin(index) {
-      const element = document.getElementById(`lsNonMesin${index}`).parentElement;
-      element.remove();
-    }
+        function resetMachineForm() {
+            // Reset ODT items
+            const odtContainer = document.getElementById('odt-items');
+            odtContainer.innerHTML = `
+                <div class="flex space-x-2">
+                    <input type="text" placeholder="ODT Name" class="flex-1 border border-gray-300 rounded-md px-3 py-2 odt-name">
+                    <input type="number" placeholder="Standard Time (min)" class="w-32 border border-gray-300 rounded-md px-3 py-2 odt-time">
+                    <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600">Remove</button>
+                </div>
+            `;
+            
+            // Reset Line Stop items
+            document.getElementById('line-stop-mesin').innerHTML = `
+                <input type="text" placeholder="Line Stop Mesin Item" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-item">
+            `;
+            document.getElementById('line-stop-non-mesin').innerHTML = `
+                <input type="text" placeholder="Line Stop Non Mesin Item" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-item">
+            `;
+            
+            // Reset Minor Stop items
+            document.getElementById('minor-stop-items').innerHTML = `
+                <input type="text" placeholder="Minor Stop Item" class="w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-item">
+            `;
+        }
 
-    function addMinorStop() {
-      const list = document.getElementById('minorStopList');
-      const div = document.createElement('div');
-      div.className = 'dynamic-item';
-      div.innerHTML = `
-        <input type="text" class="input-field uppercase-input" placeholder="Nama Minor Stop" id="minorStop${minorStopCounter}">
-        <button type="button" class="btn-danger" onclick="removeMinorStop(${minorStopCounter})">❌</button>
-      `;
-      list.appendChild(div);
-      document.getElementById(`minorStop${minorStopCounter}`).addEventListener('input', makeUppercase);
-      minorStopCounter++;
-    }
+        function addODTItem() {
+            const container = document.getElementById('odt-items');
+            const div = document.createElement('div');
+            div.className = 'flex space-x-2';
+            div.innerHTML = `
+                <input type="text" placeholder="ODT Name" class="flex-1 border border-gray-300 rounded-md px-3 py-2 odt-name">
+                <input type="number" placeholder="Standard Time (min)" class="w-32 border border-gray-300 rounded-md px-3 py-2 odt-time">
+                <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600">Remove</button>
+            `;
+            container.appendChild(div);
+        }
 
-    function removeMinorStop(index) {
-      const element = document.getElementById(`minorStop${index}`).parentElement;
-      element.remove();
-    }
+        function removeODTItem(button) {
+            button.parentElement.remove();
+        }
 
-    async function saveMesin(event) {
-      event.preventDefault();
-      
-      // Check password
-      const password = document.getElementById('mesinPassword').value;
-      if (password !== MACHINE_PASSWORD) {
-        alert('❌ KATA SANDI SALAH! Akses ditolak.');
-        return;
-      }
-      
-      const mesinNama = document.getElementById('mesinNama').value.toUpperCase();
-      const mesinArea = document.getElementById('mesinArea').value;
-      const mesinTarget = parseFloat(document.getElementById('mesinTarget').value);
-      const mesinPIC = document.getElementById('mesinPIC').value.toUpperCase();
-      
-      // Collect ODT items - scan ALL possible indices
-      const odtItems = [];
-      const odtElements = document.querySelectorAll('[id^="odtName"]');
-      odtElements.forEach(nameEl => {
-        const index = nameEl.id.replace('odtName', '');
-        const timeEl = document.getElementById(`odtTime${index}`);
-        if (nameEl.value && timeEl && timeEl.value) {
-          odtItems.push({
-            name: nameEl.value.toUpperCase(),
-            time: parseInt(timeEl.value)
-          });
+        function addLineStopMesin() {
+            const container = document.getElementById('line-stop-mesin');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Line Stop Mesin Item';
+            input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-item';
+            container.appendChild(input);
         }
-      });
-      
-      // Collect LS Mesin - scan ALL possible indices
-      const lsMesinItems = [];
-      const lsMesinElements = document.querySelectorAll('[id^="lsMesin"]');
-      lsMesinElements.forEach(el => {
-        if (el.value) {
-          lsMesinItems.push(el.value.toUpperCase());
-        }
-      });
-      
-      // Collect LS Non Mesin - scan ALL possible indices
-      const lsNonMesinItems = [];
-      const lsNonMesinElements = document.querySelectorAll('[id^="lsNonMesin"]');
-      lsNonMesinElements.forEach(el => {
-        if (el.value) {
-          lsNonMesinItems.push(el.value.toUpperCase());
-        }
-      });
-      
-      // Collect Minor Stop - scan ALL possible indices
-      const minorStopItems = [];
-      const minorStopElements = document.querySelectorAll('[id^="minorStop"]');
-      minorStopElements.forEach(el => {
-        if (el.value) {
-          minorStopItems.push(el.value.toUpperCase());
-        }
-      });
-      
-      // Generate mesin_id from mesin_nama (remove spaces, uppercase)
-      const mesinId = mesinNama.replace(/\s+/g, '_').toUpperCase();
-      
-      const machineData = {
-        mesin_id: mesinId,
-        mesin_nama: mesinNama,
-        area: mesinArea,
-        target_output: mesinTarget,
-        pic_inisial: mesinPIC,
-        odt_items: odtItems,
-        line_stop_mesin_items: lsMesinItems,
-        line_stop_non_mesin_items: lsNonMesinItems,
-        minor_stop_items: minorStopItems,
-        is_active: true
-      };
-      
-      if (DEMO_MODE) {
-        if (mesinMode === 'edit' && editingMesinId) {
-          const index = demoMachines.findIndex(m => m.id === editingMesinId);
-          if (index !== -1) {
-            demoMachines[index] = { ...machineData, id: editingMesinId };
-          }
-        } else {
-          demoMachines.push({ ...machineData, id: String(nextMachineId++) });
-        }
-      } else {
-        let result;
-        if (mesinMode === 'edit' && editingMesinId) {
-          result = await supabase.from('machines').update(machineData).eq('id', editingMesinId);
-          console.log('Update result:', result);
-        } else {
-          result = await supabase.from('machines').insert([machineData]);
-          console.log('Insert result:', result);
-        }
-        
-        if (result.error) {
-          alert('Error menyimpan data mesin: ' + result.error.message);
-          console.error('Supabase error:', result.error);
-          return;
-        }
-      }
-      
-      alert(mesinMode === 'edit' ? '✅ Mesin berhasil diupdate!' : '✅ Mesin berhasil disimpan!');
-      resetMesinForm();
-      
-      if (mesinMode === 'edit') {
-        loadMachinesForEdit();
-      }
-    }
 
-    // ===== INPUT OEE FUNCTIONS =====
-    async function loadMachinesForOEE() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = demoMachines.filter(m => m.is_active);
-      } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
-        if (result.error) {
-          console.error('Error loading machines:', result.error);
-          return;
+        function addLineStopNonMesin() {
+            const container = document.getElementById('line-stop-non-mesin');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Line Stop Non Mesin Item';
+            input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-item';
+            container.appendChild(input);
         }
-        data = result.data;
-      }
-      
-      allMachines = data;
-      
-      const select = document.getElementById('oeeSelectMesin');
-      select.innerHTML = '<option value="">-- Pilih Mesin --</option>';
-      
-      data.forEach(machine => {
-        const option = document.createElement('option');
-        option.value = machine.id;
-        option.textContent = machine.mesin_nama;
-        select.appendChild(option);
-      });
-    }
 
-    function loadMesinData() {
-      const selectedId = document.getElementById('oeeSelectMesin').value;
-      
-      if (!selectedId) {
-        document.getElementById('oeeODTList').innerHTML = '';
-        document.getElementById('oeeLSMesinList').innerHTML = '';
-        document.getElementById('oeeLSNonMesinList').innerHTML = '';
-        document.getElementById('oeeMinorStopList').innerHTML = '';
-        document.getElementById('targetOutputInfo').style.display = 'none';
-        return;
-      }
-      
-      const machine = allMachines.find(m => m.id === selectedId);
-      
-      if (!machine) return;
-      
-      // Load ODT with actual time
-      const odtList = document.getElementById('oeeODTList');
-      odtList.innerHTML = '';
-      (machine.odt_items || []).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'odt-item';
-        div.innerHTML = `
-          <input type="checkbox" id="odtCheck${index}" style="width: auto;">
-          <span style="flex: 1;">${item.name} (${item.time} menit)</span>
-          <input type="number" class="input-field" placeholder="Waktu Aktual" id="odtActual${index}" style="width: 120px;">
-          <span></span>
-        `;
-        odtList.appendChild(div);
-      });
-      
-      // Load LS Mesin
-      const lsMesinList = document.getElementById('oeeLSMesinList');
-      lsMesinList.innerHTML = '';
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <span style="flex: 1;">${item}</span>
-          <input type="number" class="input-field" placeholder="Waktu (menit)" id="lsMesinTime${index}" style="width: 150px;">
-        `;
-        lsMesinList.appendChild(div);
-      });
-      
-      // Load LS Non Mesin
-      const lsNonMesinList = document.getElementById('oeeLSNonMesinList');
-      lsNonMesinList.innerHTML = '';
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <span style="flex: 1;">${item}</span>
-          <input type="number" class="input-field" placeholder="Waktu (menit)" id="lsNonMesinTime${index}" style="width: 150px;">
-        `;
-        lsNonMesinList.appendChild(div);
-      });
-      
-      // Load Minor Stop
-      const minorStopList = document.getElementById('oeeMinorStopList');
-      minorStopList.innerHTML = '';
-      (machine.minor_stop_items || []).forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `
-          <span style="flex: 1;">${item}</span>
-          <input type="number" class="input-field" placeholder="Berapa kali?" id="minorStopFreq${index}" style="width: 150px;" min="0">
-        `;
-        minorStopList.appendChild(div);
-      });
-      
-      // Add event listeners for auto calculation
-      setTimeout(() => {
-        document.getElementById('oeeShift').addEventListener('change', calculateTargetOutput);
-        
-        // Add listeners to all ODT checkboxes and actual time inputs
-        (machine.odt_items || []).forEach((item, index) => {
-          const checkbox = document.getElementById(`odtCheck${index}`);
-          const actualInput = document.getElementById(`odtActual${index}`);
-          if (checkbox) checkbox.addEventListener('change', calculateTargetOutput);
-          if (actualInput) actualInput.addEventListener('input', calculateTargetOutput);
-        });
-        
-        // Add listeners to all LS Mesin time inputs
-        (machine.line_stop_mesin_items || []).forEach((item, index) => {
-          const timeInput = document.getElementById(`lsMesinTime${index}`);
-          if (timeInput) {
-            timeInput.addEventListener('input', calculateTargetOutput);
-            timeInput.addEventListener('input', checkWRRequirement);
-          }
-        });
-        
-        // Add listeners to all LS Non Mesin time inputs
-        (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-          const timeInput = document.getElementById(`lsNonMesinTime${index}`);
-          if (timeInput) timeInput.addEventListener('input', calculateTargetOutput);
-        });
-        
-        // Add listeners to custom LS inputs
-        document.getElementById('customLSMesinTime1').addEventListener('input', calculateTargetOutput);
-        document.getElementById('customLSMesinTime1').addEventListener('input', checkWRRequirement);
-        document.getElementById('customLSMesinTime2').addEventListener('input', calculateTargetOutput);
-        document.getElementById('customLSMesinTime2').addEventListener('input', checkWRRequirement);
-        document.getElementById('customLSNonMesinTime1').addEventListener('input', calculateTargetOutput);
-        document.getElementById('customLSNonMesinTime2').addEventListener('input', calculateTargetOutput);
-        
-        // Add listeners to output and reject for OEE preview
-        document.getElementById('oeeOutput').addEventListener('input', calculateOEEPreview);
-        document.getElementById('oeeReject').addEventListener('input', calculateOEEPreview);
-        
-        // Add listener to check WR requirement
-        setTimeout(() => {
-          checkWRRequirement();
-        }, 200);
-      }, 100);
-    }
-    
-    function checkWRRequirement() {
-      const selectedId = document.getElementById('oeeSelectMesin').value;
-      if (!selectedId) return;
-      
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
-      
-      // Calculate total LS Mesin
-      let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSMesin += time;
-      });
-      
-      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1')?.value || 0);
-      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2')?.value || 0);
-      totalLSMesin += customLSMesinTime1 + customLSMesinTime2;
-      
-      // Show/hide WR section
-      const wrSection = document.getElementById('wrSection');
-      const wrInput = document.getElementById('oeeWRNumber');
-      
-      if (totalLSMesin > 179) {
-        wrSection.classList.remove('hidden');
-        wrInput.required = true;
-      } else {
-        wrSection.classList.add('hidden');
-        wrInput.required = false;
-        wrInput.value = '';
-      }
-    }
-    
-    function calculateTargetOutput() {
-      const selectedId = document.getElementById('oeeSelectMesin').value;
-      if (!selectedId) return;
-      
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
-      
-      const shift = document.getElementById('oeeShift').value;
-      if (!shift) return;
-      
-      // Get shift duration
-      let durasi = 480;
-      if (shift === 'Shift 1') durasi = 510;
-      else if (shift === 'Shift 2') durasi = 450;
-      else if (shift === 'Shift 3') durasi = 510;
-      else if (shift === 'Long Shift Pagi' || shift === 'Long Shift Malam') durasi = 720;
-      
-      // Calculate total ODT
-      let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        if (checked && actual > 0) {
-          totalODT += Math.min(actual, item.time);
+        function addMinorStopItem() {
+            const container = document.getElementById('minor-stop-items');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Minor Stop Item';
+            input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-item';
+            container.appendChild(input);
         }
-      });
-      
-      // Calculate total LS Mesin
-      let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSMesin += time;
-      });
-      
-      // Add custom LS Mesin
-      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1')?.value || 0);
-      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2')?.value || 0);
-      totalLSMesin += customLSMesinTime1 + customLSMesinTime2;
-      
-      // Calculate total LS Non Mesin
-      let totalLSNonMesin = 0;
-      
-      // Add ODT overtime
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        if (checked && actual > item.time) {
-          totalLSNonMesin += (actual - item.time);
-        }
-      });
-      
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSNonMesin += time;
-      });
-      
-      // Add custom LS Non Mesin
-      const customLSNonMesinTime1 = parseInt(document.getElementById('customLSNonMesinTime1')?.value || 0);
-      const customLSNonMesinTime2 = parseInt(document.getElementById('customLSNonMesinTime2')?.value || 0);
-      totalLSNonMesin += customLSNonMesinTime1 + customLSNonMesinTime2;
-      
-      // Calculate target output
-      const totalLineStop = totalLSMesin + totalLSNonMesin;
-      const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
-      
-      // Update display
-      document.getElementById('infoTargetPerMinute').textContent = machine.target_output;
-      document.getElementById('infoShiftDuration').textContent = durasi;
-      document.getElementById('infoTotalODT').textContent = totalODT;
-      document.getElementById('infoTotalLineStop').textContent = totalLineStop;
-      document.getElementById('infoTargetOutput').textContent = targetOutput.toLocaleString();
-      document.getElementById('targetOutputInfo').style.display = 'block';
-      
-      // Trigger OEE preview calculation
-      calculateOEEPreview();
-    }
-    
-    function calculateOEEPreview() {
-      const selectedId = document.getElementById('oeeSelectMesin').value;
-      if (!selectedId) return;
-      
-      const machine = allMachines.find(m => m.id === selectedId);
-      if (!machine) return;
-      
-      const shift = document.getElementById('oeeShift').value;
-      if (!shift) return;
-      
-      const output = parseInt(document.getElementById('oeeOutput').value || 0);
-      const reject = parseInt(document.getElementById('oeeReject').value || 0);
-      
-      if (output === 0) {
-        document.getElementById('oeePreview').style.display = 'none';
-        return;
-      }
-      
-      // Get shift duration
-      let durasi = 480;
-      if (shift === 'Shift 1') durasi = 510;
-      else if (shift === 'Shift 2') durasi = 450;
-      else if (shift === 'Shift 3') durasi = 510;
-      else if (shift === 'Long Shift Pagi' || shift === 'Long Shift Malam') durasi = 720;
-      
-      // Calculate total ODT
-      let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        if (checked && actual > 0) {
-          totalODT += Math.min(actual, item.time);
-        }
-      });
-      
-      // Calculate total LS Mesin
-      let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSMesin += time;
-      });
-      
-      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1')?.value || 0);
-      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2')?.value || 0);
-      totalLSMesin += customLSMesinTime1 + customLSMesinTime2;
-      
-      // Calculate total LS Non Mesin
-      let totalLSNonMesin = 0;
-      
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        if (checked && actual > item.time) {
-          totalLSNonMesin += (actual - item.time);
-        }
-      });
-      
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
-        if (time > 0) totalLSNonMesin += time;
-      });
-      
-      const customLSNonMesinTime1 = parseInt(document.getElementById('customLSNonMesinTime1')?.value || 0);
-      const customLSNonMesinTime2 = parseInt(document.getElementById('customLSNonMesinTime2')?.value || 0);
-      totalLSNonMesin += customLSNonMesinTime1 + customLSNonMesinTime2;
-      
-      // Calculate target output
-      const totalLineStop = totalLSMesin + totalLSNonMesin;
-      const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
-      
-      // Calculate OEE components
-      const runTime = durasi - totalODT - totalLSMesin - totalLSNonMesin;
-      const availability = (runTime / durasi) * 100;
-      
-      const performance = (output / targetOutput) * 100;
-      
-      const goodOutput = output - reject;
-      const quality = output > 0 ? (goodOutput / output) * 100 : 0;
-      
-      const oee = (availability * performance * quality) / 10000;
-      
-      // Update preview display
-      document.getElementById('previewAvailability').textContent = availability.toFixed(2) + '%';
-      document.getElementById('previewPerformance').textContent = performance.toFixed(2) + '%';
-      document.getElementById('previewQuality').textContent = quality.toFixed(2) + '%';
-      document.getElementById('previewOEE').textContent = oee.toFixed(2) + '%';
-      
-      // Show/hide warning
-      if (oee > 100) {
-        document.getElementById('oeeWarning').style.display = 'block';
-        document.getElementById('previewOEE').style.color = '#ef4444';
-      } else {
-        document.getElementById('oeeWarning').style.display = 'none';
-        document.getElementById('previewOEE').style.color = '#22c55e';
-      }
-      
-      document.getElementById('oeePreview').style.display = 'block';
-    }
 
-    async function saveOEE(event) {
-      event.preventDefault();
-      
-      document.getElementById('oeeErrorNotice').classList.add('hidden');
-      
-      const selectedMesinId = document.getElementById('oeeSelectMesin').value;
-      const machine = allMachines.find(m => m.id === selectedMesinId);
-      
-      if (!machine) {
-        alert('Pilih mesin terlebih dahulu');
-        return;
-      }
-      
-      const tanggal = document.getElementById('oeeTanggal').value;
-      const shift = document.getElementById('oeeShift').value;
-      const picInisial = document.getElementById('oeePIC').value.toUpperCase();
-      
-      // Durasi shift otomatis berdasarkan pilihan shift
-      let durasi = 480;
-      if (shift === 'Shift 1') {
-        durasi = 510;
-      } else if (shift === 'Shift 2') {
-        durasi = 450;
-      } else if (shift === 'Shift 3') {
-        durasi = 510;
-      } else if (shift === 'Long Shift Pagi' || shift === 'Long Shift Malam') {
-        durasi = 720;
-      }
-      
-      const kodeProduk = document.getElementById('oeeKodeProduk').value.toUpperCase();
-      const batch = document.getElementById('oeeBatch').value.toUpperCase();
-      const output = parseInt(document.getElementById('oeeOutput').value);
-      const reject = parseInt(document.getElementById('oeeReject').value);
-      
-      // Collect ODT with actual time
-      const odtItems = [];
-      let totalODT = 0;
-      (machine.odt_items || []).forEach((item, index) => {
-        const checked = document.getElementById(`odtCheck${index}`)?.checked;
-        const actual = parseInt(document.getElementById(`odtActual${index}`)?.value || 0);
-        
-        if (checked && actual > 0) {
-          odtItems.push({
-            name: item.name,
-            standard: item.time,
-            actual: actual
-          });
-          totalODT += Math.min(actual, item.time);
+        async function submitMachineData() {
+            const submitBtn = document.getElementById('machine-submit-btn');
+            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Saving...';
+            
+            try {
+                const machineId = document.getElementById('edit-machine-id').value;
+                const name = document.getElementById('machine-name').value;
+                
+                // Check for duplicate names
+                const existingMachine = machines.find(m => m.name === name && m.id !== machineId);
+                if (existingMachine) {
+                    showToast('Machine name already exists', 'error');
+                    return;
+                }
+                
+                // Collect ODT items
+                const odtItems = [];
+                document.querySelectorAll('#odt-items > div').forEach(div => {
+                    const nameInput = div.querySelector('.odt-name');
+                    const timeInput = div.querySelector('.odt-time');
+                    if (nameInput.value && timeInput.value) {
+                        odtItems.push({
+                            name: nameInput.value,
+                            standardTime: parseInt(timeInput.value)
+                        });
+                    }
+                });
+                
+                // Collect Line Stop items
+                const lineStopMesin = [];
+                document.querySelectorAll('.line-stop-mesin-item').forEach(input => {
+                    if (input.value) lineStopMesin.push(input.value);
+                });
+                
+                const lineStopNonMesin = [];
+                document.querySelectorAll('.line-stop-non-mesin-item').forEach(input => {
+                    if (input.value) lineStopNonMesin.push(input.value);
+                });
+                
+                // Collect Minor Stop items
+                const minorStopItems = [];
+                document.querySelectorAll('.minor-stop-item').forEach(input => {
+                    if (input.value) minorStopItems.push(input.value);
+                });
+                
+                const machineData = {
+                    id: machineId || generateId(),
+                    type: 'machine',
+                    name: name,
+                    area: document.getElementById('machine-area').value,
+                    target_per_minute: parseInt(document.getElementById('machine-target').value),
+                    pic: document.getElementById('machine-pic').value,
+                    odt_items: JSON.stringify(odtItems),
+                    line_stop_mesin: JSON.stringify(lineStopMesin),
+                    line_stop_non_mesin: JSON.stringify(lineStopNonMesin),
+                    minor_stop_items: JSON.stringify(minorStopItems),
+                    created_at: new Date().toISOString()
+                };
+                
+                if (window.dataSdk) {
+                    if (machineId) {
+                        // Update existing machine
+                        const existingRecord = currentData.find(item => item.id === machineId);
+                        if (existingRecord) {
+                            const updateResult = await window.dataSdk.update({
+                                ...existingRecord,
+                                ...machineData
+                            });
+                            if (!updateResult.isOk) {
+                                throw new Error('Failed to update machine');
+                            }
+                        }
+                    } else {
+                        // Create new machine
+                        const createResult = await window.dataSdk.create(machineData);
+                        if (!createResult.isOk) {
+                            throw new Error('Failed to create machine');
+                        }
+                    }
+                } else {
+                    // Fallback to local storage
+                    if (machineId) {
+                        const index = machines.findIndex(m => m.id === machineId);
+                        if (index !== -1) {
+                            machines[index] = machineData;
+                        }
+                    } else {
+                        machines.push(machineData);
+                    }
+                    await saveData();
+                    updateMachineList();
+                    updateMachineSelects();
+                }
+                
+                showToast('Machine saved successfully', 'success');
+                cancelMachineForm();
+                
+            } catch (error) {
+                showToast('Error saving machine: ' + error.message, 'error');
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Save Machine';
+            }
         }
-      });
-      
-      // Collect LS Mesin
-      const lsMesinItems = [];
-      let totalLSMesin = 0;
-      (machine.line_stop_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsMesinTime${index}`)?.value || 0);
-        if (time > 0) {
-          lsMesinItems.push({ name: item, time: time });
-          totalLSMesin += time;
-        }
-      });
-      
-      // Add custom LS Mesin
-      const customLSMesin1 = document.getElementById('customLSMesin1').value.toUpperCase();
-      const customLSMesinTime1 = parseInt(document.getElementById('customLSMesinTime1').value || 0);
-      if (customLSMesin1 && customLSMesinTime1 > 0) {
-        lsMesinItems.push({ name: customLSMesin1, time: customLSMesinTime1 });
-        totalLSMesin += customLSMesinTime1;
-      }
-      
-      const customLSMesin2 = document.getElementById('customLSMesin2').value.toUpperCase();
-      const customLSMesinTime2 = parseInt(document.getElementById('customLSMesinTime2').value || 0);
-      if (customLSMesin2 && customLSMesinTime2 > 0) {
-        lsMesinItems.push({ name: customLSMesin2, time: customLSMesinTime2 });
-        totalLSMesin += customLSMesinTime2;
-      }
-      
-      // Collect LS Non Mesin + auto from ODT overtime
-      const lsNonMesinItems = [];
-      let totalLSNonMesin = 0;
-      
-      // Add ODT overtime to LS Non Mesin
-      odtItems.forEach(odt => {
-        if (odt.actual > odt.standard) {
-          const overtime = odt.actual - odt.standard;
-          lsNonMesinItems.push({ name: odt.name, time: overtime });
-          totalLSNonMesin += overtime;
-        }
-      });
-      
-      (machine.line_stop_non_mesin_items || []).forEach((item, index) => {
-        const time = parseInt(document.getElementById(`lsNonMesinTime${index}`)?.value || 0);
-        if (time > 0) {
-          lsNonMesinItems.push({ name: item, time: time });
-          totalLSNonMesin += time;
-        }
-      });
-      
-      // Add custom LS Non Mesin
-      const customLSNonMesin1 = document.getElementById('customLSNonMesin1').value.toUpperCase();
-      const customLSNonMesinTime1 = parseInt(document.getElementById('customLSNonMesinTime1').value || 0);
-      if (customLSNonMesin1 && customLSNonMesinTime1 > 0) {
-        lsNonMesinItems.push({ name: customLSNonMesin1, time: customLSNonMesinTime1 });
-        totalLSNonMesin += customLSNonMesinTime1;
-      }
-      
-      const customLSNonMesin2 = document.getElementById('customLSNonMesin2').value.toUpperCase();
-      const customLSNonMesinTime2 = parseInt(document.getElementById('customLSNonMesinTime2').value || 0);
-      if (customLSNonMesin2 && customLSNonMesinTime2 > 0) {
-        lsNonMesinItems.push({ name: customLSNonMesin2, time: customLSNonMesinTime2 });
-        totalLSNonMesin += customLSNonMesinTime2;
-      }
-      
-      // Collect Minor Stop with frequency
-      const minorStopItems = [];
-      (machine.minor_stop_items || []).forEach((item, index) => {
-        const freq = parseInt(document.getElementById(`minorStopFreq${index}`)?.value || 0);
-        if (freq > 0) {
-          minorStopItems.push({ name: item, frequency: freq });
-        }
-      });
-      
-      // Check WR requirement (validation only, not saved to database)
-      if (totalLSMesin > 179) {
-        const wrNumber = document.getElementById('oeeWRNumber').value.toUpperCase();
-        if (!wrNumber) {
-          alert('⚠️ Line Stop Mesin > 179 menit. Nomor WR wajib diisi!');
-          return;
-        }
-      }
-      
-      // Calculate target output automatically
-      const totalLineStop = totalLSMesin + totalLSNonMesin;
-      const availableTime = durasi - totalODT - totalLineStop;
-      const targetOutput = Math.round(machine.target_output * availableTime);
-      
-      // Calculate OEE
-      const runTime = durasi - totalODT - totalLSMesin - totalLSNonMesin;
-      const availability = (runTime / durasi) * 100;
-      
-      const performance = (output / targetOutput) * 100;
-      
-      const goodOutput = output - reject;
-      const quality = (goodOutput / output) * 100;
-      
-      const oee = (availability * performance * quality) / 10000;
-      
-      // Validate OEE > 100%
-      if (oee > 100) {
-        document.getElementById('oeeErrorNotice').innerHTML = `
-          <strong>⚠️ ERROR: OEE MELEBIHI 100%!</strong><br>
-          OEE Anda: <strong>${oee.toFixed(2)}%</strong><br><br>
-          Kemungkinan penyebab:<br>
-          • Output melebihi target terlalu banyak<br>
-          • Durasi downtime terlalu kecil<br>
-          • Reject terlalu sedikit dibanding output<br><br>
-          <strong>Mohon periksa kembali data input Anda!</strong>
-        `;
-        document.getElementById('oeeErrorNotice').classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      
-      // Get WR Number if applicable
-      const wrNumber = totalLSMesin > 179 ? document.getElementById('oeeWRNumber').value.toUpperCase() : null;
-      
-      const oeeData = {
-        mesin_id: machine.mesin_id,
-        mesin_nama: machine.mesin_nama,
-        area: machine.area,
-        pic_inisial: picInisial,
-        shift: shift,
-        shift_duration: durasi,
-        kode_produk: kodeProduk,
-        batch_number: batch,
-        jumlah_output: output,
-        jumlah_reject: reject,
-        target_output: targetOutput,
-        odt_items: odtItems,
-        line_stop_mesin_items: lsMesinItems,
-        line_stop_non_mesin_items: lsNonMesinItems,
-        minor_stop_items: minorStopItems,
-        wr_number: wrNumber,
-        availability: availability.toFixed(2),
-        performance: performance.toFixed(2),
-        quality: quality.toFixed(2),
-        oee: oee.toFixed(2),
-        tanggal_produksi: tanggal
-      };
-      
-      if (DEMO_MODE) {
-        demoOEERecords.unshift({ ...oeeData, id: String(nextOEEId++) });
-      } else {
-        const { error } = await supabase.from('oee_records').insert([oeeData]);
-        
-        if (error) {
-          alert('Error menyimpan data OEE: ' + error.message);
-          return;
-        }
-      }
-      
-      alert('✅ Data OEE berhasil disimpan!');
-      document.getElementById('formInputOEE').reset();
-      document.getElementById('targetOutputInfo').style.display = 'none';
-      loadMesinData();
-    }
 
-    // ===== DASHBOARD FUNCTIONS =====
-    async function loadDashboard() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = [...demoOEERecords].sort((a, b) => b.tanggal_produksi.localeCompare(a.tanggal_produksi));
-      } else {
-        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
-        if (result.error) {
-          console.error('Error loading OEE records:', result.error);
-          return;
+        function editMachine(id) {
+            const machine = machines.find(m => m.id === id);
+            if (!machine) return;
+            
+            // Fill form with machine data
+            document.getElementById('edit-machine-id').value = machine.id;
+            document.getElementById('machine-name').value = machine.name;
+            document.getElementById('machine-area').value = machine.area;
+            document.getElementById('machine-target').value = machine.target_per_minute;
+            document.getElementById('machine-pic').value = machine.pic;
+            
+            // Load ODT items
+            const odtItems = JSON.parse(machine.odt_items || '[]');
+            const odtContainer = document.getElementById('odt-items');
+            odtContainer.innerHTML = '';
+            odtItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'flex space-x-2';
+                div.innerHTML = `
+                    <input type="text" value="${item.name}" class="flex-1 border border-gray-300 rounded-md px-3 py-2 odt-name">
+                    <input type="number" value="${item.standardTime}" class="w-32 border border-gray-300 rounded-md px-3 py-2 odt-time">
+                    <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600">Remove</button>
+                `;
+                odtContainer.appendChild(div);
+            });
+            
+            // Load Line Stop items
+            const lineStopMesin = JSON.parse(machine.line_stop_mesin || '[]');
+            const lineStopMesinContainer = document.getElementById('line-stop-mesin');
+            lineStopMesinContainer.innerHTML = '';
+            lineStopMesin.forEach(item => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = item;
+                input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-item';
+                lineStopMesinContainer.appendChild(input);
+            });
+            
+            const lineStopNonMesin = JSON.parse(machine.line_stop_non_mesin || '[]');
+            const lineStopNonMesinContainer = document.getElementById('line-stop-non-mesin');
+            lineStopNonMesinContainer.innerHTML = '';
+            lineStopNonMesin.forEach(item => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = item;
+                input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-item';
+                lineStopNonMesinContainer.appendChild(input);
+            });
+            
+            // Load Minor Stop items
+            const minorStopItems = JSON.parse(machine.minor_stop_items || '[]');
+            const minorStopContainer = document.getElementById('minor-stop-items');
+            minorStopContainer.innerHTML = '';
+            minorStopItems.forEach(item => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = item;
+                input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-item';
+                minorStopContainer.appendChild(input);
+            });
+            
+            document.getElementById('machine-form-container').classList.remove('hidden');
         }
-        data = result.data;
-      }
-      
-      allOEERecords = data;
-      
-      // Load machines for filter
-      await loadMachinesForDashboardFilter();
-      
-      // Apply filter
-      applyDashboardFilter();
-    }
-    
-    async function loadMachinesForDashboardFilter() {
-      let machines;
-      
-      if (DEMO_MODE) {
-        machines = demoMachines.filter(m => m.is_active);
-      } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
-        if (result.error) {
-          console.error('Error loading machines:', result.error);
-          return;
-        }
-        machines = result.data;
-      }
-      
-      const select = document.getElementById('dashboardFilterMesin');
-      select.innerHTML = '<option value="">-- Semua Mesin --</option>';
-      
-      machines.forEach(machine => {
-        const option = document.createElement('option');
-        option.value = machine.mesin_nama;
-        option.textContent = machine.mesin_nama;
-        select.appendChild(option);
-      });
-    }
-    
-    function applyDashboardFilter() {
-      const fromDate = document.getElementById('dashboardFromDate').value;
-      const toDate = document.getElementById('dashboardToDate').value;
-      const mesinFilter = document.getElementById('dashboardFilterMesin').value;
-      
-      let data = [...allOEERecords];
-      
-      if (fromDate) {
-        data = data.filter(r => r.tanggal_produksi >= fromDate);
-      }
-      
-      if (toDate) {
-        data = data.filter(r => r.tanggal_produksi <= toDate);
-      }
-      
-      if (mesinFilter) {
-        data = data.filter(r => r.mesin_nama === mesinFilter);
-      }
-      
-      filteredOEERecords = data;
-      
-      // Calculate metrics
-      const avgOEE = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.oee), 0) / data.length).toFixed(2) : 0;
-      const totalOutput = data.reduce((sum, r) => sum + r.jumlah_output, 0);
-      
-      document.getElementById('avgOEE').textContent = avgOEE + '%';
-      document.getElementById('totalOutput').textContent = totalOutput.toLocaleString();
-      document.getElementById('totalRecords').textContent = data.length;
-      
-      // Render charts
-      renderOEEChart(data);
-      renderAPQChart(data);
-      renderLineStopMesinChart(data);
-      renderLineStopNonMesinChart(data);
-      renderMinorStopChart(data);
-      renderOEEPerMesinChart(data);
-      renderOperatorTable(data);
-    }
-    
-    function resetDashboardFilter() {
-      document.getElementById('dashboardFromDate').value = '';
-      document.getElementById('dashboardToDate').value = '';
-      document.getElementById('dashboardFilterMesin').value = '';
-      applyDashboardFilter();
-    }
 
-    function renderOEEChart(data) {
-      const ctx = document.getElementById('oeeChart');
-      
-      if (charts.oeeChart) {
-        charts.oeeChart.destroy();
-      }
-      
-      const last10 = data.slice(0, 10).reverse();
-      
-      charts.oeeChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: last10.map(r => r.tanggal_produksi),
-          datasets: [{
-            label: 'OEE (%)',
-            data: last10.map(r => parseFloat(r.oee)),
-            borderColor: '#667eea',
-            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-            tension: 0.4,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true }
-          },
-          scales: {
-            y: { beginAtZero: true, max: 100 }
-          }
+        async function deleteMachine(id) {
+            if (!confirm('Are you sure you want to delete this machine?')) return;
+            
+            try {
+                if (window.dataSdk) {
+                    const existingRecord = currentData.find(item => item.id === id);
+                    if (existingRecord) {
+                        const deleteResult = await window.dataSdk.delete(existingRecord);
+                        if (!deleteResult.isOk) {
+                            throw new Error('Failed to delete machine');
+                        }
+                    }
+                } else {
+                    machines = machines.filter(m => m.id !== id);
+                    await saveData();
+                    updateMachineList();
+                    updateMachineSelects();
+                }
+                
+                showToast('Machine deleted successfully', 'success');
+            } catch (error) {
+                showToast('Error deleting machine: ' + error.message, 'error');
+            }
         }
-      });
-    }
 
-    function renderAPQChart(data) {
-      const ctx = document.getElementById('apqChart');
-      
-      if (charts.apqChart) {
-        charts.apqChart.destroy();
-      }
-      
-      const avgA = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.availability), 0) / data.length).toFixed(2) : 0;
-      const avgP = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.performance), 0) / data.length).toFixed(2) : 0;
-      const avgQ = data.length > 0 ? (data.reduce((sum, r) => sum + parseFloat(r.quality), 0) / data.length).toFixed(2) : 0;
-      
-      charts.apqChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Availability', 'Performance', 'Quality'],
-          datasets: [{
-            label: 'Average (%)',
-            data: [avgA, avgP, avgQ],
-            backgroundColor: ['#667eea', '#f093fb', '#4facfe']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { beginAtZero: true, max: 100 }
-          }
+        function updateMachineList() {
+            if (!isAuthenticated) return;
+            
+            const tbody = document.getElementById('machine-list');
+            tbody.innerHTML = '';
+            
+            machines.forEach(machine => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-4 py-2">${machine.name}</td>
+                    <td class="px-4 py-2">${machine.area}</td>
+                    <td class="px-4 py-2">${machine.target_per_minute}</td>
+                    <td class="px-4 py-2">${machine.pic}</td>
+                    <td class="px-4 py-2">
+                        <button onclick="editMachine('${machine.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mr-2">Edit</button>
+                        <button onclick="deleteMachine('${machine.id}')" class="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
         }
-      });
-    }
 
-    function renderLineStopMesinChart(data) {
-      const ctx = document.getElementById('lineStopMesinChart');
-      
-      if (charts.lineStopMesinChart) {
-        charts.lineStopMesinChart.destroy();
-      }
-      
-      const lsMap = {};
-      data.forEach(record => {
-        (record.line_stop_mesin_items || []).forEach(item => {
-          lsMap[item.name] = (lsMap[item.name] || 0) + item.time;
-        });
-      });
-      
-      const labels = Object.keys(lsMap).slice(0, 10);
-      const values = labels.map(l => lsMap[l]);
-      
-      charts.lineStopMesinChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Total Waktu (menit)',
-            data: values,
-            backgroundColor: '#ef4444'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'y',
-          plugins: {
-            legend: { display: false }
-          }
+        function updateMachineSelects() {
+            const selects = [
+                'input-machine',
+                'filter-machine',
+                'history-machine',
+                'export-machine'
+            ];
+            
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                const currentValue = select.value;
+                
+                // Clear existing options except first
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+                
+                // Add machine options
+                machines.forEach(machine => {
+                    const option = document.createElement('option');
+                    option.value = machine.name;
+                    option.textContent = machine.name;
+                    select.appendChild(option);
+                });
+                
+                // Restore selection if still valid
+                if (currentValue) {
+                    select.value = currentValue;
+                }
+            });
         }
-      });
-    }
 
-    function renderLineStopNonMesinChart(data) {
-      const ctx = document.getElementById('lineStopNonMesinChart');
-      
-      if (charts.lineStopNonMesinChart) {
-        charts.lineStopNonMesinChart.destroy();
-      }
-      
-      const lsMap = {};
-      data.forEach(record => {
-        (record.line_stop_non_mesin_items || []).forEach(item => {
-          lsMap[item.name] = (lsMap[item.name] || 0) + item.time;
-        });
-      });
-      
-      const labels = Object.keys(lsMap).slice(0, 10);
-      const values = labels.map(l => lsMap[l]);
-      
-      charts.lineStopNonMesinChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Total Waktu (menit)',
-            data: values,
-            backgroundColor: '#f59e0b'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'y',
-          plugins: {
-            legend: { display: false }
-          }
+        // OEE Input Functions
+        function loadMachineTemplate() {
+            const machineName = document.getElementById('input-machine').value;
+            const machine = machines.find(m => m.name === machineName);
+            
+            if (!machine) {
+                document.getElementById('template-fields').innerHTML = '';
+                return;
+            }
+            
+            const templateContainer = document.getElementById('template-fields');
+            templateContainer.innerHTML = '';
+            
+            // ODT Section
+            const odtItems = JSON.parse(machine.odt_items || '[]');
+            if (odtItems.length > 0) {
+                const odtSection = document.createElement('div');
+                odtSection.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">ODT (Operational Downtime)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="odt-inputs">
+                    </div>
+                `;
+                templateContainer.appendChild(odtSection);
+                
+                const odtInputs = document.getElementById('odt-inputs');
+                odtItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <label class="block text-sm font-medium text-gray-700 mb-2">${item.name} (Standard: ${item.standardTime} min)</label>
+                        <input type="number" class="w-full border border-gray-300 rounded-md px-3 py-2 odt-actual" 
+                               data-name="${item.name}" data-standard="${item.standardTime}" 
+                               onchange="calculateOEE()" placeholder="Actual time in minutes">
+                    `;
+                    odtInputs.appendChild(div);
+                });
+            }
+            
+            // Line Stop Section
+            const lineStopMesin = JSON.parse(machine.line_stop_mesin || '[]');
+            const lineStopNonMesin = JSON.parse(machine.line_stop_non_mesin || '[]');
+            
+            if (lineStopMesin.length > 0 || lineStopNonMesin.length > 0) {
+                const lineStopSection = document.createElement('div');
+                lineStopSection.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4 mt-6">Line Stop</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-medium text-gray-600 mb-2">Line Stop Mesin</h4>
+                            <div id="line-stop-mesin-inputs"></div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-600 mb-2">Line Stop Non Mesin</h4>
+                            <div id="line-stop-non-mesin-inputs"></div>
+                        </div>
+                    </div>
+                `;
+                templateContainer.appendChild(lineStopSection);
+                
+                const lineStopMesinInputs = document.getElementById('line-stop-mesin-inputs');
+                lineStopMesin.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'mb-2';
+                    div.innerHTML = `
+                        <label class="block text-sm font-medium text-gray-700 mb-1">${item}</label>
+                        <input type="number" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-input" 
+                               data-name="${item}" onchange="calculateOEE()" placeholder="Duration in minutes">
+                    `;
+                    lineStopMesinInputs.appendChild(div);
+                });
+                
+                const lineStopNonMesinInputs = document.getElementById('line-stop-non-mesin-inputs');
+                lineStopNonMesin.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'mb-2';
+                    div.innerHTML = `
+                        <label class="block text-sm font-medium text-gray-700 mb-1">${item}</label>
+                        <input type="number" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-input" 
+                               data-name="${item}" onchange="calculateOEE()" placeholder="Duration in minutes">
+                    `;
+                    lineStopNonMesinInputs.appendChild(div);
+                });
+            }
+            
+            // Minor Stop Section
+            const minorStopItems = JSON.parse(machine.minor_stop_items || '[]');
+            if (minorStopItems.length > 0) {
+                const minorStopSection = document.createElement('div');
+                minorStopSection.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4 mt-6">Minor Stop</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="minor-stop-inputs">
+                    </div>
+                `;
+                templateContainer.appendChild(minorStopSection);
+                
+                const minorStopInputs = document.getElementById('minor-stop-inputs');
+                minorStopItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <label class="block text-sm font-medium text-gray-700 mb-2">${item}</label>
+                        <input type="number" class="w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-input" 
+                               data-name="${item}" onchange="calculateOEE()" placeholder="Frequency count">
+                    `;
+                    minorStopInputs.appendChild(div);
+                });
+            }
         }
-      });
-    }
 
-    function renderMinorStopChart(data) {
-      const ctx = document.getElementById('minorStopChart');
-      
-      if (charts.minorStopChart) {
-        charts.minorStopChart.destroy();
-      }
-      
-      const msMap = {};
-      data.forEach(record => {
-        (record.minor_stop_items || []).forEach(item => {
-          msMap[item] = (msMap[item] || 0) + 1;
-        });
-      });
-      
-      const labels = Object.keys(msMap).slice(0, 10);
-      const values = labels.map(l => msMap[l]);
-      
-      charts.minorStopChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'right' }
-          }
+        function calculateOEE() {
+            const machineName = document.getElementById('input-machine').value;
+            const machine = machines.find(m => m.name === machineName);
+            
+            if (!machine) return;
+            
+            const actualOutput = parseInt(document.getElementById('input-actual-output').value) || 0;
+            const reject = parseInt(document.getElementById('input-reject').value) || 0;
+            
+            // Calculate ODT overtime and transfer to Line Stop Non Mesin
+            let totalODTOvertime = 0;
+            const odtActualTimes = {};
+            
+            document.querySelectorAll('.odt-actual').forEach(input => {
+                const name = input.dataset.name;
+                const standard = parseInt(input.dataset.standard);
+                const actual = parseInt(input.value) || 0;
+                
+                odtActualTimes[name] = actual;
+                
+                if (actual > standard) {
+                    totalODTOvertime += (actual - standard);
+                }
+            });
+            
+            // Add ODT overtime to Line Stop Non Mesin
+            const lineStopNonMesinDurations = {};
+            document.querySelectorAll('.line-stop-non-mesin-input').forEach(input => {
+                const name = input.dataset.name;
+                const duration = parseInt(input.value) || 0;
+                lineStopNonMesinDurations[name] = duration;
+            });
+            
+            // Add ODT overtime to first Line Stop Non Mesin item
+            const lineStopNonMesinItems = JSON.parse(machine.line_stop_non_mesin || '[]');
+            if (lineStopNonMesinItems.length > 0 && totalODTOvertime > 0) {
+                const firstItem = lineStopNonMesinItems[0];
+                lineStopNonMesinDurations[firstItem] = (lineStopNonMesinDurations[firstItem] || 0) + totalODTOvertime;
+            }
+            
+            // Calculate Line Stop Mesin total and check WR requirement
+            let totalLineStopMesin = 0;
+            const lineStopMesinDurations = {};
+            
+            document.querySelectorAll('.line-stop-mesin-input').forEach(input => {
+                const name = input.dataset.name;
+                const duration = parseInt(input.value) || 0;
+                lineStopMesinDurations[name] = duration;
+                totalLineStopMesin += duration;
+            });
+            
+            // Show/hide WR section
+            const wrSection = document.getElementById('wr-section');
+            if (totalLineStopMesin > 179) {
+                wrSection.classList.remove('hidden');
+                document.getElementById('input-wr').required = true;
+            } else {
+                wrSection.classList.add('hidden');
+                document.getElementById('input-wr').required = false;
+            }
+            
+            // Calculate total downtime
+            const totalLineStopNonMesin = Object.values(lineStopNonMesinDurations).reduce((sum, val) => sum + val, 0);
+            const totalDowntime = totalLineStopMesin + totalLineStopNonMesin;
+            
+            // Calculate target output (8 hours = 480 minutes)
+            const availableTime = 480 - totalDowntime;
+            const targetOutput = availableTime * machine.target_per_minute;
+            
+            // Calculate OEE components
+            const availability = availableTime / 480 * 100;
+            const performance = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
+            const quality = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
+            const oee = (availability * performance * quality) / 10000;
+            
+            // Validate OEE not > 100%
+            const finalOEE = Math.min(oee, 100);
+            
+            // Update display
+            document.getElementById('calc-availability').textContent = availability.toFixed(1) + '%';
+            document.getElementById('calc-performance').textContent = performance.toFixed(1) + '%';
+            document.getElementById('calc-quality').textContent = quality.toFixed(1) + '%';
+            document.getElementById('calc-oee').textContent = finalOEE.toFixed(1) + '%';
         }
-      });
-    }
 
-    function renderOEEPerMesinChart(data) {
-      const ctx = document.getElementById('oeePerMesinChart');
-      
-      if (charts.oeePerMesinChart) {
-        charts.oeePerMesinChart.destroy();
-      }
-      
-      const mesinMap = {};
-      data.forEach(record => {
-        if (!mesinMap[record.mesin_nama]) {
-          mesinMap[record.mesin_nama] = { total: 0, count: 0 };
+        async function submitOEEData() {
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Saving...';
+            
+            try {
+                const machineName = document.getElementById('input-machine').value;
+                const machine = machines.find(m => m.name === machineName);
+                
+                if (!machine) {
+                    throw new Error('Please select a machine');
+                }
+                
+                // Collect all form data
+                const formData = {
+                    id: generateId(),
+                    type: 'oee_record',
+                    date: document.getElementById('input-date').value,
+                    shift: document.getElementById('input-shift').value,
+                    machine: machineName,
+                    pic: document.getElementById('input-pic').value,
+                    product: document.getElementById('input-product').value,
+                    batch: document.getElementById('input-batch').value,
+                    actual_output: parseInt(document.getElementById('input-actual-output').value),
+                    reject: parseInt(document.getElementById('input-reject').value)
+                };
+                
+                // Collect ODT actual times
+                const odtActualTimes = {};
+                document.querySelectorAll('.odt-actual').forEach(input => {
+                    odtActualTimes[input.dataset.name] = parseInt(input.value) || 0;
+                });
+                formData.odt_actual_times = JSON.stringify(odtActualTimes);
+                
+                // Collect Line Stop durations
+                const lineStopDurations = { mesin: {}, nonMesin: {} };
+                
+                document.querySelectorAll('.line-stop-mesin-input').forEach(input => {
+                    lineStopDurations.mesin[input.dataset.name] = parseInt(input.value) || 0;
+                });
+                
+                document.querySelectorAll('.line-stop-non-mesin-input').forEach(input => {
+                    lineStopDurations.nonMesin[input.dataset.name] = parseInt(input.value) || 0;
+                });
+                
+                formData.line_stop_durations = JSON.stringify(lineStopDurations);
+                
+                // Collect Minor Stop frequencies
+                const minorStopFrequencies = {};
+                document.querySelectorAll('.minor-stop-input').forEach(input => {
+                    minorStopFrequencies[input.dataset.name] = parseInt(input.value) || 0;
+                });
+                formData.minor_stop_frequencies = JSON.stringify(minorStopFrequencies);
+                
+                // WR Number
+                formData.wr_number = document.getElementById('input-wr').value || '';
+                
+                // Calculate and store OEE values
+                const availability = parseFloat(document.getElementById('calc-availability').textContent);
+                const performance = parseFloat(document.getElementById('calc-performance').textContent);
+                const quality = parseFloat(document.getElementById('calc-quality').textContent);
+                const oee = parseFloat(document.getElementById('calc-oee').textContent);
+                
+                formData.availability = availability;
+                formData.performance = performance;
+                formData.quality = quality;
+                formData.oee = oee;
+                formData.created_at = new Date().toISOString();
+                
+                if (window.dataSdk) {
+                    const createResult = await window.dataSdk.create(formData);
+                    if (!createResult.isOk) {
+                        throw new Error('Failed to save OEE data');
+                    }
+                } else {
+                    oeeRecords.push(formData);
+                    await saveData();
+                    updateHistoryTable();
+                    updateDashboard();
+                }
+                
+                showToast('OEE data saved successfully', 'success');
+                resetForm();
+                
+            } catch (error) {
+                showToast('Error saving OEE data: ' + error.message, 'error');
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Save OEE Data';
+            }
         }
-        mesinMap[record.mesin_nama].total += parseFloat(record.oee);
-        mesinMap[record.mesin_nama].count += 1;
-      });
-      
-      const labels = Object.keys(mesinMap);
-      const values = labels.map(l => (mesinMap[l].total / mesinMap[l].count).toFixed(2));
-      
-      charts.oeePerMesinChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Rata-rata OEE (%)',
-            data: values,
-            backgroundColor: '#667eea'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { beginAtZero: true, max: 100 }
-          }
+
+        function resetForm() {
+            document.getElementById('oee-form').reset();
+            document.getElementById('template-fields').innerHTML = '';
+            document.getElementById('wr-section').classList.add('hidden');
+            
+            // Reset calculated values
+            document.getElementById('calc-availability').textContent = '0%';
+            document.getElementById('calc-performance').textContent = '0%';
+            document.getElementById('calc-quality').textContent = '0%';
+            document.getElementById('calc-oee').textContent = '0%';
+            
+            // Set today's date
+            document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
         }
-      });
-    }
 
-    function renderOperatorTable(data) {
-      const picMap = {};
-      
-      data.forEach(record => {
-        if (!picMap[record.pic_inisial]) {
-          picMap[record.pic_inisial] = {
-            totalOutput: 0,
-            totalTarget: 0,
-            totalOEE: 0,
-            count: 0
-          };
+        // Dashboard Functions
+        function updateDashboard() {
+            updateKeyMetrics();
+            updateCharts();
+            updateOperatorPerformance();
         }
-        
-        picMap[record.pic_inisial].totalOutput += record.jumlah_output;
-        picMap[record.pic_inisial].totalTarget += record.target_output;
-        picMap[record.pic_inisial].totalOEE += parseFloat(record.oee);
-        picMap[record.pic_inisial].count += 1;
-      });
-      
-      const tbody = document.querySelector('#operatorTable tbody');
-      tbody.innerHTML = '';
-      
-      Object.keys(picMap).forEach(pic => {
-        const stats = picMap[pic];
-        const achievement = ((stats.totalOutput / stats.totalTarget) * 100).toFixed(2);
-        const avgOEE = (stats.totalOEE / stats.count).toFixed(2);
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td><strong>${pic}</strong></td>
-          <td>${stats.totalOutput.toLocaleString()}</td>
-          <td>${stats.totalTarget.toLocaleString()}</td>
-          <td><strong>${achievement}%</strong></td>
-          <td><strong>${avgOEE}%</strong></td>
-          <td>${stats.count}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
 
-    // ===== DOWNLOAD FUNCTIONS =====
-    async function loadDownloadTab() {
-      let machines;
-      
-      if (DEMO_MODE) {
-        machines = demoMachines.filter(m => m.is_active);
-      } else {
-        const result = await supabase.from('machines').select('*').eq('is_active', true);
-        if (result.error) {
-          console.error('Error loading machines:', result.error);
-          return;
+        function updateKeyMetrics() {
+            const filteredRecords = getFilteredRecords('dashboard');
+            
+            const avgOEE = filteredRecords.length > 0 
+                ? filteredRecords.reduce((sum, record) => sum + record.oee, 0) / filteredRecords.length 
+                : 0;
+            
+            const totalOutput = filteredRecords.reduce((sum, record) => sum + record.actual_output, 0);
+            const totalRecords = filteredRecords.length;
+            
+            document.getElementById('avg-oee').textContent = avgOEE.toFixed(1) + '%';
+            document.getElementById('total-output').textContent = totalOutput.toLocaleString();
+            document.getElementById('total-records').textContent = totalRecords.toLocaleString();
         }
-        machines = result.data;
-      }
-      
-      const select = document.getElementById('downloadFilterMesin');
-      select.innerHTML = '<option value="">-- Semua Mesin --</option>';
-      
-      machines.forEach(machine => {
-        const option = document.createElement('option');
-        option.value = machine.mesin_nama;
-        option.textContent = machine.mesin_nama;
-        select.appendChild(option);
-      });
-    }
-    
-    async function getFilteredDownloadData() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = [...demoOEERecords];
-      } else {
-        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
-        if (result.error) {
-          console.error('Error loading data:', result.error);
-          return [];
+
+        function updateCharts() {
+            const filteredRecords = getFilteredRecords('dashboard');
+            
+            // OEE Trend Chart (Last 10 records)
+            const last10Records = filteredRecords.slice(-10);
+            updateOEETrendChart(last10Records);
+            
+            // A vs P vs Q Chart
+            updateAPQChart(filteredRecords);
+            
+            // Line Stop Charts
+            updateLineStopCharts(filteredRecords);
+            
+            // Minor Stop Chart
+            updateMinorStopChart(filteredRecords);
+            
+            // OEE per Machine Chart
+            updateOEEPerMachineChart(filteredRecords);
         }
-        data = result.data;
-      }
-      
-      const fromDate = document.getElementById('downloadFromDate').value;
-      const toDate = document.getElementById('downloadToDate').value;
-      const mesinFilter = document.getElementById('downloadFilterMesin').value;
-      
-      if (fromDate) {
-        data = data.filter(r => r.tanggal_produksi >= fromDate);
-      }
-      
-      if (toDate) {
-        data = data.filter(r => r.tanggal_produksi <= toDate);
-      }
-      
-      if (mesinFilter) {
-        data = data.filter(r => r.mesin_nama === mesinFilter);
-      }
-      
-      return data;
-    }
-    
-    async function downloadCSV() {
-      const data = await getFilteredDownloadData();
-      
-      if (data.length === 0) {
-        alert('Tidak ada data untuk didownload!');
-        return;
-      }
-      
-      // CSV Header
-      let csv = 'Tanggal,Mesin,Area,Shift,PIC,Kode Produk,Batch Number,Output,Reject,Target Output,Availability (%),Performance (%),Quality (%),OEE (%),ODT Items,LS Mesin,LS Non Mesin,Minor Stop,WR Number\n';
-      
-      // CSV Rows
-      data.forEach(record => {
-        const odtText = (record.odt_items || []).map(item => `${item.name}(${item.actual}m)`).join('; ');
-        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
-        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
-        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name}(${item.frequency}x)`).join('; ');
-        const wrNumber = record.wr_number || '-';
-        
-        csv += `${record.tanggal_produksi},${record.mesin_nama},${record.area},${record.shift},${record.pic_inisial},${record.kode_produk},${record.batch_number},${record.jumlah_output},${record.jumlah_reject},${record.target_output},${record.availability},${record.performance},${record.quality},${record.oee},"${odtText}","${lsMesinText}","${lsNonMesinText}","${minorStopText}",${wrNumber}\n`;
-      });
-      
-      // Download
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `OEE_Data_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      alert(`✅ ${data.length} baris data berhasil didownload!`);
-    }
-    
-    async function downloadExcel() {
-      const data = await getFilteredDownloadData();
-      
-      if (data.length === 0) {
-        alert('Tidak ada data untuk didownload!');
-        return;
-      }
-      
-      // Create HTML table for Excel
-      let html = '<table><thead><tr>';
-      html += '<th>Tanggal</th><th>Mesin</th><th>Area</th><th>Shift</th><th>PIC</th><th>Kode Produk</th><th>Batch Number</th><th>Output</th><th>Reject</th><th>Target Output</th><th>Availability (%)</th><th>Performance (%)</th><th>Quality (%)</th><th>OEE (%)</th><th>ODT Items</th><th>LS Mesin</th><th>LS Non Mesin</th><th>Minor Stop</th><th>WR Number</th>';
-      html += '</tr></thead><tbody>';
-      
-      data.forEach(record => {
-        const odtText = (record.odt_items || []).map(item => `${item.name}(${item.actual}m)`).join('; ');
-        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
-        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name}(${item.time}m)`).join('; ');
-        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name}(${item.frequency}x)`).join('; ');
-        const wrNumber = record.wr_number || '-';
-        
-        html += '<tr>';
-        html += `<td>${record.tanggal_produksi}</td>`;
-        html += `<td>${record.mesin_nama}</td>`;
-        html += `<td>${record.area}</td>`;
-        html += `<td>${record.shift}</td>`;
-        html += `<td>${record.pic_inisial}</td>`;
-        html += `<td>${record.kode_produk}</td>`;
-        html += `<td>${record.batch_number}</td>`;
-        html += `<td>${record.jumlah_output}</td>`;
-        html += `<td>${record.jumlah_reject}</td>`;
-        html += `<td>${record.target_output}</td>`;
-        html += `<td>${record.availability}</td>`;
-        html += `<td>${record.performance}</td>`;
-        html += `<td>${record.quality}</td>`;
-        html += `<td>${record.oee}</td>`;
-        html += `<td>${odtText}</td>`;
-        html += `<td>${lsMesinText}</td>`;
-        html += `<td>${lsNonMesinText}</td>`;
-        html += `<td>${minorStopText}</td>`;
-        html += `<td>${wrNumber}</td>`;
-        html += '</tr>';
-      });
-      
-      html += '</tbody></table>';
-      
-      // Download as Excel
-      const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `OEE_Data_${new Date().toISOString().split('T')[0]}.xls`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      alert(`✅ ${data.length} baris data berhasil didownload!`);
-    }
 
-    // ===== HISTORY FUNCTIONS =====
-    async function loadHistory() {
-      let data;
-      
-      if (DEMO_MODE) {
-        data = [...demoOEERecords].sort((a, b) => b.tanggal_produksi.localeCompare(a.tanggal_produksi));
-      } else {
-        const result = await supabase.from('oee_records').select('*').order('tanggal_produksi', { ascending: false });
-        if (result.error) {
-          console.error('Error loading history:', result.error);
-          return;
+        function updateOEETrendChart(records) {
+            const ctx = document.getElementById('oee-trend-chart').getContext('2d');
+            
+            if (charts.oeeTrend) {
+                charts.oeeTrend.destroy();
+            }
+            
+            charts.oeeTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: records.map(r => `${r.date} S${r.shift}`),
+                    datasets: [{
+                        label: 'OEE %',
+                        data: records.map(r => r.oee),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
         }
-        data = result.data;
-      }
-      
-      const tbody = document.querySelector('#historyTable tbody');
-      tbody.innerHTML = '';
-      
-      data.forEach(record => {
-        const row = document.createElement('tr');
-        const oeeValue = parseFloat(record.oee);
-        const oeeClass = oeeValue < 86 ? 'low-oee' : '';
-        
-        // Format ODT
-        const odtText = (record.odt_items || []).map(item => `${item.name} (${item.actual}m)`).join(', ') || '-';
-        
-        // Format LS Mesin
-        const lsMesinText = (record.line_stop_mesin_items || []).map(item => `${item.name} (${item.time}m)`).join(', ') || '-';
-        
-        // Format LS Non Mesin
-        const lsNonMesinText = (record.line_stop_non_mesin_items || []).map(item => `${item.name} (${item.time}m)`).join(', ') || '-';
-        
-        // Format Minor Stop
-        const minorStopText = (record.minor_stop_items || []).map(item => `${item.name} (${item.frequency}x)`).join(', ') || '-';
-        
-        // Calculate total Minor Stop frequency
-        const totalMinorStopFreq = (record.minor_stop_items || []).reduce((sum, item) => sum + item.frequency, 0);
-        
-        // WR Number
-        const wrNumber = record.wr_number || '-';
-        
-        row.innerHTML = `
-          <td>${record.tanggal_produksi}</td>
-          <td>${record.mesin_nama}</td>
-          <td>${record.shift}</td>
-          <td>${record.pic_inisial}</td>
-          <td>${record.jumlah_output}</td>
-          <td>${record.jumlah_reject}</td>
-          <td class="${oeeClass}"><strong>${record.oee}%</strong></td>
-          <td>${record.availability}%</td>
-          <td>${record.performance}%</td>
-          <td>${record.quality}%</td>
-          <td style="font-size: 11px;">${odtText}</td>
-          <td style="font-size: 11px;">${lsMesinText}</td>
-          <td style="font-size: 11px;">${lsNonMesinText}</td>
-          <td style="font-size: 11px;">${minorStopText}</td>
-          <td>${totalMinorStopFreq}</td>
-          <td>${wrNumber}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
 
+        function updateAPQChart(records) {
+            const ctx = document.getElementById('apq-chart').getContext('2d');
+            
+            if (charts.apq) {
+                charts.apq.destroy();
+            }
+            
+            const avgA = records.length > 0 ? records.reduce((sum, r) => sum + r.availability, 0) / records.length : 0;
+            const avgP = records.length > 0 ? records.reduce((sum, r) => sum + r.performance, 0) / records.length : 0;
+            const avgQ = records.length > 0 ? records.reduce((sum, r) => sum + r.quality, 0) / records.length : 0;
+            
+            charts.apq = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Availability', 'Performance', 'Quality'],
+                    datasets: [{
+                        label: 'Average %',
+                        data: [avgA, avgP, avgQ],
+                        backgroundColor: ['#ef4444', '#10b981', '#8b5cf6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
 
+        function updateLineStopCharts(records) {
+            // Line Stop Mesin Chart
+            const lineStopMesinData = {};
+            records.forEach(record => {
+                const durations = JSON.parse(record.line_stop_durations || '{}');
+                if (durations.mesin) {
+                    Object.entries(durations.mesin).forEach(([key, value]) => {
+                        lineStopMesinData[key] = (lineStopMesinData[key] || 0) + value;
+                    });
+                }
+            });
+            
+            const topLineStopMesin = Object.entries(lineStopMesinData)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+            
+            updateHorizontalBarChart('line-stop-mesin-chart', 'lineStopMesin', 
+                'Line Stop Mesin (Minutes)', topLineStopMesin);
+            
+            // Line Stop Non Mesin Chart
+            const lineStopNonMesinData = {};
+            records.forEach(record => {
+                const durations = JSON.parse(record.line_stop_durations || '{}');
+                if (durations.nonMesin) {
+                    Object.entries(durations.nonMesin).forEach(([key, value]) => {
+                        lineStopNonMesinData[key] = (lineStopNonMesinData[key] || 0) + value;
+                    });
+                }
+            });
+            
+            const topLineStopNonMesin = Object.entries(lineStopNonMesinData)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+            
+            updateHorizontalBarChart('line-stop-non-mesin-chart', 'lineStopNonMesin', 
+                'Line Stop Non Mesin (Minutes)', topLineStopNonMesin);
+        }
 
-    // ===== INITIALIZATION =====
-    document.addEventListener('DOMContentLoaded', () => {
-      loadDashboard();
-      
-      // Set default date to today
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('oeeTanggal').value = today;
-      
-      // Add uppercase event listeners to all uppercase inputs
-      document.querySelectorAll('.uppercase-input').forEach(input => {
-        input.addEventListener('input', makeUppercase);
-      });
-    });
-  </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d48163946cfd6f',t:'MTc2MjkzNDUyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+        function updateMinorStopChart(records) {
+            const minorStopData = {};
+            records.forEach(record => {
+                const frequencies = JSON.parse(record.minor_stop_frequencies || '{}');
+                Object.entries(frequencies).forEach(([key, value]) => {
+                    minorStopData[key] = (minorStopData[key] || 0) + value;
+                });
+            });
+            
+            const topMinorStop = Object.entries(minorStopData)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+            
+            updateHorizontalBarChart('minor-stop-chart', 'minorStop', 
+                'Minor Stop (Frequency)', topMinorStop);
+        }
+
+        function updateOEEPerMachineChart(records) {
+            const machineOEE = {};
+            records.forEach(record => {
+                if (!machineOEE[record.machine]) {
+                    machineOEE[record.machine] = { total: 0, count: 0 };
+                }
+                machineOEE[record.machine].total += record.oee;
+                machineOEE[record.machine].count += 1;
+            });
+            
+            const avgOEEPerMachine = Object.entries(machineOEE).map(([machine, data]) => [
+                machine, data.total / data.count
+            ]);
+            
+            const ctx = document.getElementById('oee-per-machine-chart').getContext('2d');
+            
+            if (charts.oeePerMachine) {
+                charts.oeePerMachine.destroy();
+            }
+            
+            charts.oeePerMachine = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: avgOEEPerMachine.map(([machine]) => machine),
+                    datasets: [{
+                        label: 'Average OEE %',
+                        data: avgOEEPerMachine.map(([, oee]) => oee),
+                        backgroundColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateHorizontalBarChart(canvasId, chartKey, label, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            if (charts[chartKey]) {
+                charts[chartKey].destroy();
+            }
+            
+            charts[chartKey] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(([name]) => name),
+                    datasets: [{
+                        label: label,
+                        data: data.map(([, value]) => value),
+                        backgroundColor: '#ef4444'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateOperatorPerformance() {
+            const filteredRecords = getFilteredRecords('dashboard');
+            const operatorData = {};
+            
+            filteredRecords.forEach(record => {
+                if (!operatorData[record.pic]) {
+                    operatorData[record.pic] = { records: 0, totalOEE: 0 };
+                }
+                operatorData[record.pic].records += 1;
+                operatorData[record.pic].totalOEE += record.oee;
+            });
+            
+            const tbody = document.getElementById('operator-performance-table');
+            tbody.innerHTML = '';
+            
+            Object.entries(operatorData).forEach(([pic, data]) => {
+                const avgOEE = data.totalOEE / data.records;
+                const achievement = avgOEE >= 86 ? 'Achieved' : 'Below Target';
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-4 py-2">${pic}</td>
+                    <td class="px-4 py-2">${data.records}</td>
+                    <td class="px-4 py-2">${avgOEE.toFixed(1)}%</td>
+                    <td class="px-4 py-2">
+                        <span class="px-2 py-1 rounded text-sm ${achievement === 'Achieved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${achievement}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function applyDashboardFilters() {
+            updateDashboard();
+        }
+
+        // History Functions
+        function updateHistoryTable() {
+            const filteredRecords = getFilteredRecords('history');
+            const tbody = document.getElementById('history-table');
+            tbody.innerHTML = '';
+            
+            filteredRecords.forEach(record => {
+                const row = document.createElement('tr');
+                row.className = `border-b hover:bg-gray-50 ${record.oee < 86 ? 'pulse-red' : ''}`;
+                
+                // Parse complex data for display
+                const odtTimes = JSON.parse(record.odt_actual_times || '{}');
+                const lineStopDurations = JSON.parse(record.line_stop_durations || '{}');
+                const minorStopFreqs = JSON.parse(record.minor_stop_frequencies || '{}');
+                
+                const odtDisplay = Object.entries(odtTimes).map(([k,v]) => `${k}:${v}min`).join(', ');
+                const lineStopDisplay = [
+                    ...Object.entries(lineStopDurations.mesin || {}).map(([k,v]) => `M-${k}:${v}min`),
+                    ...Object.entries(lineStopDurations.nonMesin || {}).map(([k,v]) => `NM-${k}:${v}min`)
+                ].join(', ');
+                const minorStopDisplay = Object.entries(minorStopFreqs).map(([k,v]) => `${k}:${v}x`).join(', ');
+                
+                row.innerHTML = `
+                    <td class="px-2 py-2 text-xs">${record.date}</td>
+                    <td class="px-2 py-2 text-xs">${record.shift}</td>
+                    <td class="px-2 py-2 text-xs">${record.machine}</td>
+                    <td class="px-2 py-2 text-xs">${record.pic}</td>
+                    <td class="px-2 py-2 text-xs">${record.product}</td>
+                    <td class="px-2 py-2 text-xs">${record.batch}</td>
+                    <td class="px-2 py-2 text-xs">${record.actual_output}</td>
+                    <td class="px-2 py-2 text-xs">${record.reject}</td>
+                    <td class="px-2 py-2 text-xs">${record.availability.toFixed(1)}%</td>
+                    <td class="px-2 py-2 text-xs">${record.performance.toFixed(1)}%</td>
+                    <td class="px-2 py-2 text-xs">${record.quality.toFixed(1)}%</td>
+                    <td class="px-2 py-2 text-xs font-bold ${record.oee < 86 ? 'text-red-600' : 'text-green-600'}">${record.oee.toFixed(1)}%</td>
+                    <td class="px-2 py-2 text-xs">${record.wr_number || '-'}</td>
+                    <td class="px-2 py-2 text-xs" title="${odtDisplay}">${odtDisplay.substring(0, 20)}${odtDisplay.length > 20 ? '...' : ''}</td>
+                    <td class="px-2 py-2 text-xs" title="${lineStopDisplay}">${lineStopDisplay.substring(0, 20)}${lineStopDisplay.length > 20 ? '...' : ''}</td>
+                    <td class="px-2 py-2 text-xs" title="${minorStopDisplay}">${minorStopDisplay.substring(0, 20)}${minorStopDisplay.length > 20 ? '...' : ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function applyHistoryFilters() {
+            updateHistoryTable();
+        }
+
+        // Export Functions
+        function previewExport() {
+            const filteredRecords = getFilteredRecords('export');
+            const preview = document.getElementById('export-preview');
+            const info = document.getElementById('preview-info');
+            const header = document.getElementById('preview-header');
+            const body = document.getElementById('preview-body');
+            
+            info.textContent = `${filteredRecords.length} records will be exported`;
+            
+            // Create header
+            header.innerHTML = `
+                <th class="px-2 py-1 text-left text-xs">Date</th>
+                <th class="px-2 py-1 text-left text-xs">Shift</th>
+                <th class="px-2 py-1 text-left text-xs">Machine</th>
+                <th class="px-2 py-1 text-left text-xs">PIC</th>
+                <th class="px-2 py-1 text-left text-xs">Product</th>
+                <th class="px-2 py-1 text-left text-xs">OEE%</th>
+            `;
+            
+            // Create body (first 10 records)
+            body.innerHTML = '';
+            filteredRecords.slice(0, 10).forEach(record => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="px-2 py-1 text-xs">${record.date}</td>
+                    <td class="px-2 py-1 text-xs">${record.shift}</td>
+                    <td class="px-2 py-1 text-xs">${record.machine}</td>
+                    <td class="px-2 py-1 text-xs">${record.pic}</td>
+                    <td class="px-2 py-1 text-xs">${record.product}</td>
+                    <td class="px-2 py-1 text-xs">${record.oee.toFixed(1)}%</td>
+                `;
+                body.appendChild(row);
+            });
+            
+            if (filteredRecords.length > 10) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" class="px-2 py-1 text-xs text-gray-500 text-center">... and ${filteredRecords.length - 10} more records</td>`;
+                body.appendChild(row);
+            }
+            
+            preview.classList.remove('hidden');
+        }
+
+        function exportData() {
+            const exportBtn = document.getElementById('export-btn');
+            exportBtn.classList.add('loading');
+            exportBtn.textContent = 'Exporting...';
+            
+            try {
+                const filteredRecords = getFilteredRecords('export');
+                const format = document.getElementById('export-format').value;
+                
+                if (format === 'csv') {
+                    exportToCSV(filteredRecords);
+                } else {
+                    exportToExcel(filteredRecords);
+                }
+                
+                showToast('Data exported successfully', 'success');
+            } catch (error) {
+                showToast('Error exporting data: ' + error.message, 'error');
+            } finally {
+                exportBtn.classList.remove('loading');
+                exportBtn.textContent = 'Export Data';
+            }
+        }
+
+        function exportToCSV(records) {
+            const headers = [
+                'Date', 'Shift', 'Machine', 'PIC', 'Product', 'Batch',
+                'Actual Output', 'Reject', 'Availability %', 'Performance %',
+                'Quality %', 'OEE %', 'WR Number', 'ODT Times', 'Line Stop', 'Minor Stop'
+            ];
+            
+            const csvContent = [
+                headers.join(','),
+                ...records.map(record => [
+                    record.date,
+                    record.shift,
+                    record.machine,
+                    record.pic,
+                    record.product,
+                    record.batch,
+                    record.actual_output,
+                    record.reject,
+                    record.availability.toFixed(1),
+                    record.performance.toFixed(1),
+                    record.quality.toFixed(1),
+                    record.oee.toFixed(1),
+                    record.wr_number || '',
+                    `"${JSON.stringify(JSON.parse(record.odt_actual_times || '{}'))}"`,
+                    `"${JSON.stringify(JSON.parse(record.line_stop_durations || '{}'))}"`,
+                    `"${JSON.stringify(JSON.parse(record.minor_stop_frequencies || '{}'))}"`
+                ].join(','))
+            ].join('\n');
+            
+            downloadFile(csvContent, `OEE_Export_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+        }
+
+        function exportToExcel(records) {
+            // Simple Excel export using HTML table format
+            const headers = [
+                'Date', 'Shift', 'Machine', 'PIC', 'Product', 'Batch',
+                'Actual Output', 'Reject', 'Availability %', 'Performance %',
+                'Quality %', 'OEE %', 'WR Number'
+            ];
+            
+            let excelContent = `
+                <table>
+                    <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                    ${records.map(record => `
+                        <tr style="${record.oee < 86 ? 'background-color: #fecaca;' : ''}">
+                            <td>${record.date}</td>
+                            <td>${record.shift}</td>
+                            <td>${record.machine}</td>
+                            <td>${record.pic}</td>
+                            <td>${record.product}</td>
+                            <td>${record.batch}</td>
+                            <td>${record.actual_output}</td>
+                            <td>${record.reject}</td>
+                            <td>${record.availability.toFixed(1)}</td>
+                            <td>${record.performance.toFixed(1)}</td>
+                            <td>${record.quality.toFixed(1)}</td>
+                            <td>${record.oee.toFixed(1)}</td>
+                            <td>${record.wr_number || ''}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            `;
+            
+            downloadFile(excelContent, `OEE_Export_${new Date().toISOString().split('T')[0]}.xls`, 'application/vnd.ms-excel');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Utility Functions
+        function getFilteredRecords(section) {
+            let startDate, endDate, machine, shift;
+            
+            if (section === 'dashboard') {
+                startDate = document.getElementById('filter-start-date').value;
+                endDate = document.getElementById('filter-end-date').value;
+                machine = document.getElementById('filter-machine').value;
+            } else if (section === 'history') {
+                startDate = document.getElementById('history-start-date').value;
+                endDate = document.getElementById('history-end-date').value;
+                machine = document.getElementById('history-machine').value;
+                shift = document.getElementById('history-shift').value;
+            } else if (section === 'export') {
+                startDate = document.getElementById('export-start-date').value;
+                endDate = document.getElementById('export-end-date').value;
+                machine = document.getElementById('export-machine').value;
+            }
+            
+            return oeeRecords.filter(record => {
+                if (startDate && record.date < startDate) return false;
+                if (endDate && record.date > endDate) return false;
+                if (machine && record.machine !== machine) return false;
+                if (shift && record.shift !== shift) return false;
+                return true;
+            });
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Initialize application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99e40af500714ac3',t:'MTc2MzA5NzQ1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
