@@ -333,47 +333,6 @@
      <div class="table-container">
       <table id="operatorTable">
        <thead>
-             <h2 style="margin-top: 0;">📋 History Data OEE</h2>
-     <div class="card" style="background: #f9fafb; margin-bottom: 20px;">
-      <h3 style="margin-top: 0;">🔍 Filter History</h3>
-      <div class="grid-3">
-       <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="historyFromDate" class="input-field" onchange="applyHistoryFilter()">
-       </div>
-       <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="historyToDate" class="input-field" onchange="applyHistoryFilter()">
-       </div>
-       <div class="form-group"><label>Pilih Mesin</label> <select id="historyFilterMesin" class="input-field" onchange="applyHistoryFilter()"> <option value="">-- Semua Mesin --</option> </select>
-       </div>
-      </div><button class="btn-secondary" onclick="resetHistoryFilter()">🔄 Reset Filter</button>
-     </div>
-     <div class="table-container">
-      <table id="historyTable">
-       <thead>
-        <tr>
-         <th>Tanggal</th>
-         <th>Mesin</th>
-         <th>Shift</th>
-         <th>PIC</th>
-         <th>Output</th>
-         <th>Reject</th>
-         <th>OEE (%)</th>
-         <th>A (%)</th>
-         <th>P (%)</th>
-         <th>Q (%)</th>
-         <th>ODT</th>
-         <th>LS Mesin</th>
-         <th>LS Non Mesin</th>
-         <th>Minor Stop</th>
-         <th>Frek MS</th>
-         <th>WR</th>
-        </tr>
-       </thead>
-       <tbody></tbody>
-      </table>
-     </div>
-    </div>
-   </div>
-  </div>
-  <script>
         <tr>
          <th>PIC</th>
          <th>Total Output</th>
@@ -592,6 +551,47 @@
    </div><!-- History Tab -->
    <div id="historyTab" class="tab-content hidden">
     <div class="card">
+     <h2 style="margin-top: 0;">📋 History Data OEE</h2>
+     <div class="card" style="background: #f9fafb; margin-bottom: 20px;">
+      <h3 style="margin-top: 0;">🔍 Filter History</h3>
+      <div class="grid-3">
+       <div class="form-group"><label>Dari Tanggal</label> <input type="date" id="historyFromDate" class="input-field" onchange="applyHistoryFilter()">
+       </div>
+       <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="historyToDate" class="input-field" onchange="applyHistoryFilter()">
+       </div>
+       <div class="form-group"><label>Pilih Mesin</label> <select id="historyFilterMesin" class="input-field" onchange="applyHistoryFilter()"> <option value="">-- Semua Mesin --</option> </select>
+       </div>
+      </div><button class="btn-secondary" onclick="resetHistoryFilter()">🔄 Reset Filter</button>
+     </div>
+     <div class="table-container">
+      <table id="historyTable">
+       <thead>
+        <tr>
+         <th>Tanggal</th>
+         <th>Mesin</th>
+         <th>Shift</th>
+         <th>PIC</th>
+         <th>Output</th>
+         <th>Reject</th>
+         <th>OEE (%)</th>
+         <th>A (%)</th>
+         <th>P (%)</th>
+         <th>Q (%)</th>
+         <th>ODT</th>
+         <th>LS Mesin</th>
+         <th>LS Non Mesin</th>
+         <th>Minor Stop</th>
+         <th>Frek MS</th>
+         <th>WR</th>
+        </tr>
+       </thead>
+       <tbody></tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
     // ===== PASSWORD CONFIGURATION =====
     const MACHINE_PASSWORD = 'cimenG90'; // GANTI INI DI GITHUB!
 
