@@ -559,10 +559,7 @@
        </div>
        <div class="form-group"><label>Sampai Tanggal</label> <input type="date" id="historyToDate" class="input-field" onchange="applyHistoryFilter()">
        </div>
-       <div class="form-group"><label>Pilih Mesin</label> <select id="historyFilterMesin" class="form-select">
-  <option value="">-- Semua Mesin --</option>
-</select>
-
+       <div class="form-group"><label>Pilih Mesin</label> <select id="historyFilterMesin" class="input-field" onchange="applyHistoryFilter()"> <option value="">-- Semua Mesin --</option> </select>
        </div>
       </div><button class="btn-secondary" onclick="resetHistoryFilter()">🔄 Reset Filter</button>
      </div>
@@ -2139,41 +2136,6 @@
     // ===== DOWNLOAD FUNCTIONS =====
     async function loadDownloadTab() {
       let machines;
-
-     // ===== HISTORY FUNCTIONS =====
-async function loadHistory() {
-  await loadMachinesForHistory();
-  // di sini kamu bisa tambahkan logika untuk filter tanggal & data OEE history
-}
-
-async function loadMachinesForHistory() {
-  let machines;
-
-  if (DEMO_MODE) {
-    machines = demoMachines.filter(m => m.is_active);
-    console.log("🔧 DEMO machines:", machines);
-  } else {
-    const result = await supabase.from('machines').select('*').eq('is_active', true);
-    console.log("📦 Supabase result:", result);
-    if (result.error) {
-      console.error('❌ Supabase error:', result.error);
-      return;
-    }
-    machines = result.data;
-  }
-
-  console.log("✅ Machines loaded for history:", machines);
-
-  const select = document.getElementById('historyFilterMesin');
-  select.innerHTML = '<option value="">-- Semua Mesin --</option>';
-
-  machines.forEach(machine => {
-    const option = document.createElement('option');
-    option.value = machine.mesin_nama;
-    option.textContent = machine.mesin_nama;
-    select.appendChild(option);
-  });
-}
       
       if (DEMO_MODE) {
         machines = demoMachines.filter(m => m.is_active);
