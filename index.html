@@ -3,129 +3,309 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OEE Manufacturing System v02</title>
+  <title>OEE Manufacturing System v30</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
         body {
             box-sizing: border-box;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+        
         .pulse-red {
             animation: pulse-red 2s infinite;
         }
+        
         @keyframes pulse-red {
             0%, 100% { background-color: #fecaca; }
             50% { background-color: #ef4444; }
         }
+        
         .chart-container {
             position: relative;
             height: 300px;
         }
+        
         .loading {
             opacity: 0.5;
             pointer-events: none;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+        
+        .metric-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .metric-card.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .metric-card.purple {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .nav-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: white;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-btn:hover::before,
+        .nav-btn.active::before {
+            transform: translateX(0);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+        }
+        
+        .input-field {
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+        
+        .section-header {
+            color: #1f2937;
+            font-weight: 900;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+        
+        table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        table tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        table tbody tr:hover {
+            background-color: #f3f4f6;
+            transform: scale(1.01);
+        }
+        
+        .toast {
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .chart-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .filter-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #667eea;
+        }
+        
+        .password-card {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(253, 203, 110, 0.3);
         }
     </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
  </head>
- <body class="min-h-full bg-gray-50">
-  <div id="app" class="min-h-full"><!-- Header -->
-   <header class="bg-blue-900 text-white shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 py-6">
-     <h1 id="system-title" class="text-3xl font-bold">OEE Manufacturing System v02</h1>
-     <p id="company-name" class="text-blue-200 mt-1">by Eduardus Rian</p>
+ <body class="min-h-full">
+  <div id="app" class="min-h-full pb-8"><!-- Header -->
+   <header class="glass-card mb-6 animate-fade-in" style="border-radius: 0;">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+     <div class="flex items-center justify-between">
+      <div>
+       <h1 id="system-title" class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">🏭 OEE Manufacturing System v30</h1>
+       <p id="company-name" class="text-gray-600 mt-2 text-lg">📊 Manufacturing Company Excellence</p>
+      </div>
+     </div>
     </div>
    </header><!-- Navigation -->
-   <nav class="bg-blue-800 text-white">
-    <div class="max-w-7xl mx-auto px-4">
-     <div class="flex space-x-8"><button onclick="showSection('dashboard')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="dashboard">Dashboard</button> <button onclick="showSection('input')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="input">OEE Input</button> <button onclick="showSection('machines')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="machines">Machine Management</button> <button onclick="showSection('export')" class="nav-btn py-4 px-6 hover:bg-blue-700 transition-colors" data-section="export">Export</button>
+   <nav class="max-w-7xl mx-auto px-6 mb-8">
+    <div class="glass-card rounded-2xl p-2">
+     <div class="flex space-x-2"><button onclick="showSection('dashboard')" class="nav-btn flex-1 py-4 px-6 rounded-xl text-purple-700 font-semibold hover:bg-purple-50 transition-all active" data-section="dashboard"> 📊 Dashboard </button> <button onclick="showSection('input')" class="nav-btn flex-1 py-4 px-6 rounded-xl text-purple-700 font-semibold hover:bg-purple-50 transition-all" data-section="input"> ✍️ OEE Input </button> <button onclick="showSection('machines')" class="nav-btn flex-1 py-4 px-6 rounded-xl text-purple-700 font-semibold hover:bg-purple-50 transition-all" data-section="machines"> 🔧 Machine Management </button> <button onclick="showSection('export')" class="nav-btn flex-1 py-4 px-6 rounded-xl text-purple-700 font-semibold hover:bg-purple-50 transition-all" data-section="export"> 📥 Export </button>
      </div>
     </div>
    </nav><!-- Dashboard Section -->
-   <section id="dashboard-section" class="section max-w-7xl mx-auto px-4 py-8">
-    <div class="mb-6">
-     <h2 class="text-2xl font-bold text-gray-800 mb-4">Dashboard Analytics</h2><!-- Filters -->
-     <div class="bg-white p-6 rounded-lg shadow mb-6">
+   <section id="dashboard-section" class="section max-w-7xl mx-auto px-6">
+    <div class="mb-6 animate-fade-in">
+     <h2 class="section-header mb-6">📈 Dashboard Analytics</h2><!-- Filters -->
+     <div class="filter-card mb-8">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">🔍 Filters</h3>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label> <input type="date" id="filter-start-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">📅 Start Date</label> <input type="date" id="filter-start-date" class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">End Date</label> <input type="date" id="filter-end-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">📅 End Date</label> <input type="date" id="filter-end-date" class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine</label> <select id="filter-machine" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Machines</option> </select>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">🏭 Machine</label> <select id="filter-machine" class="w-full input-field rounded-lg px-4 py-2"> <option value="">All Machines</option> </select>
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Operator (PIC)</label> <select id="filter-operator" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Operators</option> </select>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">👤 Operator (PIC)</label> <select id="filter-operator" class="w-full input-field rounded-lg px-4 py-2"> <option value="">All Operators</option> </select>
        </div>
-       <div class="flex items-end"><button onclick="applyDashboardFilters()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Apply Filters</button>
+       <div class="flex items-end"><button onclick="applyDashboardFilters()" class="w-full btn-primary text-white px-6 py-2 rounded-lg font-semibold"> Apply Filters </button>
        </div>
       </div>
      </div><!-- Key Metrics -->
-     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700">Average OEE</h3>
-       <p id="avg-oee" class="text-3xl font-bold text-blue-600">0%</p>
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="metric-card">
+       <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold opacity-90">Average OEE</h3><span class="text-3xl">🎯</span>
+       </div>
+       <p id="avg-oee" class="text-4xl font-bold">0%</p>
+       <p class="text-sm opacity-80 mt-2">Overall Equipment Effectiveness</p>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700">Total Output</h3>
-       <p id="total-output" class="text-3xl font-bold text-green-600">0</p>
+      <div class="metric-card green">
+       <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold opacity-90">Total Output</h3><span class="text-3xl">📦</span>
+       </div>
+       <p id="total-output" class="text-4xl font-bold">0</p>
+       <p class="text-sm opacity-80 mt-2">Production Units</p>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700">Active Machines</h3>
-       <p id="active-machines" class="text-3xl font-bold text-purple-600">0</p>
+      <div class="metric-card purple">
+       <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold opacity-90">Active Machines</h3><span class="text-3xl">⚙️</span>
+       </div>
+       <p id="active-machines" class="text-4xl font-bold">0</p>
+       <p class="text-sm opacity-80 mt-2">Running Equipment</p>
       </div>
      </div><!-- Charts -->
-     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700 mb-4">OEE Trend (Last 10 Records)</h3>
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="chart-card">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">📊 OEE Trend (Last 10 Records)</h3>
        <div class="chart-container">
         <canvas id="oee-trend-chart"></canvas>
        </div>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700 mb-4">OEE per Machine</h3>
+      <div class="chart-card">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">🏭 OEE per Machine</h3>
        <div class="chart-container">
         <canvas id="oee-per-machine-chart"></canvas>
        </div>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700 mb-4">A vs P vs Q Breakdown</h3>
+      <div class="chart-card">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">📈 A vs P vs Q Breakdown</h3>
        <div class="chart-container">
         <canvas id="apq-chart"></canvas>
        </div>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700 mb-4">ODT Analysis (Top 10)</h3>
+      <div class="chart-card">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">⏱️ ODT Analysis (Top 10)</h3>
        <div class="chart-container">
         <canvas id="odt-chart"></canvas>
        </div>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700 mb-4">Line Stop Mesin (Top 10)</h3>
+      <div class="chart-card">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">🔴 Line Stop Mesin (Top 10)</h3>
        <div class="chart-container">
         <canvas id="line-stop-mesin-chart"></canvas>
        </div>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow">
-       <h3 class="text-lg font-semibold text-gray-700 mb-4">Line Stop Non Mesin (Top 10)</h3>
+      <div class="chart-card">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">🟡 Line Stop Non Mesin (Top 10)</h3>
        <div class="chart-container">
         <canvas id="line-stop-non-mesin-chart"></canvas>
        </div>
       </div>
      </div><!-- Operator Performance Table -->
-     <div class="bg-white p-6 rounded-lg shadow mt-6">
-      <h3 class="text-lg font-semibold text-gray-700 mb-4">Operator Performance</h3>
+     <div class="chart-card mb-8">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">👥 Operator Performance</h3>
       <div class="overflow-x-auto">
        <table class="min-w-full table-auto">
-        <thead class="bg-gray-50">
+        <thead>
          <tr>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">PIC</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Avg OEE</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Target Output</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actual Output</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Achievement %</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Records</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">PIC</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Avg OEE</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Target Output</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Actual Output</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Achievement %</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Records</th>
          </tr>
         </thead>
         <tbody id="operator-performance-table">
@@ -133,28 +313,28 @@
        </table>
       </div>
      </div><!-- OEE History Table -->
-     <div class="bg-white p-6 rounded-lg shadow mt-6">
-      <h3 class="text-lg font-semibold text-gray-700 mb-4">OEE History</h3>
+     <div class="chart-card">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">📋 OEE History</h3>
       <div class="overflow-x-auto">
        <table class="min-w-full table-auto">
-        <thead class="bg-gray-50">
+        <thead>
          <tr>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Date</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Shift</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Machine</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">PIC</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Product</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Batch</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Output</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Reject</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">A%</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">P%</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Q%</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">OEE%</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">WR</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">ODT</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Line Stop</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Minor Stop</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Date</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Shift</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Machine</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">PIC</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Product</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Batch</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Output</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Reject</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">A%</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">P%</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Q%</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">OEE%</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">WR</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">ODT</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Line Stop</th>
+          <th class="px-2 py-3 text-left text-xs font-medium">Minor Stop</th>
          </tr>
         </thead>
         <tbody id="dashboard-history-table">
@@ -164,110 +344,110 @@
      </div>
     </div>
    </section><!-- OEE Input Section -->
-   <section id="input-section" class="section hidden max-w-4xl mx-auto px-4 py-8">
-    <div class="bg-white p-6 rounded-lg shadow">
-     <h2 class="text-2xl font-bold text-gray-800 mb-6">OEE Data Input</h2>
+   <section id="input-section" class="section hidden max-w-4xl mx-auto px-6">
+    <div class="glass-card rounded-2xl p-8 animate-fade-in">
+     <h2 class="section-header mb-6">✍️ OEE Data Input</h2>
      <form id="oee-form" class="space-y-6"><!-- Basic Information -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Date</label> <input type="date" id="input-date" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">📅 Date</label> <input type="date" id="input-date" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Shift</label> <select id="input-shift" required class="w-full border border-gray-300 rounded-md px-3 py-2" onchange="calculateTargetRecommendation()"> <option value="">Select Shift</option> <option value="shift1" data-minutes="510">Shift 1 (07:00 - 15:30)</option> <option value="shift2" data-minutes="450">Shift 2 (15:20 - 22:50)</option> <option value="shift3" data-minutes="510">Shift 3 (22:40 - 07:10)</option> <option value="longshift_pagi" data-minutes="720">Long Shift Pagi (07:00 - 19:00)</option> <option value="longshift_malam" data-minutes="720">Long Shift Malam (19:00 - 07:00)</option> </select>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">🕐 Shift</label> <select id="input-shift" required class="w-full input-field rounded-lg px-4 py-2" onchange="calculateTargetRecommendation()"> <option value="">Select Shift</option> <option value="shift1" data-minutes="510">Shift 1 (07:00 - 15:30)</option> <option value="shift2" data-minutes="450">Shift 2 (15:20 - 22:50)</option> <option value="shift3" data-minutes="510">Shift 3 (22:40 - 07:10)</option> <option value="longshift_pagi" data-minutes="720">Long Shift Pagi (07:00 - 19:00)</option> <option value="longshift_malam" data-minutes="720">Long Shift Malam (19:00 - 07:00)</option> </select>
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine</label> <select id="input-machine" required class="w-full border border-gray-300 rounded-md px-3 py-2" onchange="loadMachineTemplate()"> <option value="">Select Machine</option> </select>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">🏭 Machine</label> <select id="input-machine" required class="w-full input-field rounded-lg px-4 py-2" onchange="loadMachineTemplate()"> <option value="">Select Machine</option> </select>
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">PIC</label> <input type="text" id="input-pic" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">👤 PIC</label> <input type="text" id="input-pic" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Product</label> <input type="text" id="input-product" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">📦 Product</label> <input type="text" id="input-product" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Batch</label> <input type="text" id="input-batch" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Batch</label> <input type="text" id="input-batch" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
       </div><!-- Dynamic Template Fields -->
-      <div id="template-fields"></div><!-- Output Data (After Minor Stop) -->
+      <div id="template-fields"></div><!-- Output Data -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Actual Output</label> <input type="number" id="input-actual-output" required class="w-full border border-gray-300 rounded-md px-3 py-2" onchange="calculateOEE()">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">✅ Actual Output</label> <input type="number" id="input-actual-output" required class="w-full input-field rounded-lg px-4 py-2" onchange="calculateOEE()">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Reject</label> <input type="number" id="input-reject" required class="w-full border border-gray-300 rounded-md px-3 py-2" onchange="calculateOEE()">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">❌ Reject</label> <input type="number" id="input-reject" required class="w-full input-field rounded-lg px-4 py-2" onchange="calculateOEE()">
        </div>
       </div><!-- Target Recommendation -->
-      <div class="bg-blue-50 p-4 rounded-lg mb-4">
-       <h3 class="text-lg font-semibold text-blue-700 mb-2">Target Output Recommendation</h3>
-       <p id="target-recommendation" class="text-blue-600">Select shift and machine to see recommendation</p>
+      <div class="metric-card purple">
+       <h3 class="text-lg font-semibold mb-2">🎯 Target Output Recommendation</h3>
+       <p id="target-recommendation" class="text-white opacity-90">Select shift and machine to see recommendation</p>
       </div><!-- Calculated Results -->
-      <div class="bg-gray-50 p-4 rounded-lg">
-       <h3 class="text-lg font-semibold text-gray-700 mb-4">Calculated Results</h3>
+      <div class="chart-card">
+       <h3 class="text-lg font-semibold text-gray-700 mb-4">📊 Calculated Results</h3>
        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div><label class="block text-sm font-medium text-gray-600">Availability</label> <span id="calc-availability" class="text-lg font-bold text-blue-600">0%</span>
+        <div class="text-center p-4 bg-red-50 rounded-lg"><label class="block text-sm font-medium text-gray-600 mb-2">Availability</label> <span id="calc-availability" class="text-2xl font-bold text-red-600">0%</span>
         </div>
-        <div><label class="block text-sm font-medium text-gray-600">Performance</label> <span id="calc-performance" class="text-lg font-bold text-green-600">0%</span>
+        <div class="text-center p-4 bg-green-50 rounded-lg"><label class="block text-sm font-medium text-gray-600 mb-2">Performance</label> <span id="calc-performance" class="text-2xl font-bold text-green-600">0%</span>
         </div>
-        <div><label class="block text-sm font-medium text-gray-600">Quality</label> <span id="calc-quality" class="text-lg font-bold text-purple-600">0%</span>
+        <div class="text-center p-4 bg-purple-50 rounded-lg"><label class="block text-sm font-medium text-gray-600 mb-2">Quality</label> <span id="calc-quality" class="text-2xl font-bold text-purple-600">0%</span>
         </div>
-        <div><label class="block text-sm font-medium text-gray-600">OEE</label> <span id="calc-oee" class="text-lg font-bold text-red-600">0%</span>
+        <div class="text-center p-4 bg-blue-50 rounded-lg"><label class="block text-sm font-medium text-gray-600 mb-2">OEE</label> <span id="calc-oee" class="text-2xl font-bold text-blue-600">0%</span>
         </div>
        </div>
       </div>
-      <div class="flex space-x-4"><button type="submit" id="submit-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">Simpan Data OEE</button> <button type="button" onclick="resetForm()" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors">Reset</button>
+      <div class="flex space-x-4"><button type="submit" id="submit-btn" class="btn-success text-white px-8 py-3 rounded-lg font-semibold"> 💾 Simpan Data OEE </button> <button type="button" onclick="resetForm()" class="bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-all"> 🔄 Reset </button>
       </div>
      </form>
     </div>
    </section><!-- Machine Management Section -->
-   <section id="machines-section" class="section hidden max-w-6xl mx-auto px-4 py-8">
-    <div class="bg-white p-6 rounded-lg shadow">
+   <section id="machines-section" class="section hidden max-w-6xl mx-auto px-6">
+    <div class="glass-card rounded-2xl p-8 animate-fade-in">
      <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-gray-800">Machine Management</h2><button onclick="showMachineForm()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Add Machine</button>
+      <h2 class="section-header">🔧 Machine Management</h2><button onclick="showMachineForm()" class="btn-success text-white px-6 py-3 rounded-lg font-semibold"> ➕ Add Machine </button>
      </div><!-- Password Protection -->
      <div id="password-protection" class="mb-6">
-      <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg"><label class="block text-sm font-medium text-gray-700 mb-2">Enter Admin Password</label>
-       <div class="flex space-x-2"><input type="password" id="admin-password" placeholder="Enter password" class="flex-1 border border-gray-300 rounded-md px-3 py-2"> <button onclick="checkPassword()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Access</button>
+      <div class="password-card"><label class="block text-sm font-medium text-gray-800 mb-2">🔒 Enter Admin Password</label>
+       <div class="flex space-x-2"><input type="password" id="admin-password" placeholder="Enter password" class="flex-1 input-field rounded-lg px-4 py-2 bg-white"> <button onclick="checkPassword()" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold"> 🔓 Access </button>
        </div>
       </div>
      </div><!-- Machine Form -->
      <div id="machine-form-container" class="hidden mb-6">
       <form id="machine-form" class="space-y-6"><input type="hidden" id="edit-machine-id">
        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine Name</label> <input type="text" id="machine-name" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">🏭 Machine Name</label> <input type="text" id="machine-name" required class="w-full input-field rounded-lg px-4 py-2">
         </div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">Area</label> <select id="machine-area" required class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">Select Area</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">📍 Area</label> <select id="machine-area" required class="w-full input-field rounded-lg px-4 py-2"> <option value="">Select Area</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
         </div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">Target per Minute</label> <input type="number" id="machine-target" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">🎯 Target per Minute</label> <input type="number" id="machine-target" required class="w-full input-field rounded-lg px-4 py-2">
         </div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">PIC</label> <input type="text" id="machine-pic" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+        <div><label class="block text-sm font-medium text-gray-700 mb-2">👤 PIC</label> <input type="text" id="machine-pic" required class="w-full input-field rounded-lg px-4 py-2">
         </div>
        </div><!-- ODT Items -->
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">ODT Items</label>
+       <div class="chart-card"><label class="block text-sm font-medium text-gray-700 mb-4">⏱️ ODT Items</label>
         <div id="odt-items" class="space-y-2">
-         <div class="flex space-x-2"><input type="text" placeholder="ODT Name" class="flex-1 border border-gray-300 rounded-md px-3 py-2 odt-name"> <input type="number" placeholder="Standard Time (min)" class="w-32 border border-gray-300 rounded-md px-3 py-2 odt-time"> <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600">Remove</button>
+         <div class="flex space-x-2"><input type="text" placeholder="ODT Name" class="flex-1 input-field rounded-lg px-4 py-2 odt-name"> <input type="number" placeholder="Standard Time (min)" class="w-32 input-field rounded-lg px-4 py-2 odt-time"> <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all">Remove</button>
          </div>
-        </div><button type="button" onclick="addODTItem()" class="mt-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600">Add ODT Item</button>
+        </div><button type="button" onclick="addODTItem()" class="mt-3 btn-success text-white px-4 py-2 rounded-lg font-semibold"> ➕ Add ODT Item </button>
        </div><!-- Line Stop Categories -->
        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">Line Stop Mesin</label>
-         <div id="line-stop-mesin" class="space-y-2"><input type="text" placeholder="Line Stop Mesin Item" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-item">
-         </div><button type="button" onclick="addLineStopMesin()" class="mt-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600">Add Item</button>
+        <div class="chart-card"><label class="block text-sm font-medium text-gray-700 mb-4">🔴 Line Stop Mesin</label>
+         <div id="line-stop-mesin" class="space-y-2"><input type="text" placeholder="Line Stop Mesin Item" class="w-full input-field rounded-lg px-4 py-2 line-stop-mesin-item">
+         </div><button type="button" onclick="addLineStopMesin()" class="mt-3 btn-success text-white px-4 py-2 rounded-lg font-semibold"> ➕ Add Item </button>
         </div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-2">Line Stop Non Mesin</label>
-         <div id="line-stop-non-mesin" class="space-y-2"><input type="text" placeholder="Line Stop Non Mesin Item" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-item">
-         </div><button type="button" onclick="addLineStopNonMesin()" class="mt-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600">Add Item</button>
+        <div class="chart-card"><label class="block text-sm font-medium text-gray-700 mb-4">🟡 Line Stop Non Mesin</label>
+         <div id="line-stop-non-mesin" class="space-y-2"><input type="text" placeholder="Line Stop Non Mesin Item" class="w-full input-field rounded-lg px-4 py-2 line-stop-non-mesin-item">
+         </div><button type="button" onclick="addLineStopNonMesin()" class="mt-3 btn-success text-white px-4 py-2 rounded-lg font-semibold"> ➕ Add Item </button>
         </div>
        </div><!-- Minor Stop Items -->
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Minor Stop Items</label>
-        <div id="minor-stop-items" class="space-y-2"><input type="text" placeholder="Minor Stop Item" class="w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-item">
-        </div><button type="button" onclick="addMinorStopItem()" class="mt-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600">Add Item</button>
+       <div class="chart-card"><label class="block text-sm font-medium text-gray-700 mb-4">⚠️ Minor Stop Items</label>
+        <div id="minor-stop-items" class="space-y-2"><input type="text" placeholder="Minor Stop Item" class="w-full input-field rounded-lg px-4 py-2 minor-stop-item">
+        </div><button type="button" onclick="addMinorStopItem()" class="mt-3 btn-success text-white px-4 py-2 rounded-lg font-semibold"> ➕ Add Item </button>
        </div>
-       <div class="flex space-x-4"><button type="submit" id="machine-submit-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">Save Machine</button> <button type="button" onclick="cancelMachineForm()" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors">Cancel</button>
+       <div class="flex space-x-4"><button type="submit" id="machine-submit-btn" class="btn-primary text-white px-8 py-3 rounded-lg font-semibold"> 💾 Save Machine </button> <button type="button" onclick="cancelMachineForm()" class="bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-all"> ❌ Cancel </button>
        </div>
       </form>
      </div><!-- Machine List -->
      <div id="machine-list-container" class="hidden">
       <div class="overflow-x-auto">
        <table class="min-w-full table-auto">
-        <thead class="bg-gray-50">
+        <thead>
          <tr>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Name</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Area</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Target/Min</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">PIC</th>
-          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Name</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Area</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Target/Min</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">PIC</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Actions</th>
          </tr>
         </thead>
         <tbody id="machine-list">
@@ -277,30 +457,30 @@
      </div>
     </div>
    </section><!-- Export Section -->
-   <section id="export-section" class="section hidden max-w-4xl mx-auto px-4 py-8">
-    <div class="bg-white p-6 rounded-lg shadow">
-     <h2 class="text-2xl font-bold text-gray-800 mb-6">Export Data</h2><!-- Export Filters -->
-     <div class="bg-gray-50 p-4 rounded-lg mb-6">
+   <section id="export-section" class="section hidden max-w-4xl mx-auto px-6">
+    <div class="glass-card rounded-2xl p-8 animate-fade-in">
+     <h2 class="section-header mb-6">📥 Export Data</h2><!-- Export Filters -->
+     <div class="filter-card mb-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label> <input type="date" id="export-start-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">📅 Start Date</label> <input type="date" id="export-start-date" class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">End Date</label> <input type="date" id="export-end-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">📅 End Date</label> <input type="date" id="export-end-date" class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine</label> <select id="export-machine" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Machines</option> </select>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">🏭 Machine</label> <select id="export-machine" class="w-full input-field rounded-lg px-4 py-2"> <option value="">All Machines</option> </select>
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Format</label> <select id="export-format" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="csv">CSV</option> <option value="excel">Excel</option> </select>
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">📄 Format</label> <select id="export-format" class="w-full input-field rounded-lg px-4 py-2"> <option value="csv">CSV</option> <option value="excel">Excel</option> </select>
        </div>
       </div>
      </div>
-     <div class="flex space-x-4"><button onclick="exportData()" id="export-btn" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors">Export Data</button> <button onclick="previewExport()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">Preview</button>
+     <div class="flex space-x-4"><button onclick="exportData()" id="export-btn" class="btn-success text-white px-8 py-3 rounded-lg font-semibold"> 📥 Export Data </button> <button onclick="previewExport()" class="btn-primary text-white px-8 py-3 rounded-lg font-semibold"> 👁️ Preview </button>
      </div><!-- Export Preview -->
      <div id="export-preview" class="mt-6 hidden">
-      <h3 class="text-lg font-semibold text-gray-700 mb-4">Export Preview</h3>
-      <div class="bg-gray-50 p-4 rounded-lg">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">👁️ Export Preview</h3>
+      <div class="chart-card">
        <p id="preview-info" class="text-sm text-gray-600 mb-4"></p>
        <div class="overflow-x-auto max-h-96">
         <table class="min-w-full table-auto text-xs">
-         <thead class="bg-gray-100">
+         <thead>
           <tr id="preview-header"></tr>
          </thead>
          <tbody id="preview-body"></tbody>
@@ -325,6 +505,32 @@
         // Supabase Configuration
         const SUPABASE_URL = 'https://pjzojygnaizbtvmzonee.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqem9qeWduYWl6YnR2bXpvbmVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNjMwNDksImV4cCI6MjA3ODkzOTA0OX0.75YGcnYa9cN7AZc68-kWsHsGDg_VRp2JL89EhuCPJ2U';
+
+        // Make all functions globally accessible
+        window.showSection = showSection;
+        window.calculateTargetRecommendation = calculateTargetRecommendation;
+        window.loadMachineTemplate = loadMachineTemplate;
+        window.calculateOEE = calculateOEE;
+        window.resetForm = resetForm;
+        window.checkPassword = checkPassword;
+        window.showMachineForm = showMachineForm;
+        window.cancelMachineForm = cancelMachineForm;
+        window.addODTItem = addODTItem;
+        window.removeODTItem = removeODTItem;
+        window.addLineStopMesin = addLineStopMesin;
+        window.addLineStopNonMesin = addLineStopNonMesin;
+        window.addMinorStopItem = addMinorStopItem;
+        window.editMachine = editMachine;
+        window.deleteMachine = deleteMachine;
+        window.confirmDeleteMachine = confirmDeleteMachine;
+        window.cancelDeleteMachine = cancelDeleteMachine;
+        window.applyDashboardFilters = applyDashboardFilters;
+        window.exportData = exportData;
+        window.previewExport = previewExport;
+        window.toggleODTInput = toggleODTInput;
+        window.updateODTOvertimeDisplay = updateODTOvertimeDisplay;
+        window.checkWRRequirement = checkWRRequirement;
+        window.checkCustomWRRequirement = checkCustomWRRequirement;
 
         // Initialize application
         async function init() {
@@ -494,13 +700,19 @@
             });
             
             // Show selected section
-            document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+            const targetSection = document.getElementById(`${sectionName}-section`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
             
             // Update navigation
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-700');
+                btn.classList.remove('active', 'bg-purple-50');
             });
-            document.querySelector(`[data-section="${sectionName}"]`).classList.add('bg-blue-700');
+            const activeBtn = document.querySelector(`[data-section="${sectionName}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-purple-50');
+            }
             
             // Load section-specific data
             if (sectionName === 'dashboard') {
@@ -585,23 +797,23 @@
             const odtContainer = document.getElementById('odt-items');
             odtContainer.innerHTML = `
                 <div class="flex space-x-2">
-                    <input type="text" placeholder="ODT Name" class="flex-1 border border-gray-300 rounded-md px-3 py-2 odt-name">
-                    <input type="number" placeholder="Standard Time (min)" class="w-32 border border-gray-300 rounded-md px-3 py-2 odt-time">
-                    <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600">Remove</button>
+                    <input type="text" placeholder="ODT Name" class="flex-1 input-field rounded-lg px-4 py-2 odt-name">
+                    <input type="number" placeholder="Standard Time (min)" class="w-32 input-field rounded-lg px-4 py-2 odt-time">
+                    <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all">Remove</button>
                 </div>
             `;
             
             // Reset Line Stop items
             document.getElementById('line-stop-mesin').innerHTML = `
-                <input type="text" placeholder="Line Stop Mesin Item" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-item">
+                <input type="text" placeholder="Line Stop Mesin Item" class="w-full input-field rounded-lg px-4 py-2 line-stop-mesin-item">
             `;
             document.getElementById('line-stop-non-mesin').innerHTML = `
-                <input type="text" placeholder="Line Stop Non Mesin Item" class="w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-item">
+                <input type="text" placeholder="Line Stop Non Mesin Item" class="w-full input-field rounded-lg px-4 py-2 line-stop-non-mesin-item">
             `;
             
             // Reset Minor Stop items
             document.getElementById('minor-stop-items').innerHTML = `
-                <input type="text" placeholder="Minor Stop Item" class="w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-item">
+                <input type="text" placeholder="Minor Stop Item" class="w-full input-field rounded-lg px-4 py-2 minor-stop-item">
             `;
         }
 
@@ -610,9 +822,9 @@
             const div = document.createElement('div');
             div.className = 'flex space-x-2';
             div.innerHTML = `
-                <input type="text" placeholder="ODT Name" class="flex-1 border border-gray-300 rounded-md px-3 py-2 odt-name">
-                <input type="number" placeholder="Standard Time (min)" class="w-32 border border-gray-300 rounded-md px-3 py-2 odt-time">
-                <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600">Remove</button>
+                <input type="text" placeholder="ODT Name" class="flex-1 input-field rounded-lg px-4 py-2 odt-name">
+                <input type="number" placeholder="Standard Time (min)" class="w-32 input-field rounded-lg px-4 py-2 odt-time">
+                <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all">Remove</button>
             `;
             container.appendChild(div);
         }
@@ -626,7 +838,7 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = 'Line Stop Mesin Item';
-            input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-item';
+            input.className = 'w-full input-field rounded-lg px-4 py-2 line-stop-mesin-item';
             container.appendChild(input);
         }
 
@@ -635,7 +847,7 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = 'Line Stop Non Mesin Item';
-            input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-item';
+            input.className = 'w-full input-field rounded-lg px-4 py-2 line-stop-non-mesin-item';
             container.appendChild(input);
         }
 
@@ -644,7 +856,7 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = 'Minor Stop Item';
-            input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-item';
+            input.className = 'w-full input-field rounded-lg px-4 py-2 minor-stop-item';
             container.appendChild(input);
         }
 
@@ -739,7 +951,7 @@
                 showToast('Error saving machine: ' + error.message, 'error');
             } finally {
                 submitBtn.classList.remove('loading');
-                submitBtn.textContent = 'Save Machine';
+                submitBtn.textContent = '💾 Save Machine';
             }
         }
 
@@ -762,9 +974,9 @@
                 const div = document.createElement('div');
                 div.className = 'flex space-x-2';
                 div.innerHTML = `
-                    <input type="text" value="${item.name}" class="flex-1 border border-gray-300 rounded-md px-3 py-2 odt-name">
-                    <input type="number" value="${item.standardTime}" class="w-32 border border-gray-300 rounded-md px-3 py-2 odt-time">
-                    <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600">Remove</button>
+                    <input type="text" value="${item.name}" class="flex-1 input-field rounded-lg px-4 py-2 odt-name">
+                    <input type="number" value="${item.standardTime}" class="w-32 input-field rounded-lg px-4 py-2 odt-time">
+                    <button type="button" onclick="removeODTItem(this)" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all">Remove</button>
                 `;
                 odtContainer.appendChild(div);
             });
@@ -777,7 +989,7 @@
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = item;
-                input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-item';
+                input.className = 'w-full input-field rounded-lg px-4 py-2 line-stop-mesin-item';
                 lineStopMesinContainer.appendChild(input);
             });
             
@@ -788,7 +1000,7 @@
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = item;
-                input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-item';
+                input.className = 'w-full input-field rounded-lg px-4 py-2 line-stop-non-mesin-item';
                 lineStopNonMesinContainer.appendChild(input);
             });
             
@@ -800,7 +1012,7 @@
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = item;
-                input.className = 'w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-item';
+                input.className = 'w-full input-field rounded-lg px-4 py-2 minor-stop-item';
                 minorStopContainer.appendChild(input);
             });
             
@@ -848,15 +1060,15 @@
             
             machines.forEach(machine => {
                 const row = document.createElement('tr');
-                row.className = 'border-b hover:bg-gray-50';
+                row.className = 'border-b';
                 row.innerHTML = `
-                    <td class="px-4 py-2">${machine.name}</td>
-                    <td class="px-4 py-2">${machine.area}</td>
-                    <td class="px-4 py-2">${machine.target_per_minute}</td>
-                    <td class="px-4 py-2">${machine.pic}</td>
-                    <td class="px-4 py-2">
-                        <button onclick="editMachine('${machine.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mr-2">Edit</button>
-                        <button onclick="deleteMachine('${machine.id}')" class="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">Delete</button>
+                    <td class="px-4 py-3">${machine.name}</td>
+                    <td class="px-4 py-3">${machine.area}</td>
+                    <td class="px-4 py-3">${machine.target_per_minute}</td>
+                    <td class="px-4 py-3">${machine.pic}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="editMachine('${machine.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-all mr-2">✏️ Edit</button>
+                        <button onclick="deleteMachine('${machine.id}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600 transition-all">🗑️ Delete</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -901,7 +1113,7 @@
             const selectedOption = shiftSelect.options[shiftSelect.selectedIndex];
             
             if (!machineName || !selectedOption.dataset.minutes) {
-                document.getElementById('target-recommendation').textContent = 'Select shift and machine to see recommendation';
+                document.getElementById('target-recommendation').innerHTML = '⏳ Select shift and machine to see recommendation';
                 return;
             }
             
@@ -937,8 +1149,8 @@
             const recommendedOutput = Math.max(0, availableTime * machine.target_per_minute);
             
             document.getElementById('target-recommendation').innerHTML = `
-                <strong>Recommended Target Output: ${recommendedOutput.toLocaleString()} units</strong><br>
-                <small>Calculation: (${shiftMinutes} - ${totalODT} - ${totalLineStop}) × ${machine.target_per_minute} = ${recommendedOutput}</small>
+                <strong>🎯 Recommended Target Output: ${recommendedOutput.toLocaleString()} units</strong><br>
+                <small class="opacity-80">📐 Calculation: (${shiftMinutes} - ${totalODT} - ${totalLineStop}) × ${machine.target_per_minute} = ${recommendedOutput}</small>
             `;
         }
 
@@ -959,8 +1171,9 @@
             const odtItems = JSON.parse(machine.odt_items || '[]');
             if (odtItems.length > 0) {
                 const odtSection = document.createElement('div');
+                odtSection.className = 'chart-card';
                 odtSection.innerHTML = `
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">ODT (Operational Downtime)</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">⏱️ ODT (Operational Downtime)</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="odt-inputs">
                     </div>
                 `;
@@ -969,13 +1182,13 @@
                 const odtInputs = document.getElementById('odt-inputs');
                 odtItems.forEach(item => {
                     const div = document.createElement('div');
-                    div.className = 'flex items-center space-x-3 p-3 border border-gray-200 rounded-lg';
+                    div.className = 'flex items-center space-x-3 p-3 bg-purple-50 rounded-lg border-2 border-purple-200';
                     div.innerHTML = `
-                        <input type="checkbox" class="odt-checkbox w-4 h-4 text-blue-600" 
+                        <input type="checkbox" class="odt-checkbox w-5 h-5 text-purple-600" 
                                data-name="${item.name}" data-standard="${item.standardTime}" 
                                onchange="toggleODTInput(this); calculateOEE(); calculateTargetRecommendation(); updateODTOvertimeDisplay();">
                         <label class="flex-1 text-sm font-medium text-gray-700">${item.name} (Standard: ${item.standardTime} min)</label>
-                        <input type="number" class="w-24 border border-gray-300 rounded-md px-2 py-1 text-sm odt-actual" 
+                        <input type="number" class="w-24 input-field rounded-lg px-3 py-2 text-sm odt-actual" 
                                data-name="${item.name}" data-standard="${item.standardTime}" 
                                onchange="calculateOEE(); calculateTargetRecommendation(); updateODTOvertimeDisplay();" 
                                placeholder="Actual" disabled>
@@ -990,70 +1203,71 @@
             
             if (lineStopMesin.length > 0 || lineStopNonMesin.length > 0) {
                 const lineStopSection = document.createElement('div');
+                lineStopSection.className = 'chart-card';
                 lineStopSection.innerHTML = `
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4 mt-6">Line Stop</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">🛑 Line Stop</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <h4 class="font-medium text-gray-600 mb-2">Line Stop Mesin</h4>
-                            <div id="line-stop-mesin-inputs"></div>
+                            <h4 class="font-medium text-gray-600 mb-3">🔴 Line Stop Mesin</h4>
+                            <div id="line-stop-mesin-inputs" class="space-y-2"></div>
                             
                             <!-- Custom Line Stop Mesin Slots -->
-                            <div class="mt-4 space-y-2">
-                                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-300">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Custom Line Stop Mesin 1</label>
-                                    <input type="text" id="customLSMesinName1" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 uppercase" 
+                            <div class="mt-4 space-y-3">
+                                <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">⚠️ Custom Line Stop Mesin 1</label>
+                                    <input type="text" id="customLSMesinName1" class="w-full input-field rounded-lg px-3 py-2 mb-2 uppercase" 
                                            placeholder="Nama Problem (opsional)" style="text-transform: uppercase;">
                                     <div class="grid grid-cols-3 gap-2">
-                                        <input type="number" id="customLSMesinTime1" class="border border-gray-300 rounded-md px-3 py-2" 
+                                        <input type="number" id="customLSMesinTime1" class="input-field rounded-lg px-3 py-2" 
                                                placeholder="Durasi (menit)" onchange="calculateOEE(); calculateTargetRecommendation(); checkCustomWRRequirement('customLSMesinTime1', 'customLSMesinWR1');">
-                                        <input type="text" id="customLSMesinAction1" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
+                                        <input type="text" id="customLSMesinAction1" class="input-field rounded-lg px-3 py-2 uppercase" 
                                                placeholder="Action" style="text-transform: uppercase;">
-                                        <input type="text" id="customLSMesinWR1" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
+                                        <input type="text" id="customLSMesinWR1" class="input-field rounded-lg px-3 py-2 uppercase" 
                                                placeholder="No WR" style="text-transform: uppercase;">
                                     </div>
                                 </div>
                                 
-                                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-300">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Custom Line Stop Mesin 2</label>
-                                    <input type="text" id="customLSMesinName2" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 uppercase" 
+                                <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">⚠️ Custom Line Stop Mesin 2</label>
+                                    <input type="text" id="customLSMesinName2" class="w-full input-field rounded-lg px-3 py-2 mb-2 uppercase" 
                                            placeholder="Nama Problem (opsional)" style="text-transform: uppercase;">
                                     <div class="grid grid-cols-3 gap-2">
-                                        <input type="number" id="customLSMesinTime2" class="border border-gray-300 rounded-md px-3 py-2" 
+                                        <input type="number" id="customLSMesinTime2" class="input-field rounded-lg px-3 py-2" 
                                                placeholder="Durasi (menit)" onchange="calculateOEE(); calculateTargetRecommendation(); checkCustomWRRequirement('customLSMesinTime2', 'customLSMesinWR2');">
-                                        <input type="text" id="customLSMesinAction2" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
+                                        <input type="text" id="customLSMesinAction2" class="input-field rounded-lg px-3 py-2 uppercase" 
                                                placeholder="Action" style="text-transform: uppercase;">
-                                        <input type="text" id="customLSMesinWR2" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
+                                        <input type="text" id="customLSMesinWR2" class="input-field rounded-lg px-3 py-2 uppercase" 
                                                placeholder="No WR" style="text-transform: uppercase;">
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div>
-                            <h4 class="font-medium text-gray-600 mb-2">Line Stop Non Mesin</h4>
-                            <div id="line-stop-non-mesin-inputs"></div>
+                            <h4 class="font-medium text-gray-600 mb-3">🟡 Line Stop Non Mesin</h4>
+                            <div id="line-stop-non-mesin-inputs" class="space-y-2"></div>
                             
                             <!-- Custom Line Stop Non Mesin Slots -->
-                            <div class="mt-4 space-y-2">
-                                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-300">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Custom Line Stop Non Mesin 1</label>
-                                    <input type="text" id="customLSNonMesinName1" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 uppercase" 
+                            <div class="mt-4 space-y-3">
+                                <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">⚠️ Custom Line Stop Non Mesin 1</label>
+                                    <input type="text" id="customLSNonMesinName1" class="w-full input-field rounded-lg px-3 py-2 mb-2 uppercase" 
                                            placeholder="Nama Problem (opsional)" style="text-transform: uppercase;">
                                     <div class="grid grid-cols-2 gap-2">
-                                        <input type="number" id="customLSNonMesinTime1" class="border border-gray-300 rounded-md px-3 py-2" 
+                                        <input type="number" id="customLSNonMesinTime1" class="input-field rounded-lg px-3 py-2" 
                                                placeholder="Durasi (menit)" onchange="calculateOEE(); calculateTargetRecommendation();">
-                                        <input type="text" id="customLSNonMesinAction1" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
+                                        <input type="text" id="customLSNonMesinAction1" class="input-field rounded-lg px-3 py-2 uppercase" 
                                                placeholder="Action" style="text-transform: uppercase;">
                                     </div>
                                 </div>
                                 
-                                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-300">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Custom Line Stop Non Mesin 2</label>
-                                    <input type="text" id="customLSNonMesinName2" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 uppercase" 
+                                <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">⚠️ Custom Line Stop Non Mesin 2</label>
+                                    <input type="text" id="customLSNonMesinName2" class="w-full input-field rounded-lg px-3 py-2 mb-2 uppercase" 
                                            placeholder="Nama Problem (opsional)" style="text-transform: uppercase;">
                                     <div class="grid grid-cols-2 gap-2">
-                                        <input type="number" id="customLSNonMesinTime2" class="border border-gray-300 rounded-md px-3 py-2" 
+                                        <input type="number" id="customLSNonMesinTime2" class="input-field rounded-lg px-3 py-2" 
                                                placeholder="Durasi (menit)" onchange="calculateOEE(); calculateTargetRecommendation();">
-                                        <input type="text" id="customLSNonMesinAction2" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
+                                        <input type="text" id="customLSNonMesinAction2" class="input-field rounded-lg px-3 py-2 uppercase" 
                                                placeholder="Action" style="text-transform: uppercase;">
                                     </div>
                                 </div>
@@ -1069,16 +1283,16 @@
                 const lineStopMesinInputs = document.getElementById('line-stop-mesin-inputs');
                 lineStopMesin.forEach(item => {
                     const div = document.createElement('div');
-                    div.className = 'mb-2';
+                    div.className = 'mb-2 p-3 bg-red-50 rounded-lg border-2 border-red-200';
                     div.innerHTML = `
-                        <label class="block text-sm font-medium text-gray-700 mb-1">${item}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">${item}</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <input type="number" class="border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-input" 
+                            <input type="number" class="input-field rounded-lg px-3 py-2 line-stop-mesin-input" 
                                    data-name="${item}" onchange="checkWRRequirement(); calculateOEE(); calculateTargetRecommendation();" placeholder="Durasi (menit)">
-                            <input type="text" class="border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-action uppercase" 
-                                   data-name="${item}" placeholder="Action yang diambil" style="text-transform: uppercase;">
-                            <input type="text" class="border border-gray-300 rounded-md px-3 py-2 line-stop-mesin-wr" 
-                                   data-name="${item}" placeholder="No WR (jika > 179 menit)" style="text-transform: uppercase;">
+                            <input type="text" class="input-field rounded-lg px-3 py-2 line-stop-mesin-action uppercase" 
+                                   data-name="${item}" placeholder="Action" style="text-transform: uppercase;">
+                            <input type="text" class="input-field rounded-lg px-3 py-2 line-stop-mesin-wr" 
+                                   data-name="${item}" placeholder="No WR" style="text-transform: uppercase;">
                         </div>
                     `;
                     lineStopMesinInputs.appendChild(div);
@@ -1087,14 +1301,14 @@
                 const lineStopNonMesinInputs = document.getElementById('line-stop-non-mesin-inputs');
                 lineStopNonMesin.forEach(item => {
                     const div = document.createElement('div');
-                    div.className = 'mb-2';
+                    div.className = 'mb-2 p-3 bg-yellow-50 rounded-lg border-2 border-yellow-200';
                     div.innerHTML = `
-                        <label class="block text-sm font-medium text-gray-700 mb-1">${item}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">${item}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" class="border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-input" 
+                            <input type="number" class="input-field rounded-lg px-3 py-2 line-stop-non-mesin-input" 
                                    data-name="${item}" onchange="calculateOEE(); calculateTargetRecommendation();" placeholder="Durasi (menit)">
-                            <input type="text" class="border border-gray-300 rounded-md px-3 py-2 line-stop-non-mesin-action uppercase" 
-                                   data-name="${item}" placeholder="Action yang diambil" style="text-transform: uppercase;">
+                            <input type="text" class="input-field rounded-lg px-3 py-2 line-stop-non-mesin-action uppercase" 
+                                   data-name="${item}" placeholder="Action" style="text-transform: uppercase;">
                         </div>
                     `;
                     lineStopNonMesinInputs.appendChild(div);
@@ -1105,8 +1319,9 @@
             const minorStopItems = JSON.parse(machine.minor_stop_items || '[]');
             if (minorStopItems.length > 0) {
                 const minorStopSection = document.createElement('div');
+                minorStopSection.className = 'chart-card';
                 minorStopSection.innerHTML = `
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4 mt-6">Minor Stop</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">⚠️ Minor Stop</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="minor-stop-inputs">
                     </div>
                 `;
@@ -1115,9 +1330,10 @@
                 const minorStopInputs = document.getElementById('minor-stop-inputs');
                 minorStopItems.forEach(item => {
                     const div = document.createElement('div');
+                    div.className = 'p-3 bg-orange-50 rounded-lg border-2 border-orange-200';
                     div.innerHTML = `
                         <label class="block text-sm font-medium text-gray-700 mb-2">${item}</label>
-                        <input type="number" class="w-full border border-gray-300 rounded-md px-3 py-2 minor-stop-input" 
+                        <input type="number" class="w-full input-field rounded-lg px-3 py-2 minor-stop-input" 
                                data-name="${item}" onchange="calculateOEE()" placeholder="Frequency count">
                     `;
                     minorStopInputs.appendChild(div);
@@ -1139,7 +1355,7 @@
                 wrInput.placeholder = 'WAJIB ISI NO WR!';
             } else {
                 wrInput.required = false;
-                wrInput.style.borderColor = '#d1d5db';
+                wrInput.style.borderColor = '#e2e8f0';
                 wrInput.style.backgroundColor = 'white';
                 wrInput.placeholder = 'No WR';
             }
@@ -1175,20 +1391,20 @@
                         const overtimeName = `${name} Overtime`;
                         
                         const div = document.createElement('div');
-                        div.className = 'bg-orange-50 p-3 rounded-lg border border-orange-300';
+                        div.className = 'bg-orange-100 p-4 rounded-lg border-2 border-orange-400';
                         div.innerHTML = `
-                            <label class="block text-sm font-medium text-orange-700 mb-1">
+                            <label class="block text-sm font-medium text-orange-700 mb-2">
                                 🔔 ${overtimeName} (Auto-calculated)
                             </label>
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="number" value="${overtime}" 
-                                       class="border border-orange-300 rounded-md px-3 py-2 bg-orange-50" 
+                                       class="input-field rounded-lg px-3 py-2 bg-orange-50" 
                                        disabled readonly>
                                 <input type="text" value="ODT MELEBIHI STANDARD" 
-                                       class="border border-orange-300 rounded-md px-3 py-2 bg-orange-50 uppercase" 
+                                       class="input-field rounded-lg px-3 py-2 bg-orange-50 uppercase" 
                                        disabled readonly>
                             </div>
-                            <p class="text-xs text-orange-600 mt-1">
+                            <p class="text-xs text-orange-600 mt-2">
                                 ℹ️ ODT Overtime otomatis masuk ke Line Stop Non Mesin (Standard: ${standard} min, Actual: ${actual} min)
                             </p>
                         `;
@@ -1211,9 +1427,9 @@
                     wrInput.placeholder = 'WAJIB ISI NO WR!';
                 } else {
                     wrInput.required = false;
-                    wrInput.style.borderColor = '#d1d5db';
+                    wrInput.style.borderColor = '#e2e8f0';
                     wrInput.style.backgroundColor = 'white';
-                    wrInput.placeholder = 'No WR (jika > 179 menit)';
+                    wrInput.placeholder = 'No WR';
                 }
             });
         }
@@ -1559,7 +1775,7 @@
                 showToast('Error menyimpan data OEE: ' + error.message, 'error');
             } finally {
                 submitBtn.classList.remove('loading');
-                submitBtn.textContent = 'Simpan Data OEE';
+                submitBtn.textContent = '💾 Simpan Data OEE';
             }
         }
 
@@ -1634,9 +1850,10 @@
                     datasets: [{
                         label: 'OEE %',
                         data: records.map(r => r.oee),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
                     }]
                 },
                 options: {
@@ -1670,7 +1887,11 @@
                     datasets: [{
                         label: 'Average %',
                         data: [avgA, avgP, avgQ],
-                        backgroundColor: ['#ef4444', '#10b981', '#8b5cf6']
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ]
                     }]
                 },
                 options: {
@@ -1706,7 +1927,7 @@
                 .slice(0, 10);
             
             updateHorizontalBarChart('line-stop-mesin-chart', 'lineStopMesin', 
-                'Line Stop Mesin (Minutes)', topLineStopMesin);
+                'Line Stop Mesin (Minutes)', topLineStopMesin, 'rgba(239, 68, 68, 0.8)');
             
             // Line Stop Non Mesin Chart
             const lineStopNonMesinData = {};
@@ -1727,7 +1948,7 @@
                 .slice(0, 10);
             
             updateHorizontalBarChart('line-stop-non-mesin-chart', 'lineStopNonMesin', 
-                'Line Stop Non Mesin (Minutes)', topLineStopNonMesin);
+                'Line Stop Non Mesin (Minutes)', topLineStopNonMesin, 'rgba(251, 191, 36, 0.8)');
         }
 
         function updateODTChart(records) {
@@ -1747,7 +1968,7 @@
                 .slice(0, 10);
             
             updateHorizontalBarChart('odt-chart', 'odt', 
-                'ODT Time (Minutes)', topODT);
+                'ODT Time (Minutes)', topODT, 'rgba(139, 92, 246, 0.8)');
         }
 
         function updateOEEPerMachineChart(records) {
@@ -1777,7 +1998,7 @@
                     datasets: [{
                         label: 'Average OEE %',
                         data: avgOEEPerMachine.map(([, oee]) => oee),
-                        backgroundColor: '#3b82f6'
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)'
                     }]
                 },
                 options: {
@@ -1793,7 +2014,7 @@
             });
         }
 
-        function updateHorizontalBarChart(canvasId, chartKey, label, data) {
+        function updateHorizontalBarChart(canvasId, chartKey, label, data, color) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             
             if (charts[chartKey]) {
@@ -1807,7 +2028,7 @@
                     datasets: [{
                         label: label,
                         data: data.map(([, value]) => value),
-                        backgroundColor: '#ef4444'
+                        backgroundColor: color || 'rgba(239, 68, 68, 0.8)'
                     }]
                 },
                 options: {
@@ -1884,16 +2105,16 @@
                 const achievement = data.totalTarget > 0 ? (data.totalOutput / data.totalTarget) * 100 : 0;
                 
                 const row = document.createElement('tr');
-                row.className = 'border-b hover:bg-gray-50';
+                row.className = 'border-b';
                 row.innerHTML = `
-                    <td class="px-4 py-2">${pic}</td>
-                    <td class="px-4 py-2">${avgOEE.toFixed(1)}%</td>
-                    <td class="px-4 py-2">${Math.round(data.totalTarget).toLocaleString()}</td>
-                    <td class="px-4 py-2">${data.totalOutput.toLocaleString()}</td>
-                    <td class="px-4 py-2 font-bold ${achievement >= 100 ? 'text-green-600' : 'text-red-600'}">
+                    <td class="px-4 py-3">${pic}</td>
+                    <td class="px-4 py-3">${avgOEE.toFixed(1)}%</td>
+                    <td class="px-4 py-3">${Math.round(data.totalTarget).toLocaleString()}</td>
+                    <td class="px-4 py-3">${data.totalOutput.toLocaleString()}</td>
+                    <td class="px-4 py-3 font-bold ${achievement >= 100 ? 'text-green-600' : 'text-red-600'}">
                         ${achievement.toFixed(1)}%
                     </td>
-                    <td class="px-4 py-2">${data.records}</td>
+                    <td class="px-4 py-3">${data.records}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -1906,7 +2127,7 @@
             
             filteredRecords.forEach(record => {
                 const row = document.createElement('tr');
-                row.className = `border-b hover:bg-gray-50 ${record.oee < 86 ? 'pulse-red' : ''}`;
+                row.className = `border-b ${record.oee < 86 ? 'pulse-red' : ''}`;
                 
                 // Parse complex data for display
                 const odtTimes = JSON.parse(record.odt_actual_times || '{}');
@@ -1972,16 +2193,16 @@
             const header = document.getElementById('preview-header');
             const body = document.getElementById('preview-body');
             
-            info.textContent = `${filteredRecords.length} records will be exported`;
+            info.textContent = `📊 ${filteredRecords.length} records will be exported`;
             
             // Create header
             header.innerHTML = `
-                <th class="px-2 py-1 text-left text-xs">Date</th>
-                <th class="px-2 py-1 text-left text-xs">Shift</th>
-                <th class="px-2 py-1 text-left text-xs">Machine</th>
-                <th class="px-2 py-1 text-left text-xs">PIC</th>
-                <th class="px-2 py-1 text-left text-xs">Product</th>
-                <th class="px-2 py-1 text-left text-xs">OEE%</th>
+                <th class="px-2 py-2 text-left text-xs">Date</th>
+                <th class="px-2 py-2 text-left text-xs">Shift</th>
+                <th class="px-2 py-2 text-left text-xs">Machine</th>
+                <th class="px-2 py-2 text-left text-xs">PIC</th>
+                <th class="px-2 py-2 text-left text-xs">Product</th>
+                <th class="px-2 py-2 text-left text-xs">OEE%</th>
             `;
             
             // Create body (first 10 records)
@@ -1990,19 +2211,19 @@
                 const row = document.createElement('tr');
                 row.className = 'border-b';
                 row.innerHTML = `
-                    <td class="px-2 py-1 text-xs">${record.date}</td>
-                    <td class="px-2 py-1 text-xs">${record.shift}</td>
-                    <td class="px-2 py-1 text-xs">${record.machine}</td>
-                    <td class="px-2 py-1 text-xs">${record.pic}</td>
-                    <td class="px-2 py-1 text-xs">${record.product}</td>
-                    <td class="px-2 py-1 text-xs">${record.oee.toFixed(1)}%</td>
+                    <td class="px-2 py-2 text-xs">${record.date}</td>
+                    <td class="px-2 py-2 text-xs">${record.shift}</td>
+                    <td class="px-2 py-2 text-xs">${record.machine}</td>
+                    <td class="px-2 py-2 text-xs">${record.pic}</td>
+                    <td class="px-2 py-2 text-xs">${record.product}</td>
+                    <td class="px-2 py-2 text-xs">${record.oee.toFixed(1)}%</td>
                 `;
                 body.appendChild(row);
             });
             
             if (filteredRecords.length > 10) {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="6" class="px-2 py-1 text-xs text-gray-500 text-center">... and ${filteredRecords.length - 10} more records</td>`;
+                row.innerHTML = `<td colspan="6" class="px-2 py-2 text-xs text-gray-500 text-center">... and ${filteredRecords.length - 10} more records</td>`;
                 body.appendChild(row);
             }
             
@@ -2029,7 +2250,7 @@
                 showToast('Error exporting data: ' + error.message, 'error');
             } finally {
                 exportBtn.classList.remove('loading');
-                exportBtn.textContent = 'Export Data';
+                exportBtn.textContent = '📥 Export Data';
             }
         }
 
@@ -2141,11 +2362,12 @@
 
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
-                type === 'success' ? 'bg-green-500' : 
-                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            toast.className = `toast fixed top-4 right-4 px-6 py-4 rounded-xl text-white z-50 shadow-2xl ${
+                type === 'success' ? 'bg-gradient-to-r from-green-500 to-green-600' : 
+                type === 'error' ? 'bg-gradient-to-r from-red-500 to-red-600' : 
+                'bg-gradient-to-r from-blue-500 to-blue-600'
             }`;
-            toast.textContent = message;
+            toast.innerHTML = `<strong>${message}</strong>`;
             
             document.body.appendChild(toast);
             
@@ -2157,5 +2379,5 @@
         // Initialize application when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a03a9c4255ecdd9',t:'MTc2MzQyOTAxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a044b56c552ea7d',t:'MTc2MzQzNTYzMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
