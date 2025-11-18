@@ -6,6 +6,7 @@
   <title>OEE Manufacturing System v30</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
         body {
             box-sizing: border-box;
@@ -275,51 +276,6 @@
       </div>
      </div>
     </div>
-   </section><!-- History Section -->
-   <section id="history-section" class="section hidden max-w-7xl mx-auto px-4 py-8">
-    <div class="bg-white p-6 rounded-lg shadow">
-     <h2 class="text-2xl font-bold text-gray-800 mb-6">OEE History</h2><!-- History Filters -->
-     <div class="bg-gray-50 p-4 rounded-lg mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label> <input type="date" id="history-start-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
-       </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">End Date</label> <input type="date" id="history-end-date" class="w-full border border-gray-300 rounded-md px-3 py-2">
-       </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Machine</label> <select id="history-machine" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Machines</option> </select>
-       </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">Shift</label> <select id="history-shift" class="w-full border border-gray-300 rounded-md px-3 py-2"> <option value="">All Shifts</option> <option value="1">Shift 1</option> <option value="2">Shift 2</option> <option value="3">Shift 3</option> </select>
-       </div>
-       <div class="flex items-end"><button onclick="applyHistoryFilters()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Apply Filters</button>
-       </div>
-      </div>
-     </div><!-- History Table -->
-     <div class="overflow-x-auto">
-      <table class="min-w-full table-auto">
-       <thead class="bg-gray-50">
-        <tr>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Date</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Shift</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Machine</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">PIC</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Product</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Batch</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Output</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Reject</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">A%</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">P%</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Q%</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">OEE%</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">WR</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">ODT</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Line Stop</th>
-         <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">Minor Stop</th>
-        </tr>
-       </thead>
-       <tbody id="history-table">
-       </tbody>
-      </table>
-     </div>
-    </div>
    </section><!-- Export Section -->
    <section id="export-section" class="section hidden max-w-4xl mx-auto px-4 py-8">
     <div class="bg-white p-6 rounded-lg shadow">
@@ -366,118 +322,23 @@
         let inactivityTimer = null;
         const INACTIVITY_TIMEOUT = 20000; // 20 seconds
 
-        // Default configuration
-        const defaultConfig = {
-            system_title: "OEE Manufacturing System v30",
-            company_name: "Manufacturing Company"
-        };
-
-        // Initialize Supabase
-        function initSupabase() {
-            const SUPABASE_URL = 'https://pjzojygnaizbtvmzonee.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqem9qeWduYWl6YnR2bXpvbmVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNjMwNDksImV4cCI6MjA3ODkzOTA0OX0.75YGcnYa9cN7AZc68-kWsHsGDg_VRp2JL89EhuCPJ2U';
-            
-            // Simple Supabase client implementation
-            supabaseClient = {
-                url: SUPABASE_URL,
-                key: SUPABASE_ANON_KEY,
-                
-                async from(table) {
-                    return {
-                        async select(columns = '*') {
-                            try {
-                                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${columns}`, {
-                                    headers: {
-                                        'apikey': SUPABASE_ANON_KEY,
-                                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                                        'Content-Type': 'application/json'
-                                    }
-                                });
-                                const data = await response.json();
-                                return { data, error: null };
-                            } catch (error) {
-                                return { data: null, error };
-                            }
-                        },
-                        
-                        async insert(data) {
-                            try {
-                                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'apikey': SUPABASE_ANON_KEY,
-                                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                                        'Content-Type': 'application/json',
-                                        'Prefer': 'return=minimal'
-                                    },
-                                    body: JSON.stringify(data)
-                                });
-                                return { data: null, error: null };
-                            } catch (error) {
-                                return { data: null, error };
-                            }
-                        },
-                        
-                        async update(data) {
-                            return {
-                                async eq(column, value) {
-                                    try {
-                                        const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${value}`, {
-                                            method: 'PATCH',
-                                            headers: {
-                                                'apikey': SUPABASE_ANON_KEY,
-                                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                                                'Content-Type': 'application/json'
-                                            },
-                                            body: JSON.stringify(data)
-                                        });
-                                        return { data: null, error: null };
-                                    } catch (error) {
-                                        return { data: null, error };
-                                    }
-                                }
-                            };
-                        },
-                        
-                        async delete() {
-                            return {
-                                async eq(column, value) {
-                                    try {
-                                        const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${value}`, {
-                                            method: 'DELETE',
-                                            headers: {
-                                                'apikey': SUPABASE_ANON_KEY,
-                                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                                            }
-                                        });
-                                        return { data: null, error: null };
-                                    } catch (error) {
-                                        return { data: null, error };
-                                    }
-                                }
-                            };
-                        }
-                    };
-                }
-            };
-        }
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://pjzojygnaizbtvmzonee.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqem9qeWduYWl6YnR2bXpvbmVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNjMwNDksImV4cCI6MjA3ODkzOTA0OX0.75YGcnYa9cN7AZc68-kWsHsGDg_VRp2JL89EhuCPJ2U';
 
         // Initialize application
         async function init() {
-
             // Initialize Supabase
-            initSupabase();
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            // Load data from localStorage as backup
-            loadLocalData();
+            // Load data from Supabase
+            await loadDataFromSupabase();
             
             // Set default dates
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('input-date').value = today;
             document.getElementById('filter-start-date').value = today;
             document.getElementById('filter-end-date').value = today;
-            document.getElementById('history-start-date').value = today;
-            document.getElementById('history-end-date').value = today;
             document.getElementById('export-start-date').value = today;
             document.getElementById('export-end-date').value = today;
             
@@ -494,51 +355,81 @@
             updateOperatorFilter();
         }
 
-        // Load data from localStorage
-        function loadLocalData() {
-            const localMachines = JSON.parse(localStorage.getItem('oee_machines') || '[]');
-            const localRecords = JSON.parse(localStorage.getItem('oee_records') || '[]');
-            
-            machines = localMachines;
-            oeeRecords = localRecords;
-            
-            updateMachineSelects();
-            updateMachineList();
-            updateHistoryTable();
-            updateDashboard();
-            updateOperatorFilter();
+        // Load data from Supabase
+        async function loadDataFromSupabase() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('oee_data')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (data) {
+                    machines = data.filter(item => item.type === 'machine');
+                    oeeRecords = data.filter(item => item.type === 'oee_record');
+                    
+                    updateMachineSelects();
+                    updateMachineList();
+                    updateDashboard();
+                    updateOperatorFilter();
+                }
+            } catch (error) {
+                console.error('Error loading data from Supabase:', error);
+                showToast('Error loading data from database', 'error');
+            }
         }
 
-        // Save data to localStorage and Supabase
-        async function saveData() {
-            // Save to localStorage
-            localStorage.setItem('oee_machines', JSON.stringify(machines));
-            localStorage.setItem('oee_records', JSON.stringify(oeeRecords));
-            
-            // Update operator filter after saving
-            updateOperatorFilter();
-            
-            // Sync to Supabase if available
-            if (supabaseClient) {
-                try {
-                    // Save machines
-                    for (const machine of machines) {
-                        await supabaseClient.from('oee_data').insert({
-                            ...machine,
-                            created_at: new Date().toISOString()
-                        });
-                    }
-                    
-                    // Save records
-                    for (const record of oeeRecords) {
-                        await supabaseClient.from('oee_data').insert({
-                            ...record,
-                            created_at: new Date().toISOString()
-                        });
-                    }
-                } catch (error) {
-                    console.log('Supabase sync failed, using localStorage only');
-                }
+        // Save data to Supabase
+        async function saveToSupabase(data) {
+            try {
+                const { error } = await supabaseClient
+                    .from('oee_data')
+                    .insert([data]);
+                
+                if (error) throw error;
+                
+                return true;
+            } catch (error) {
+                console.error('Error saving to Supabase:', error);
+                showToast('Error saving to database: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // Update data in Supabase
+        async function updateInSupabase(id, data) {
+            try {
+                const { error } = await supabaseClient
+                    .from('oee_data')
+                    .update(data)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                return true;
+            } catch (error) {
+                console.error('Error updating in Supabase:', error);
+                showToast('Error updating database: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // Delete data from Supabase
+        async function deleteFromSupabase(id) {
+            try {
+                const { error } = await supabaseClient
+                    .from('oee_data')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                return true;
+            } catch (error) {
+                console.error('Error deleting from Supabase:', error);
+                showToast('Error deleting from database: ' + error.message, 'error');
+                return false;
             }
         }
 
@@ -804,6 +695,7 @@
                 });
                 
                 const machineData = {
+                    id: machineId || generateId(),
                     type: 'machine',
                     name: name,
                     area: document.getElementById('machine-area').value,
@@ -812,30 +704,35 @@
                     odt_items: JSON.stringify(odtItems),
                     line_stop_mesin: JSON.stringify(lineStopMesin),
                     line_stop_non_mesin: JSON.stringify(lineStopNonMesin),
-                    minor_stop_items: JSON.stringify(minorStopItems)
-                };
-                
-                // Save to local storage
-                const finalMachineData = {
-                    ...machineData,
-                    id: machineId || generateId(),
+                    minor_stop_items: JSON.stringify(minorStopItems),
                     created_at: new Date().toISOString()
                 };
                 
+                // Save to Supabase
+                let success = false;
                 if (machineId) {
-                    const index = machines.findIndex(m => m.id === machineId);
-                    if (index !== -1) {
-                        machines[index] = finalMachineData;
+                    // Update existing machine
+                    success = await updateInSupabase(machineId, machineData);
+                    if (success) {
+                        const index = machines.findIndex(m => m.id === machineId);
+                        if (index !== -1) {
+                            machines[index] = machineData;
+                        }
                     }
                 } else {
-                    machines.push(finalMachineData);
+                    // Insert new machine
+                    success = await saveToSupabase(machineData);
+                    if (success) {
+                        machines.push(machineData);
+                    }
                 }
-                await saveData();
-                updateMachineList();
-                updateMachineSelects();
                 
-                showToast('Machine saved successfully', 'success');
-                cancelMachineForm();
+                if (success) {
+                    updateMachineList();
+                    updateMachineSelects();
+                    showToast('Machine saved successfully', 'success');
+                    cancelMachineForm();
+                }
                 
             } catch (error) {
                 console.error('Machine save error:', error);
@@ -926,11 +823,13 @@
         
         async function confirmDeleteMachine(id, button) {
             try {
-                machines = machines.filter(m => m.id !== id);
-                await saveData();
-                updateMachineList();
-                updateMachineSelects();
-                showToast('Machine deleted successfully', 'success');
+                const success = await deleteFromSupabase(id);
+                if (success) {
+                    machines = machines.filter(m => m.id !== id);
+                    updateMachineList();
+                    updateMachineSelects();
+                    showToast('Machine deleted successfully', 'success');
+                }
             } catch (error) {
                 showToast('Error deleting machine: ' + error.message, 'error');
             }
@@ -968,7 +867,6 @@
             const selects = [
                 'input-machine',
                 'filter-machine',
-                'history-machine',
                 'export-machine'
             ];
             
@@ -1030,10 +928,10 @@
             });
             
             // Add custom line stop times
-            totalLineStop += parseInt(document.getElementById('customLSMesinTime1').value) || 0;
-            totalLineStop += parseInt(document.getElementById('customLSMesinTime2').value) || 0;
-            totalLineStop += parseInt(document.getElementById('customLSNonMesinTime1').value) || 0;
-            totalLineStop += parseInt(document.getElementById('customLSNonMesinTime2').value) || 0;
+            totalLineStop += parseInt(document.getElementById('customLSMesinTime1')?.value) || 0;
+            totalLineStop += parseInt(document.getElementById('customLSMesinTime2')?.value) || 0;
+            totalLineStop += parseInt(document.getElementById('customLSNonMesinTime1')?.value) || 0;
+            totalLineStop += parseInt(document.getElementById('customLSNonMesinTime2')?.value) || 0;
             
             const availableTime = shiftMinutes - totalODT - totalLineStop;
             const recommendedOutput = Math.max(0, availableTime * machine.target_per_minute);
@@ -1107,7 +1005,7 @@
                                            placeholder="Nama Problem (opsional)" style="text-transform: uppercase;">
                                     <div class="grid grid-cols-3 gap-2">
                                         <input type="number" id="customLSMesinTime1" class="border border-gray-300 rounded-md px-3 py-2" 
-                                               placeholder="Durasi (menit)">
+                                               placeholder="Durasi (menit)" onchange="calculateOEE(); calculateTargetRecommendation(); checkCustomWRRequirement('customLSMesinTime1', 'customLSMesinWR1');">
                                         <input type="text" id="customLSMesinAction1" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
                                                placeholder="Action" style="text-transform: uppercase;">
                                         <input type="text" id="customLSMesinWR1" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
@@ -1121,7 +1019,7 @@
                                            placeholder="Nama Problem (opsional)" style="text-transform: uppercase;">
                                     <div class="grid grid-cols-3 gap-2">
                                         <input type="number" id="customLSMesinTime2" class="border border-gray-300 rounded-md px-3 py-2" 
-                                               placeholder="Durasi (menit)">
+                                               placeholder="Durasi (menit)" onchange="calculateOEE(); calculateTargetRecommendation(); checkCustomWRRequirement('customLSMesinTime2', 'customLSMesinWR2');">
                                         <input type="text" id="customLSMesinAction2" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
                                                placeholder="Action" style="text-transform: uppercase;">
                                         <input type="text" id="customLSMesinWR2" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
@@ -1142,7 +1040,7 @@
                                            placeholder="Nama Problem (opsional)" style="text-transform: uppercase;">
                                     <div class="grid grid-cols-2 gap-2">
                                         <input type="number" id="customLSNonMesinTime1" class="border border-gray-300 rounded-md px-3 py-2" 
-                                               placeholder="Durasi (menit)">
+                                               placeholder="Durasi (menit)" onchange="calculateOEE(); calculateTargetRecommendation();">
                                         <input type="text" id="customLSNonMesinAction1" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
                                                placeholder="Action" style="text-transform: uppercase;">
                                     </div>
@@ -1154,7 +1052,7 @@
                                            placeholder="Nama Problem (opsional)" style="text-transform: uppercase;">
                                     <div class="grid grid-cols-2 gap-2">
                                         <input type="number" id="customLSNonMesinTime2" class="border border-gray-300 rounded-md px-3 py-2" 
-                                               placeholder="Durasi (menit)">
+                                               placeholder="Durasi (menit)" onchange="calculateOEE(); calculateTargetRecommendation();">
                                         <input type="text" id="customLSNonMesinAction2" class="border border-gray-300 rounded-md px-3 py-2 uppercase" 
                                                placeholder="Action" style="text-transform: uppercase;">
                                     </div>
@@ -1201,9 +1099,6 @@
                     `;
                     lineStopNonMesinInputs.appendChild(div);
                 });
-                
-                // Setup event listeners for custom line stop slots
-                setupCustomLineStopListeners();
             }
             
             // Minor Stop Section
@@ -1230,35 +1125,11 @@
             }
         }
 
-        function setupCustomLineStopListeners() {
-            // Add event listeners for custom line stop mesin
-            document.getElementById('customLSMesinTime1').addEventListener('input', () => {
-                checkCustomWRRequirement('customLSMesinTime1', 'customLSMesinWR1');
-                calculateOEE();
-                calculateTargetRecommendation();
-            });
-            
-            document.getElementById('customLSMesinTime2').addEventListener('input', () => {
-                checkCustomWRRequirement('customLSMesinTime2', 'customLSMesinWR2');
-                calculateOEE();
-                calculateTargetRecommendation();
-            });
-            
-            // Add event listeners for custom line stop non mesin
-            document.getElementById('customLSNonMesinTime1').addEventListener('input', () => {
-                calculateOEE();
-                calculateTargetRecommendation();
-            });
-            
-            document.getElementById('customLSNonMesinTime2').addEventListener('input', () => {
-                calculateOEE();
-                calculateTargetRecommendation();
-            });
-        }
-
         function checkCustomWRRequirement(timeInputId, wrInputId) {
             const timeInput = document.getElementById(timeInputId);
             const wrInput = document.getElementById(wrInputId);
+            if (!timeInput || !wrInput) return;
+            
             const duration = parseInt(timeInput.value) || 0;
             
             if (duration > 179) {
@@ -1361,93 +1232,44 @@
             const selectedOption = shiftSelect.options[shiftSelect.selectedIndex];
             const shiftMinutes = selectedOption.dataset.minutes ? parseInt(selectedOption.dataset.minutes) : 480;
             
-            // Calculate ODT times and overtime
-            const odtActualTimes = {};
+            // Calculate ODT times
             let totalODT = 0;
-            
             document.querySelectorAll('.odt-checkbox').forEach(checkbox => {
-                const name = checkbox.dataset.name;
-                const standard = parseInt(checkbox.dataset.standard);
-                const actualInput = checkbox.parentElement.querySelector('.odt-actual');
-                
                 if (checkbox.checked) {
-                    const actual = parseInt(actualInput.value) || standard;
-                    odtActualTimes[name] = actual;
-                    
-                    // ODT hanya pakai waktu standar untuk perhitungan
+                    const standard = parseInt(checkbox.dataset.standard);
                     totalODT += standard;
-                } else {
-                    odtActualTimes[name] = 0;
                 }
             });
             
             // Calculate Line Stop Mesin total (including custom)
             let totalLineStopMesin = 0;
-            const lineStopMesinDurations = {};
-            
             document.querySelectorAll('.line-stop-mesin-input').forEach(input => {
-                const name = input.dataset.name;
-                const duration = parseInt(input.value) || 0;
-                lineStopMesinDurations[name] = duration;
-                totalLineStopMesin += duration;
+                totalLineStopMesin += parseInt(input.value) || 0;
             });
             
-            // Add custom line stop mesin
-            const customMesin1Time = parseInt(document.getElementById('customLSMesinTime1').value) || 0;
-            const customMesin1Name = document.getElementById('customLSMesinName1').value.trim() || 'CUSTOM LS MESIN 1';
-            if (customMesin1Time > 0) {
-                lineStopMesinDurations[customMesin1Name] = customMesin1Time;
-                totalLineStopMesin += customMesin1Time;
-            }
+            const customMesin1Time = parseInt(document.getElementById('customLSMesinTime1')?.value) || 0;
+            const customMesin2Time = parseInt(document.getElementById('customLSMesinTime2')?.value) || 0;
+            totalLineStopMesin += customMesin1Time + customMesin2Time;
             
-            const customMesin2Time = parseInt(document.getElementById('customLSMesinTime2').value) || 0;
-            const customMesin2Name = document.getElementById('customLSMesinName2').value.trim() || 'CUSTOM LS MESIN 2';
-            if (customMesin2Time > 0) {
-                lineStopMesinDurations[customMesin2Name] = customMesin2Time;
-                totalLineStopMesin += customMesin2Time;
-            }
-            
-            // Collect Line Stop Non Mesin durations (including custom)
+            // Calculate Line Stop Non Mesin total (including custom)
             let totalLineStopNonMesin = 0;
-            const lineStopNonMesinDurations = {};
-            
             document.querySelectorAll('.line-stop-non-mesin-input').forEach(input => {
-                const name = input.dataset.name;
-                const duration = parseInt(input.value) || 0;
-                if (duration > 0) {
-                    lineStopNonMesinDurations[name] = duration;
-                    totalLineStopNonMesin += duration;
-                }
+                totalLineStopNonMesin += parseInt(input.value) || 0;
             });
             
-            // Add custom line stop non mesin
-            const customNonMesin1Time = parseInt(document.getElementById('customLSNonMesinTime1').value) || 0;
-            const customNonMesin1Name = document.getElementById('customLSNonMesinName1').value.trim() || 'CUSTOM LS NON MESIN 1';
-            if (customNonMesin1Time > 0) {
-                lineStopNonMesinDurations[customNonMesin1Name] = customNonMesin1Time;
-                totalLineStopNonMesin += customNonMesin1Time;
-            }
+            const customNonMesin1Time = parseInt(document.getElementById('customLSNonMesinTime1')?.value) || 0;
+            const customNonMesin2Time = parseInt(document.getElementById('customLSNonMesinTime2')?.value) || 0;
+            totalLineStopNonMesin += customNonMesin1Time + customNonMesin2Time;
             
-            const customNonMesin2Time = parseInt(document.getElementById('customLSNonMesinTime2').value) || 0;
-            const customNonMesin2Name = document.getElementById('customLSNonMesinName2').value.trim() || 'CUSTOM LS NON MESIN 2';
-            if (customNonMesin2Time > 0) {
-                lineStopNonMesinDurations[customNonMesin2Name] = customNonMesin2Time;
-                totalLineStopNonMesin += customNonMesin2Time;
-            }
-            
-            // Add ODT overtimes as separate Line Stop Non Mesin items
+            // Add ODT overtimes to Line Stop Non Mesin
             document.querySelectorAll('.odt-checkbox').forEach(checkbox => {
                 if (checkbox.checked) {
-                    const name = checkbox.dataset.name;
                     const standard = parseInt(checkbox.dataset.standard);
                     const actualInput = checkbox.parentElement.querySelector('.odt-actual');
                     const actual = parseInt(actualInput.value) || standard;
                     
                     if (actual > standard) {
-                        const overtime = actual - standard;
-                        const overtimeName = `${name} Overtime`;
-                        lineStopNonMesinDurations[overtimeName] = overtime;
-                        totalLineStopNonMesin += overtime;
+                        totalLineStopNonMesin += (actual - standard);
                     }
                 }
             });
@@ -1455,12 +1277,11 @@
             // Calculate total downtime
             const totalDowntime = totalODT + totalLineStopMesin + totalLineStopNonMesin;
             
-            // Calculate target output using actual shift duration
+            // Calculate target output
             const availableTime = shiftMinutes - totalDowntime;
             const targetOutput = availableTime * machine.target_per_minute;
             
-            // Calculate OEE components - NEW FORMULA
-            // Availability = (Waktu Kerja - Total ODT - (Total Line Stop Mesin + Total Line Stop Non Mesin)) / (Waktu Kerja - Total ODT)
+            // Calculate OEE components
             const workTimeMinusODT = shiftMinutes - totalODT;
             const availability = workTimeMinusODT > 0 ? ((workTimeMinusODT - totalLineStopMesin - totalLineStopNonMesin) / workTimeMinusODT) * 100 : 0;
             const performance = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
@@ -1501,17 +1322,17 @@
                 });
                 
                 // Check custom line stop mesin WR requirement
-                const customMesin1Time = parseInt(document.getElementById('customLSMesinTime1').value) || 0;
-                const customMesin1WR = document.getElementById('customLSMesinWR1').value.trim();
-                const customMesin1Name = document.getElementById('customLSMesinName1').value.trim() || 'CUSTOM LS MESIN 1';
+                const customMesin1Time = parseInt(document.getElementById('customLSMesinTime1')?.value) || 0;
+                const customMesin1WR = document.getElementById('customLSMesinWR1')?.value.trim();
+                const customMesin1Name = document.getElementById('customLSMesinName1')?.value.trim() || 'CUSTOM LS MESIN 1';
                 if (customMesin1Time > 179 && !customMesin1WR) {
                     showToast(`No WR wajib diisi untuk ${customMesin1Name} (durasi ${customMesin1Time} menit > 179 menit)`, 'error');
                     wrValidationFailed = true;
                 }
                 
-                const customMesin2Time = parseInt(document.getElementById('customLSMesinTime2').value) || 0;
-                const customMesin2WR = document.getElementById('customLSMesinWR2').value.trim();
-                const customMesin2Name = document.getElementById('customLSMesinName2').value.trim() || 'CUSTOM LS MESIN 2';
+                const customMesin2Time = parseInt(document.getElementById('customLSMesinTime2')?.value) || 0;
+                const customMesin2WR = document.getElementById('customLSMesinWR2')?.value.trim();
+                const customMesin2Name = document.getElementById('customLSMesinName2')?.value.trim() || 'CUSTOM LS MESIN 2';
                 if (customMesin2Time > 179 && !customMesin2WR) {
                     showToast(`No WR wajib diisi untuk ${customMesin2Name} (durasi ${customMesin2Time} menit > 179 menit)`, 'error');
                     wrValidationFailed = true;
@@ -1539,14 +1360,14 @@
                 });
                 
                 // Check custom line stop mesin actions
-                if (customMesin1Time > 0 && !document.getElementById('customLSMesinAction1').value.trim()) {
+                if (customMesin1Time > 0 && !document.getElementById('customLSMesinAction1')?.value.trim()) {
                     showToast(`Action wajib diisi untuk ${customMesin1Name}`, 'error');
                     document.getElementById('customLSMesinAction1').style.borderColor = '#ef4444';
                     document.getElementById('customLSMesinAction1').style.backgroundColor = '#fef2f2';
                     actionValidationFailed = true;
                 }
                 
-                if (customMesin2Time > 0 && !document.getElementById('customLSMesinAction2').value.trim()) {
+                if (customMesin2Time > 0 && !document.getElementById('customLSMesinAction2')?.value.trim()) {
                     showToast(`Action wajib diisi untuk ${customMesin2Name}`, 'error');
                     document.getElementById('customLSMesinAction2').style.borderColor = '#ef4444';
                     document.getElementById('customLSMesinAction2').style.backgroundColor = '#fef2f2';
@@ -1568,18 +1389,18 @@
                 });
                 
                 // Check custom line stop non mesin actions
-                const customNonMesin1Time = parseInt(document.getElementById('customLSNonMesinTime1').value) || 0;
-                const customNonMesin1Name = document.getElementById('customLSNonMesinName1').value.trim() || 'CUSTOM LS NON MESIN 1';
-                if (customNonMesin1Time > 0 && !document.getElementById('customLSNonMesinAction1').value.trim()) {
+                const customNonMesin1Time = parseInt(document.getElementById('customLSNonMesinTime1')?.value) || 0;
+                const customNonMesin1Name = document.getElementById('customLSNonMesinName1')?.value.trim() || 'CUSTOM LS NON MESIN 1';
+                if (customNonMesin1Time > 0 && !document.getElementById('customLSNonMesinAction1')?.value.trim()) {
                     showToast(`Action wajib diisi untuk ${customNonMesin1Name}`, 'error');
                     document.getElementById('customLSNonMesinAction1').style.borderColor = '#ef4444';
                     document.getElementById('customLSNonMesinAction1').style.backgroundColor = '#fef2f2';
                     actionValidationFailed = true;
                 }
                 
-                const customNonMesin2Time = parseInt(document.getElementById('customLSNonMesinTime2').value) || 0;
-                const customNonMesin2Name = document.getElementById('customLSNonMesinName2').value.trim() || 'CUSTOM LS NON MESIN 2';
-                if (customNonMesin2Time > 0 && !document.getElementById('customLSNonMesinAction2').value.trim()) {
+                const customNonMesin2Time = parseInt(document.getElementById('customLSNonMesinTime2')?.value) || 0;
+                const customNonMesin2Name = document.getElementById('customLSNonMesinName2')?.value.trim() || 'CUSTOM LS NON MESIN 2';
+                if (customNonMesin2Time > 0 && !document.getElementById('customLSNonMesinAction2')?.value.trim()) {
                     showToast(`Action wajib diisi untuk ${customNonMesin2Name}`, 'error');
                     document.getElementById('customLSNonMesinAction2').style.borderColor = '#ef4444';
                     document.getElementById('customLSNonMesinAction2').style.backgroundColor = '#fef2f2';
@@ -1648,7 +1469,7 @@
                 // Add custom line stop mesin
                 if (customMesin1Time > 0) {
                     lineStopDurations.mesin[customMesin1Name] = customMesin1Time;
-                    lineStopActions.mesin[customMesin1Name] = document.getElementById('customLSMesinAction1').value || '';
+                    lineStopActions.mesin[customMesin1Name] = document.getElementById('customLSMesinAction1')?.value || '';
                     if (customMesin1WR) {
                         lineStopWRNumbers[customMesin1Name] = customMesin1WR;
                     }
@@ -1656,7 +1477,7 @@
                 
                 if (customMesin2Time > 0) {
                     lineStopDurations.mesin[customMesin2Name] = customMesin2Time;
-                    lineStopActions.mesin[customMesin2Name] = document.getElementById('customLSMesinAction2').value || '';
+                    lineStopActions.mesin[customMesin2Name] = document.getElementById('customLSMesinAction2')?.value || '';
                     if (customMesin2WR) {
                         lineStopWRNumbers[customMesin2Name] = customMesin2WR;
                     }
@@ -1674,13 +1495,30 @@
                 // Add custom line stop non mesin
                 if (customNonMesin1Time > 0) {
                     lineStopDurations.nonMesin[customNonMesin1Name] = customNonMesin1Time;
-                    lineStopActions.nonMesin[customNonMesin1Name] = document.getElementById('customLSNonMesinAction1').value || '';
+                    lineStopActions.nonMesin[customNonMesin1Name] = document.getElementById('customLSNonMesinAction1')?.value || '';
                 }
                 
                 if (customNonMesin2Time > 0) {
                     lineStopDurations.nonMesin[customNonMesin2Name] = customNonMesin2Time;
-                    lineStopActions.nonMesin[customNonMesin2Name] = document.getElementById('customLSNonMesinAction2').value || '';
+                    lineStopActions.nonMesin[customNonMesin2Name] = document.getElementById('customLSNonMesinAction2')?.value || '';
                 }
+                
+                // Add ODT overtimes to Line Stop Non Mesin
+                document.querySelectorAll('.odt-checkbox').forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const name = checkbox.dataset.name;
+                        const standard = parseInt(checkbox.dataset.standard);
+                        const actualInput = checkbox.parentElement.querySelector('.odt-actual');
+                        const actual = parseInt(actualInput.value) || standard;
+                        
+                        if (actual > standard) {
+                            const overtime = actual - standard;
+                            const overtimeName = `${name} Overtime`;
+                            lineStopDurations.nonMesin[overtimeName] = overtime;
+                            lineStopActions.nonMesin[overtimeName] = 'ODT MELEBIHI STANDARD';
+                        }
+                    }
+                });
                 
                 formData.line_stop_durations = JSON.stringify(lineStopDurations);
                 formData.line_stop_actions = JSON.stringify(lineStopActions);
@@ -1692,8 +1530,6 @@
                     minorStopFrequencies[input.dataset.name] = parseInt(input.value) || 0;
                 });
                 formData.minor_stop_frequencies = JSON.stringify(minorStopFrequencies);
-                
-
                 
                 // Calculate and store OEE values
                 const availability = parseFloat(document.getElementById('calc-availability').textContent);
@@ -1707,13 +1543,17 @@
                 formData.oee = oee;
                 formData.created_at = new Date().toISOString();
                 
-                oeeRecords.push(formData);
-                await saveData();
-                updateHistoryTable();
-                updateDashboard();
+                // Save to Supabase
+                const success = await saveToSupabase(formData);
                 
-                showToast('Data OEE berhasil disimpan', 'success');
-                resetForm();
+                if (success) {
+                    oeeRecords.push(formData);
+                    updateDashboard();
+                    updateOperatorFilter();
+                    
+                    showToast('Data OEE berhasil disimpan', 'success');
+                    resetForm();
+                }
                 
             } catch (error) {
                 showToast('Error menyimpan data OEE: ' + error.message, 'error');
@@ -1853,7 +1693,7 @@
                 const durations = JSON.parse(record.line_stop_durations || '{}');
                 if (durations.mesin) {
                     Object.entries(durations.mesin).forEach(([key, value]) => {
-                        if (value > 0) { // Only include items with values
+                        if (value > 0) {
                             lineStopMesinData[key] = (lineStopMesinData[key] || 0) + value;
                         }
                     });
@@ -1861,45 +1701,28 @@
             });
             
             const topLineStopMesin = Object.entries(lineStopMesinData)
-                .filter(([, value]) => value > 0) // Filter out zero values
+                .filter(([, value]) => value > 0)
                 .sort(([,a], [,b]) => b - a)
                 .slice(0, 10);
             
             updateHorizontalBarChart('line-stop-mesin-chart', 'lineStopMesin', 
                 'Line Stop Mesin (Minutes)', topLineStopMesin);
             
-            // Line Stop Non Mesin Chart (INCLUDING ODT OVERTIME!)
+            // Line Stop Non Mesin Chart
             const lineStopNonMesinData = {};
             records.forEach(record => {
                 const durations = JSON.parse(record.line_stop_durations || '{}');
-                
-                // Add regular Line Stop Non Mesin
                 if (durations.nonMesin) {
                     Object.entries(durations.nonMesin).forEach(([key, value]) => {
-                        if (value > 0) { // Only include items with values
+                        if (value > 0) {
                             lineStopNonMesinData[key] = (lineStopNonMesinData[key] || 0) + value;
-                        }
-                    });
-                }
-                
-                // ADD ODT OVERTIME to Line Stop Non Mesin Chart
-                const odtTimes = JSON.parse(record.odt_actual_times || '{}');
-                const machine = machines.find(m => m.name === record.machine);
-                if (machine) {
-                    const odtItems = JSON.parse(machine.odt_items || '[]');
-                    odtItems.forEach(odtItem => {
-                        const actual = odtTimes[odtItem.name] || 0;
-                        if (actual > odtItem.standardTime) {
-                            const overtime = actual - odtItem.standardTime;
-                            const overtimeName = `${odtItem.name} Overtime`;
-                            lineStopNonMesinData[overtimeName] = (lineStopNonMesinData[overtimeName] || 0) + overtime;
                         }
                     });
                 }
             });
             
             const topLineStopNonMesin = Object.entries(lineStopNonMesinData)
-                .filter(([, value]) => value > 0) // Filter out zero values
+                .filter(([, value]) => value > 0)
                 .sort(([,a], [,b]) => b - a)
                 .slice(0, 10);
             
@@ -1912,14 +1735,14 @@
             records.forEach(record => {
                 const odtTimes = JSON.parse(record.odt_actual_times || '{}');
                 Object.entries(odtTimes).forEach(([key, value]) => {
-                    if (value > 0) { // Only include items with values
+                    if (value > 0) {
                         odtData[key] = (odtData[key] || 0) + value;
                     }
                 });
             });
             
             const topODT = Object.entries(odtData)
-                .filter(([, value]) => value > 0) // Filter out zero values
+                .filter(([, value]) => value > 0)
                 .sort(([,a], [,b]) => b - a)
                 .slice(0, 10);
             
@@ -2141,72 +1964,6 @@
             updateDashboard();
         }
 
-        // History Functions
-        function updateHistoryTable() {
-            const filteredRecords = getFilteredRecords('history');
-            const tbody = document.getElementById('history-table');
-            tbody.innerHTML = '';
-            
-            filteredRecords.forEach(record => {
-                const row = document.createElement('tr');
-                row.className = `border-b hover:bg-gray-50 ${record.oee < 86 ? 'pulse-red' : ''}`;
-                
-                // Parse complex data for display
-                const odtTimes = JSON.parse(record.odt_actual_times || '{}');
-                const lineStopDurations = JSON.parse(record.line_stop_durations || '{}');
-                const minorStopFreqs = JSON.parse(record.minor_stop_frequencies || '{}');
-                const wrNumbers = JSON.parse(record.wr_number || '{}');
-                
-                // Filter out items with zero or empty values
-                const odtDisplay = Object.entries(odtTimes)
-                    .filter(([k,v]) => v > 0)
-                    .map(([k,v]) => `${k}:${v}min`)
-                    .join(', ') || '-';
-                    
-                const lineStopDisplay = [
-                    ...Object.entries(lineStopDurations.mesin || {})
-                        .filter(([k,v]) => v > 0)
-                        .map(([k,v]) => `M-${k}:${v}min`),
-                    ...Object.entries(lineStopDurations.nonMesin || {})
-                        .filter(([k,v]) => v > 0)
-                        .map(([k,v]) => `NM-${k}:${v}min`)
-                ].join(', ') || '-';
-                
-                const minorStopDisplay = Object.entries(minorStopFreqs)
-                    .filter(([k,v]) => v > 0)
-                    .map(([k,v]) => `${k}:${v}x`)
-                    .join(', ') || '-';
-                
-                const wrDisplay = Object.entries(wrNumbers)
-                    .map(([k,v]) => `${k}:${v}`)
-                    .join(', ') || '-';
-                
-                row.innerHTML = `
-                    <td class="px-2 py-2 text-xs">${record.date}</td>
-                    <td class="px-2 py-2 text-xs">${record.shift}</td>
-                    <td class="px-2 py-2 text-xs">${record.machine}</td>
-                    <td class="px-2 py-2 text-xs">${record.pic}</td>
-                    <td class="px-2 py-2 text-xs">${record.product}</td>
-                    <td class="px-2 py-2 text-xs">${record.batch}</td>
-                    <td class="px-2 py-2 text-xs">${record.actual_output}</td>
-                    <td class="px-2 py-2 text-xs">${record.reject}</td>
-                    <td class="px-2 py-2 text-xs">${record.availability.toFixed(1)}%</td>
-                    <td class="px-2 py-2 text-xs">${record.performance.toFixed(1)}%</td>
-                    <td class="px-2 py-2 text-xs">${record.quality.toFixed(1)}%</td>
-                    <td class="px-2 py-2 text-xs font-bold ${record.oee < 86 ? 'text-red-600' : 'text-green-600'}">${record.oee.toFixed(1)}%</td>
-                    <td class="px-2 py-2 text-xs" title="${wrDisplay}">${wrDisplay.length > 20 ? wrDisplay.substring(0, 20) + '...' : wrDisplay}</td>
-                    <td class="px-2 py-2 text-xs" title="${odtDisplay}">${odtDisplay.length > 20 ? odtDisplay.substring(0, 20) + '...' : odtDisplay}</td>
-                    <td class="px-2 py-2 text-xs" title="${lineStopDisplay}">${lineStopDisplay.length > 20 ? lineStopDisplay.substring(0, 20) + '...' : lineStopDisplay}</td>
-                    <td class="px-2 py-2 text-xs" title="${minorStopDisplay}">${minorStopDisplay.length > 20 ? minorStopDisplay.substring(0, 20) + '...' : minorStopDisplay}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function applyHistoryFilters() {
-            updateHistoryTable();
-        }
-
         // Export Functions
         function previewExport() {
             const filteredRecords = getFilteredRecords('export');
@@ -2356,18 +2113,13 @@
 
         // Utility Functions
         function getFilteredRecords(section) {
-            let startDate, endDate, machine, shift, operator;
+            let startDate, endDate, machine, operator;
             
             if (section === 'dashboard') {
                 startDate = document.getElementById('filter-start-date').value;
                 endDate = document.getElementById('filter-end-date').value;
                 machine = document.getElementById('filter-machine').value;
                 operator = document.getElementById('filter-operator').value;
-            } else if (section === 'history') {
-                startDate = document.getElementById('history-start-date').value;
-                endDate = document.getElementById('history-end-date').value;
-                machine = document.getElementById('history-machine').value;
-                shift = document.getElementById('history-shift').value;
             } else if (section === 'export') {
                 startDate = document.getElementById('export-start-date').value;
                 endDate = document.getElementById('export-end-date').value;
@@ -2378,7 +2130,6 @@
                 if (startDate && record.date < startDate) return false;
                 if (endDate && record.date > endDate) return false;
                 if (machine && record.machine !== machine) return false;
-                if (shift && record.shift !== shift) return false;
                 if (operator && record.pic !== operator) return false;
                 return true;
             });
@@ -2406,5 +2157,5 @@
         // Initialize application when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a03912ad5db5c33',t:'MTc2MzQyODAwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a03a149e518cdd9',t:'MTc2MzQyODY2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
