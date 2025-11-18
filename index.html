@@ -357,7 +357,7 @@
        </div>
        <div><label class="block text-sm font-medium text-gray-700 mb-2">👤 PIC</label> <input type="text" id="input-pic" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">📦 Product</label> <input type="text" id="input-product" required class="w-full input-field rounded-lg px-4 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">���� Product</label> <input type="text" id="input-product" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
        <div><label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Batch</label> <input type="text" id="input-batch" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
@@ -2103,6 +2103,8 @@
             Object.entries(operatorData).forEach(([pic, data]) => {
                 const avgOEE = data.totalOEE / data.records;
                 const achievement = data.totalTarget > 0 ? (data.totalOutput / data.totalTarget) * 100 : 0;
+                // Cap achievement at 100%
+                const cappedAchievement = Math.min(achievement, 100);
                 
                 const row = document.createElement('tr');
                 row.className = 'border-b';
@@ -2111,8 +2113,8 @@
                     <td class="px-4 py-3">${avgOEE.toFixed(1)}%</td>
                     <td class="px-4 py-3">${Math.round(data.totalTarget).toLocaleString()}</td>
                     <td class="px-4 py-3">${data.totalOutput.toLocaleString()}</td>
-                    <td class="px-4 py-3 font-bold ${achievement >= 100 ? 'text-green-600' : 'text-red-600'}">
-                        ${achievement.toFixed(1)}%
+                    <td class="px-4 py-3 font-bold ${cappedAchievement >= 100 ? 'text-green-600' : 'text-red-600'}">
+                        ${cappedAchievement.toFixed(1)}%
                     </td>
                     <td class="px-4 py-3">${data.records}</td>
                 `;
@@ -2379,5 +2381,5 @@
         // Initialize application when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a044b56c552ea7d',t:'MTc2MzQzNTYzMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a0455b0a020ba25',t:'MTc2MzQzNjA1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
