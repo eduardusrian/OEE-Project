@@ -357,7 +357,7 @@
        </div>
        <div><label class="block text-sm font-medium text-gray-700 mb-2">👤 PIC</label> <input type="text" id="input-pic" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">💻 Product</label> <input type="text" id="input-product" required class="w-full input-field rounded-lg px-4 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">���� Product</label> <input type="text" id="input-product" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
        <div><label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Batch</label> <input type="text" id="input-batch" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
@@ -386,7 +386,7 @@
         </div>
        </div>
       </div>
-      <div class="flex space-x-4"><button type="submit" id="submit-btn" class="btn-success text-white px-8 py-3 rounded-lg font-semibold"> 💾 Simpan Data OEE </button> <button type="button" onclick="resetForm()" class="bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-all"> 🔄 Reset </button>
+      <div class="flex space-x-4"><button type="button" id="submit-btn" onclick="submitOEEData()" class="btn-success text-white px-8 py-3 rounded-lg font-semibold"> 💾 Simpan Data OEE </button> <button type="button" onclick="resetForm()" class="bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-all"> 🔄 Reset </button>
       </div>
      </form>
     </div>
@@ -670,10 +670,19 @@
 
         // Setup form handlers
         function setupFormHandlers() {
-            // OEE Form
-            document.getElementById('oee-form').addEventListener('submit', async (e) => {
+            // OEE Form - Prevent Enter key from submitting
+            const oeeForm = document.getElementById('oee-form');
+            oeeForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await submitOEEData();
+                // Form will only submit via button click
+            });
+            
+            // Prevent Enter key on OEE form inputs
+            oeeForm.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+                    e.preventDefault();
+                    return false;
+                }
             });
             
             // Machine Form
@@ -1205,7 +1214,7 @@
                 const lineStopSection = document.createElement('div');
                 lineStopSection.className = 'chart-card';
                 lineStopSection.innerHTML = `
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">🛑 Line Stop</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">���� Line Stop</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <h4 class="font-medium text-gray-600 mb-3">🔴 Line Stop Mesin</h4>
@@ -2381,5 +2390,5 @@
         // Initialize application when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a0455b0a020ba25',t:'MTc2MzQzNjA1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a0487b7a02efb90',t:'MTc2MzQzODEwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
