@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OEE Manufacturing System</title>
+  <title>OEE Manufacturing System v30</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -203,8 +203,8 @@
     <div class="max-w-7xl mx-auto px-6 py-8">
      <div class="flex items-center justify-between">
       <div>
-       <h1 id="system-title" class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">🏭 OEE Manufacturing System</h1>
-       <p id="company-name" class="text-gray-600 mt-2 text-lg">📊 by Eduardus Rian</p>
+       <h1 id="system-title" class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">🏭 OEE Manufacturing System v30</h1>
+       <p id="company-name" class="text-gray-600 mt-2 text-lg">📊 Manufacturing Company Excellence</p>
       </div>
      </div>
     </div>
@@ -357,7 +357,7 @@
        </div>
        <div><label class="block text-sm font-medium text-gray-700 mb-2">👤 PIC</label> <input type="text" id="input-pic" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-2">💊 Product</label> <input type="text" id="input-product" required class="w-full input-field rounded-lg px-4 py-2">
+       <div><label class="block text-sm font-medium text-gray-700 mb-2">���� Product</label> <input type="text" id="input-product" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
        <div><label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Batch</label> <input type="text" id="input-batch" required class="w-full input-field rounded-lg px-4 py-2">
        </div>
@@ -475,7 +475,7 @@
      <div class="flex space-x-4"><button onclick="exportData()" id="export-btn" class="btn-success text-white px-8 py-3 rounded-lg font-semibold"> 📥 Export Data </button> <button onclick="previewExport()" class="btn-primary text-white px-8 py-3 rounded-lg font-semibold"> 👁️ Preview </button>
      </div><!-- Export Preview -->
      <div id="export-preview" class="mt-6 hidden">
-      <h3 class="text-lg font-semibold text-gray-700 mb-4">👁️ Export Preview</h3>
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">��️ Export Preview</h3>
       <div class="chart-card">
        <p id="preview-info" class="text-sm text-gray-600 mb-4"></p>
        <div class="overflow-x-auto max-h-96">
@@ -732,7 +732,7 @@
         // Password protection
         function checkPassword() {
             const password = document.getElementById('admin-password').value;
-            if (password === 'cimenG90') {
+            if (password === 'admin123') {
                 isAuthenticated = true;
                 document.getElementById('password-protection').classList.add('hidden');
                 document.getElementById('machine-list-container').classList.remove('hidden');
@@ -1031,34 +1031,37 @@
         async function deleteMachine(id) {
             // Create inline confirmation
             const row = event.target.closest('tr');
-            const originalContent = row.innerHTML;
+            
+            // Store original row data
+            row.dataset.machineId = id;
+            row.dataset.isDeleting = 'true';
             
             row.innerHTML = `
-                <td colspan="5" class="px-4 py-2 text-center">
-                    <span class="text-red-600 font-medium">Are you sure you want to delete this machine?</span>
-                    <button onclick="confirmDeleteMachine('${id}', this)" class="ml-4 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Yes, Delete</button>
-                    <button onclick="cancelDeleteMachine(this, \`${originalContent.replace(/`/g, '\\`')}\`)" class="ml-2 bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">Cancel</button>
+                <td colspan="5" class="px-4 py-2 text-center bg-red-50">
+                    <span class="text-red-600 font-medium">⚠️ Yakin mau hapus mesin ini?</span>
+                    <button onclick="confirmDeleteMachine('${id}')" class="ml-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition-all font-semibold">✓ Ya, Hapus</button>
+                    <button onclick="cancelDeleteMachine(this)" class="ml-2 bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition-all font-semibold">✗ Batal</button>
                 </td>
             `;
         }
         
-        async function confirmDeleteMachine(id, button) {
+        async function confirmDeleteMachine(id) {
             try {
                 const success = await deleteFromSupabase(id);
                 if (success) {
                     machines = machines.filter(m => m.id !== id);
                     updateMachineList();
                     updateMachineSelects();
-                    showToast('Machine deleted successfully', 'success');
+                    showToast('Mesin berhasil dihapus', 'success');
                 }
             } catch (error) {
-                showToast('Error deleting machine: ' + error.message, 'error');
+                showToast('Error menghapus mesin: ' + error.message, 'error');
             }
         }
         
-        function cancelDeleteMachine(button, originalContent) {
-            const row = button.closest('tr');
-            row.innerHTML = originalContent;
+        function cancelDeleteMachine(button) {
+            // Just refresh the machine list to restore original state
+            updateMachineList();
         }
 
         function updateMachineList() {
@@ -2390,5 +2393,5 @@
         // Initialize application when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a0487b7a02efb90',t:'MTc2MzQzODEwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a04989662986d44',t:'MTc2MzQzODc5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
