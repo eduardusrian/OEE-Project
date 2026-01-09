@@ -328,6 +328,9 @@ function updateTables(records) {
     
     const lsDurations = typeof r.line_stop_durations === 'string' ? JSON.parse(r.line_stop_durations) : r.line_stop_durations || {};
     const lsText = Object.entries(lsDurations).map(([k, v]) => `${k.split(' - ')[1] || k}: ${v}m`).join(', ') || '-';
+    
+    const minorStops = typeof r.minor_stop_counts === 'string' ? JSON.parse(r.minor_stop_counts) : r.minor_stop_counts || {};
+    const minorText = Object.entries(minorStops).map(([k, v]) => `${k}: ${v}x`).join(', ') || '-';
 
     return `
       <tr class="border-b border-slate-200 ${parseFloat(r.oee) < 86 ? 'bg-red-50' : ''}">
@@ -340,13 +343,13 @@ function updateTables(records) {
         <td class="py-3 px-2 text-right text-slate-700">${parseFloat(r.oee_365).toFixed(1)}%</td>
         <td class="py-3 px-2 text-slate-600 text-xs">${odtText}</td>
         <td class="py-3 px-2 text-slate-600 text-xs">${lsText}</td>
-        <td class="py-3 px-2 text-slate-600 text-xs">-</td>
+        <td class="py-3 px-2 text-slate-600 text-xs">${minorText}</td>
       </tr>
     `;
   }).join('');
   
   if (document.getElementById('historyTable')) {
-    document.getElementById('historyTable').innerHTML = histHtml || '<tr><td colspan="10" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+    document.getElementById('historyTable').innerHTML = histHtml || '<tr><td colspan="11" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
   }
 }
 
@@ -660,6 +663,25 @@ function loadMachineTemplate() {
     lineStopNonMesinSection.innerHTML = lsNonHtml + '</div>';
   }
 
+  // MINOR STOP Section - PERBAIKAN DISINI
+  const minorStopItems = typeof currentMachine.minor_stop_items === 'string' ? JSON.parse(currentMachine.minor_stop_items) : currentMachine.minor_stop_items || [];
+  let minorHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Minor Stop (Frekuesnsi)</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+  minorStopItems.forEach(item => {
+    minorHtml += `
+      <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <label class="flex items-center mb-2">
+          <span class="text-slate-700 font-semibold">${item}</span>
+        </label>
+        <input type="number" class="minor-stop-count w-full px-3 py-2 bg-white border border-slate-300 rounded text-slate-800" placeholder="Jumlah frekuensi" min="0" data-item="${item}" oninput="calculateOee()">
+      </div>
+    `;
+  });
+  
+  const minorStopSection = document.getElementById('minorStopSection');
+  if (minorStopSection) {
+    minorStopSection.innerHTML = minorHtml + '</div>';
+  }
+
   calculateOee();
 }
 
@@ -864,6 +886,15 @@ async function saveOeeRecord(e) {
     }
   });
   
+  // MINOR STOP Collection
+  const minorStops = {};
+  document.querySelectorAll('.minor-stop-count').forEach(i => {
+    const count = parseInt(i.value) || 0;
+    if (count > 0) {
+      minorStops[i.dataset.item] = count;
+    }
+  });
+  
   // TAMPILKAN ERROR JIKA VALIDASI GAGAL
   if (!validationPassed) {
     const errorMsg = validationErrors.join('\n');
@@ -923,6 +954,7 @@ async function saveOeeRecord(e) {
     line_stop_durations: lsDurations,
     line_stop_actions: lsActions,
     wr_numbers: wrNums,
+    minor_stop_counts: minorStops, // MENAMBAHKAN MINOR STOP KE DATABASE
     work_time: workTime,
     target_output: targetOutput
   };
