@@ -678,35 +678,58 @@ function calculateOee() {
   const reject = parseFloat(document.getElementById('inputReject').value) || 0;
 
   let totalOdt = 0;
+  let extraLineStop = 0; // Untuk waktu yang melebihi standar
+  
   document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => {
-    totalOdt += Math.min(parseFloat(i.value) || 0, parseFloat(i.dataset.standard));
+    const actualTime = parseFloat(i.value) || 0;
+    const standardTime = parseFloat(i.dataset.standard) || 0;
+    
+    if (actualTime > standardTime) {
+      // Jika waktu aktual melebihi standar, ambil standarnya untuk ODT
+      totalOdt += standardTime;
+      // Kelebihan waktu masuk ke line stop non mesin
+      extraLineStop += (actualTime - standardTime);
+    } else {
+      // Jika waktu aktual <= standar, gunakan waktu aktual
+      totalOdt += actualTime;
+    }
   });
 
   let totalLS = 0;
   document.querySelectorAll('.ls-mesin-duration, .ls-nonmesin-duration').forEach(i => {
     totalLS += (parseFloat(i.value) || 0);
   });
+  
+  // Tambahkan extra line stop dari ODT yang melebihi standar
+  totalLS += extraLineStop;
 
   const targetOutput = parseFloat(currentMachine.target_per_minute) * Math.max(0, workTime - totalOdt - totalLS);
   
+  // Standard OEE Calculation
   const availability = workTime > totalOdt ? ((workTime - totalOdt - totalLS) / (workTime - totalOdt)) * 100 : 0;
   const performance = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
   const quality = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
   const oee = (availability * performance * quality) / 10000;
 
-  const oee365 = workTime > 0 ? (((workTime - totalOdt - totalLS) / workTime) * performance * quality) / 10000 : 0;
+  // OEE 365 Calculation (Availability berdasarkan total work time)
+  const availability365 = workTime > 0 ? ((workTime - totalOdt - totalLS) / workTime) * 100 : 0;
+  const performance365 = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
+  const quality365 = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
+  const oee365 = (availability365 * performance365 * quality365) / 10000;
 
   const liveA = document.getElementById('liveA');
   const liveP = document.getElementById('liveP');
   const liveQ = document.getElementById('liveQ');
   const liveOEE = document.getElementById('liveOEE');
   const liveOEE365 = document.getElementById('liveOEE365');
+  const liveA365 = document.getElementById('liveA365');
   
   if (liveA) liveA.textContent = `${availability.toFixed(1)}%`;
   if (liveP) liveP.textContent = `${performance.toFixed(1)}%`;
   if (liveQ) liveQ.textContent = `${quality.toFixed(1)}%`;
   if (liveOEE) liveOEE.textContent = `${oee.toFixed(1)}%`;
   if (liveOEE365) liveOEE365.textContent = `${oee365.toFixed(1)}%`;
+  if (liveA365) liveA365.textContent = `${availability365.toFixed(1)}%`;
 }
 
 async function saveOeeRecord(e) {
@@ -727,33 +750,89 @@ async function saveOeeRecord(e) {
   }[shift] || 0;
 
   const odtTimes = {};
+  const extraLineStop = {}; // Untuk mencatat waktu yang melebihi standar
+  
   document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => {
-    odtTimes[i.dataset.name] = parseFloat(i.value) || 0;
+    const actualTime = parseFloat(i.value) || 0;
+    const standardTime = parseFloat(i.dataset.standard) || 0;
+    const itemName = i.dataset.name;
+    
+    if (actualTime > 0) {
+      if (actualTime > standardTime) {
+        // Simpan waktu standar sebagai ODT
+        odtTimes[itemName] = standardTime;
+        // Simpan kelebihan waktu sebagai line stop non mesin
+        extraLineStop[`${itemName} (Extra)`] = (actualTime - standardTime);
+      } else {
+        // Simpan waktu aktual sebagai ODT
+        odtTimes[itemName] = actualTime;
+      }
+    }
   });
   
   const lsDurations = {}; 
   const lsActions = {}; 
   const wrNums = {};
   
-  document.querySelectorAll('.ls-mesin-duration, .ls-nonmesin-duration').forEach(i => {
+  // Ambil line stop mesin
+  document.querySelectorAll('.ls-mesin-duration').forEach(i => {
     const val = parseFloat(i.value) || 0;
     if (val > 0) {
       const name = i.dataset.item;
       lsDurations[name] = val;
       
-      const act = document.querySelector(`[data-item="${name}"].ls-mesin-action, [data-item="${name}"].ls-nonmesin-action`)?.value;
+      const act = document.querySelector(`[data-item="${name}"].ls-mesin-action`)?.value;
       if (act) lsActions[name] = act;
       
       const wr = document.querySelector(`[data-item="${name}"].ls-mesin-wr`)?.value;
       if (wr) wrNums[name] = wr;
     }
   });
+  
+  // Ambil line stop non mesin
+  document.querySelectorAll('.ls-nonmesin-duration').forEach(i => {
+    const val = parseFloat(i.value) || 0;
+    if (val > 0) {
+      const name = i.dataset.item;
+      lsDurations[name] = val;
+      
+      const act = document.querySelector(`[data-item="${name}"].ls-nonmesin-action`)?.value;
+      if (act) lsActions[name] = act;
+    }
+  });
+  
+  // Tambahkan extra line stop dari ODT yang melebihi standar
+  Object.entries(extraLineStop).forEach(([name, time]) => {
+    lsDurations[name] = time;
+    lsActions[name] = 'EXCESS ODT TIME';
+  });
 
-  const availability = parseFloat(document.getElementById('liveA').textContent);
-  const performance = parseFloat(document.getElementById('liveP').textContent);
-  const quality = parseFloat(document.getElementById('liveQ').textContent);
-  const oee = parseFloat(document.getElementById('liveOEE').textContent);
-  const oee365 = parseFloat(document.getElementById('liveOEE365').textContent);
+  const actualOutput = parseFloat(document.getElementById('inputOutput').value) || 0;
+  const reject = parseFloat(document.getElementById('inputReject').value) || 0;
+
+  let totalOdt = 0;
+  Object.values(odtTimes).forEach(val => {
+    totalOdt += parseFloat(val) || 0;
+  });
+
+  let totalLS = 0;
+  Object.values(lsDurations).forEach(val => {
+    totalLS += parseFloat(val) || 0;
+  });
+
+  const targetOutput = parseFloat(currentMachine.target_per_minute) * Math.max(0, workTime - totalOdt - totalLS);
+  
+  // Standard OEE Calculation
+  const availability = workTime > totalOdt ? ((workTime - totalOdt - totalLS) / (workTime - totalOdt)) * 100 : 0;
+  const performance = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
+  const quality = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
+  const oee = (availability * performance * quality) / 10000;
+
+  // OEE 365 Calculation
+  const availability365 = workTime > 0 ? ((workTime - totalOdt - totalLS) / workTime) * 100 : 0;
+  const performance365 = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
+  const quality365 = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
+  const oee365 = (availability365 * performance365 * quality365) / 10000;
 
   const record = {
     date: document.getElementById('inputDate').value,
@@ -762,18 +841,20 @@ async function saveOeeRecord(e) {
     pic: document.getElementById('inputOperator').value,
     product: document.getElementById('inputProduct').value,
     batch: document.getElementById('inputBatch').value,
-    actual_output: parseFloat(document.getElementById('inputOutput').value) || 0,
-    reject: parseFloat(document.getElementById('inputReject').value) || 0,
+    actual_output: actualOutput,
+    reject: reject,
     availability, 
     performance, 
     quality, 
-    oee, 
+    oee,
+    availability_365: availability365,
     oee_365: oee365,
     odt_actual_times: odtTimes,
     line_stop_durations: lsDurations,
     line_stop_actions: lsActions,
     wr_numbers: wrNums,
-    work_time: workTime
+    work_time: workTime,
+    target_output: targetOutput
   };
 
   const btn = document.getElementById('saveBtn');
