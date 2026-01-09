@@ -29,7 +29,7 @@ const defaultConfig = {
 };
 
 // ========================================== 
-// 1. HELPER FUNCTIONS (DEFINED FIRST)
+// 1. HELPER FUNCTIONS
 // ========================================== 
 
 function showToast(message, type) {
@@ -93,7 +93,6 @@ function updateDashboard() {
 }
 
 function updateCharts(records) {
-  // Sort records by date for charts
   const sortedRecords = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
   const last10 = sortedRecords.slice(-10);
   
@@ -432,12 +431,6 @@ async function loadAllData() {
     machines = machinesData || [];
     oeeRecords = recordsData || [];
 
-    // Map to allData for compatibility
-    allData = [
-      ...machines.map(m => ({ ...m, type: 'machine' })),
-      ...oeeRecords.map(r => ({ ...r, type: 'oee_record' }))
-    ];
-
     updateDashboard();
     updateFilters();
     updateExportPreview();
@@ -556,6 +549,33 @@ function handleOdtTimeInput(input) {
   calculateOee();
 }
 
+function validateLineStopInput(input) {
+  const duration = parseFloat(input.value) || 0;
+  const name = input.dataset.item;
+  
+  const actionInput = document.querySelector(`[data-item="${name}"].ls-mesin-action`);
+  const wrInput = document.querySelector(`[data-item="${name}"].ls-mesin-wr`);
+  
+  // Reset error styling
+  actionInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+  wrInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+  
+  // Tampilkan warning jika durasi >= 180
+  if (duration >= 180) {
+    if (wrInput) {
+      wrInput.placeholder = "WR # WAJIB DIISI (≥180 menit)";
+      wrInput.classList.add('border-yellow-500', 'bg-yellow-50');
+    }
+  } else {
+    if (wrInput) {
+      wrInput.placeholder = "WR #";
+      wrInput.classList.remove('border-yellow-500', 'bg-yellow-50');
+    }
+  }
+  
+  calculateOee();
+}
+
 function loadMachineTemplate() {
   const name = document.getElementById('inputMachine').value;
   currentMachine = machines.find(m => m.name === name);
@@ -584,17 +604,26 @@ function loadMachineTemplate() {
     odtSection.innerHTML = odtHtml + '</div>';
   }
 
-  // LS Mesin
+  // LS Mesin dengan validation
   const lsMesin = typeof currentMachine.line_stop_mesin === 'string' ? JSON.parse(currentMachine.line_stop_mesin) : currentMachine.line_stop_mesin || [];
-  let lsHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Line Stop Mesin</h3><div class="space-y-4">';
+  let lsHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Line Stop Mesin <span class="text-sm text-red-600">*Action wajib diisi, WR wajib jika ≥180 menit</span></h3><div class="space-y-4">';
   lsMesin.forEach(item => {
     lsHtml += `
       <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <div class="font-semibold text-slate-700 mb-2">${item}</div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <input type="number" class="ls-mesin-duration px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Min" data-item="${item}" oninput="calculateOee()">
-          <input type="text" class="ls-mesin-action px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Action" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
-          <input type="text" class="ls-mesin-wr px-3 py-2 bg-white border border-slate-300 rounded" placeholder="WR #" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
+          <div>
+            <input type="number" class="ls-mesin-duration w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Durasi (min)" data-item="${item}" oninput="validateLineStopInput(this)">
+            <div class="text-xs text-slate-500 mt-1">Durasi line stop</div>
+          </div>
+          <div>
+            <input type="text" class="ls-mesin-action w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Action *WAJIB" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
+            <div class="text-xs text-red-600 mt-1">*Wajib diisi</div>
+          </div>
+          <div>
+            <input type="text" class="ls-mesin-wr w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="WR #" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
+            <div class="text-xs text-yellow-600 mt-1">Wajib jika ≥180 menit</div>
+          </div>
         </div>
       </div>
     `;
@@ -605,16 +634,22 @@ function loadMachineTemplate() {
     lineStopMesinSection.innerHTML = lsHtml + '</div>';
   }
 
-  // LS Non Mesin
+  // LS Non Mesin dengan validation
   const lsNon = typeof currentMachine.line_stop_non_mesin === 'string' ? JSON.parse(currentMachine.line_stop_non_mesin) : currentMachine.line_stop_non_mesin || [];
-  let lsNonHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Line Stop Non Mesin</h3><div class="space-y-4">';
+  let lsNonHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Line Stop Non Mesin <span class="text-sm text-red-600">*Action wajib diisi</span></h3><div class="space-y-4">';
   lsNon.forEach(item => {
     lsNonHtml += `
       <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <div class="font-semibold text-slate-700 mb-2">${item}</div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <input type="number" class="ls-nonmesin-duration px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Min" data-item="${item}" oninput="calculateOee()">
-          <input type="text" class="ls-nonmesin-action px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Action" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
+          <div>
+            <input type="number" class="ls-nonmesin-duration w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Durasi (min)" data-item="${item}" oninput="calculateOee()">
+            <div class="text-xs text-slate-500 mt-1">Durasi line stop</div>
+          </div>
+          <div>
+            <input type="text" class="ls-nonmesin-action w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Action *WAJIB" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
+            <div class="text-xs text-red-600 mt-1">*Wajib diisi</div>
+          </div>
         </div>
       </div>
     `;
@@ -678,19 +713,16 @@ function calculateOee() {
   const reject = parseFloat(document.getElementById('inputReject').value) || 0;
 
   let totalOdt = 0;
-  let extraLineStop = 0; // Untuk waktu yang melebihi standar
+  let extraLineStop = 0;
   
   document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => {
     const actualTime = parseFloat(i.value) || 0;
     const standardTime = parseFloat(i.dataset.standard) || 0;
     
     if (actualTime > standardTime) {
-      // Jika waktu aktual melebihi standar, ambil standarnya untuk ODT
       totalOdt += standardTime;
-      // Kelebihan waktu masuk ke line stop non mesin
       extraLineStop += (actualTime - standardTime);
     } else {
-      // Jika waktu aktual <= standar, gunakan waktu aktual
       totalOdt += actualTime;
     }
   });
@@ -700,7 +732,6 @@ function calculateOee() {
     totalLS += (parseFloat(i.value) || 0);
   });
   
-  // Tambahkan extra line stop dari ODT yang melebihi standar
   totalLS += extraLineStop;
 
   const targetOutput = parseFloat(currentMachine.target_per_minute) * Math.max(0, workTime - totalOdt - totalLS);
@@ -711,7 +742,7 @@ function calculateOee() {
   const quality = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
   const oee = (availability * performance * quality) / 10000;
 
-  // OEE 365 Calculation (Availability berdasarkan total work time)
+  // OEE 365 Calculation
   const availability365 = workTime > 0 ? ((workTime - totalOdt - totalLS) / workTime) * 100 : 0;
   const performance365 = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
   const quality365 = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
@@ -750,7 +781,7 @@ async function saveOeeRecord(e) {
   }[shift] || 0;
 
   const odtTimes = {};
-  const extraLineStop = {}; // Untuk mencatat waktu yang melebihi standar
+  const extraLineStop = {};
   
   document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => {
     const actualTime = parseFloat(i.value) || 0;
@@ -759,12 +790,9 @@ async function saveOeeRecord(e) {
     
     if (actualTime > 0) {
       if (actualTime > standardTime) {
-        // Simpan waktu standar sebagai ODT
         odtTimes[itemName] = standardTime;
-        // Simpan kelebihan waktu sebagai line stop non mesin
         extraLineStop[`${itemName} (Extra)`] = (actualTime - standardTime);
       } else {
-        // Simpan waktu aktual sebagai ODT
         odtTimes[itemName] = actualTime;
       }
     }
@@ -774,34 +802,76 @@ async function saveOeeRecord(e) {
   const lsActions = {}; 
   const wrNums = {};
   
-  // Ambil line stop mesin
+  // VALIDASI LINE STOP MESIN
+  let validationPassed = true;
+  let validationErrors = [];
+  
   document.querySelectorAll('.ls-mesin-duration').forEach(i => {
     const val = parseFloat(i.value) || 0;
     if (val > 0) {
       const name = i.dataset.item;
       lsDurations[name] = val;
       
-      const act = document.querySelector(`[data-item="${name}"].ls-mesin-action`)?.value;
-      if (act) lsActions[name] = act;
+      const actInput = document.querySelector(`[data-item="${name}"].ls-mesin-action`);
+      const wrInput = document.querySelector(`[data-item="${name}"].ls-mesin-wr`);
       
-      const wr = document.querySelector(`[data-item="${name}"].ls-mesin-wr`)?.value;
-      if (wr) wrNums[name] = wr;
+      const action = actInput?.value || '';
+      const wr = wrInput?.value || '';
+      
+      // VALIDASI 1: Action wajib diisi
+      if (!action.trim()) {
+        validationPassed = false;
+        validationErrors.push(`Action harus diisi untuk "${name}"`);
+        actInput?.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+      } else {
+        actInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+        lsActions[name] = action;
+      }
+      
+      // VALIDASI 2: WR wajib diisi jika durasi >= 180 menit
+      if (val >= 180 && !wr.trim()) {
+        validationPassed = false;
+        validationErrors.push(`WR # wajib diisi untuk "${name}" (durasi ≥ 180 menit)`);
+        wrInput?.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+      } else {
+        wrInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+        if (wr.trim()) {
+          wrNums[name] = wr;
+        }
+      }
     }
   });
   
-  // Ambil line stop non mesin
+  // VALIDASI LINE STOP NON MESIN
   document.querySelectorAll('.ls-nonmesin-duration').forEach(i => {
     const val = parseFloat(i.value) || 0;
     if (val > 0) {
       const name = i.dataset.item;
       lsDurations[name] = val;
       
-      const act = document.querySelector(`[data-item="${name}"].ls-nonmesin-action`)?.value;
-      if (act) lsActions[name] = act;
+      const actInput = document.querySelector(`[data-item="${name}"].ls-nonmesin-action`);
+      const action = actInput?.value || '';
+      
+      // VALIDASI: Action wajib diisi
+      if (!action.trim()) {
+        validationPassed = false;
+        validationErrors.push(`Action harus diisi untuk "${name}"`);
+        actInput?.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+      } else {
+        actInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+        lsActions[name] = action;
+      }
     }
   });
   
-  // Tambahkan extra line stop dari ODT yang melebihi standar
+  // TAMPILKAN ERROR JIKA VALIDASI GAGAL
+  if (!validationPassed) {
+    const errorMsg = validationErrors.join('\n');
+    showToast(`Validasi gagal:\n${errorMsg}`, 'error');
+    return;
+  }
+  
+  // TAMBAH EXTRA LINE STOP
   Object.entries(extraLineStop).forEach(([name, time]) => {
     lsDurations[name] = time;
     lsActions[name] = 'EXCESS ODT TIME';
@@ -867,7 +937,7 @@ async function saveOeeRecord(e) {
   btn.innerHTML = 'Save OEE Record';
 
   if (!error) {
-    showToast('Success');
+    showToast('Data OEE berhasil disimpan!');
     document.getElementById('oeeForm').reset();
     await loadAllData();
   } else {
@@ -1050,6 +1120,7 @@ window.updateWorkTime = updateWorkTime;
 window.calculateOee = calculateOee;
 window.handleOdtCheck = handleOdtCheck;
 window.handleOdtTimeInput = handleOdtTimeInput;
+window.validateLineStopInput = validateLineStopInput;
 window.editMachine = editMachine;
 window.deleteMachine = deleteMachine;
 window.exportData = exportData;
