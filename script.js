@@ -96,7 +96,7 @@ function updateCharts(records) {
   const sortedRecords = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
   const last10 = sortedRecords.slice(-10);
   
-  // OEE Trend
+  // OEE Trend - Standard vs 365
   if (charts.oeeTrend) charts.oeeTrend.destroy();
   const trendCtx = document.getElementById('oeeTrendChart')?.getContext('2d');
   if (trendCtx) {
@@ -104,13 +104,24 @@ function updateCharts(records) {
       type: 'line',
       data: {
         labels: last10.map(r => r.date),
-        datasets: [{
-          label: 'OEE Standard',
-          data: last10.map(r => r.oee),
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4
-        }]
+        datasets: [
+          {
+            label: 'OEE Standard',
+            data: last10.map(r => r.oee),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: false
+          },
+          {
+            label: 'OEE 365',
+            data: last10.map(r => r.oee_365),
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: false
+          }
+        ]
       },
       options: {
         responsive: true,
@@ -131,7 +142,7 @@ function updateCharts(records) {
     });
   }
 
-  // OEE per Machine
+  // OEE per Machine dengan target line
   const machineData = {};
   records.forEach(r => {
     if (!machineData[r.machine]) machineData[r.machine] = [];
@@ -145,6 +156,30 @@ function updateCharts(records) {
   if (charts.oeeMachine) charts.oeeMachine.destroy();
   const machineCtx = document.getElementById('oeeMachineChart')?.getContext('2d');
   if (machineCtx) {
+    const targetLine = {
+      id: 'targetLine',
+      afterDraw: (chart) => {
+        const ctx = chart.ctx;
+        const yAxis = chart.scales.y;
+        const targetY = yAxis.getPixelForValue(88);
+        
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(chart.chartArea.left, targetY);
+        ctx.lineTo(chart.chartArea.right, targetY);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        
+        // Label target
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('Target: 88%', chart.chartArea.right - 80, targetY - 5);
+        ctx.restore();
+      }
+    };
+
     charts.oeeMachine = new Chart(machineCtx, {
       type: 'bar',
       data: {
@@ -152,7 +187,9 @@ function updateCharts(records) {
         datasets: [{
           label: 'Average OEE Standard',
           data: machineAvg.map(m => m.avg),
-          backgroundColor: '#10b981'
+          backgroundColor: '#10b981',
+          borderColor: '#047857',
+          borderWidth: 1
         }]
       },
       options: {
@@ -173,7 +210,8 @@ function updateCharts(records) {
           },
           x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
         }
-      }
+      },
+      plugins: [targetLine]
     });
   }
 
@@ -267,6 +305,76 @@ function updateCharts(records) {
       }
     });
   }
+
+  // Top 10 Line Stop Mesin
+  const lsData = {};
+  records.forEach(r => {
+    const lsDurations = typeof r.line_stop_durations === 'string' ? JSON.parse(r.line_stop_durations) : r.line_stop_durations || {};
+    const lsActions = typeof r.line_stop_actions === 'string' ? JSON.parse(r.line_stop_actions) : r.line_stop_actions || {};
+    
+    Object.entries(lsDurations).forEach(([item, duration]) => {
+      // Cek apakah ini line stop mesin (bukan non-mesin atau ODT extra)
+      const action = lsActions[item] || '';
+      const isMesinStop = !item.includes('(Extra)') && 
+                         (action.includes('MESIN') || 
+                          action.includes('MACHINE') || 
+                          !action.includes('MATERIAL') && !action.includes('OPERATOR'));
+      
+      if (isMesinStop) {
+        lsData[item] = (lsData[item] || 0) + parseFloat(duration);
+      }
+    });
+  });
+  
+  const top10LS = Object.entries(lsData).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+  if (charts.lsChart) charts.lsChart.destroy();
+  const lsCtx = document.getElementById('lsChart')?.getContext('2d');
+  if (lsCtx) {
+    charts.lsChart = new Chart(lsCtx, {
+      type: 'bar',
+      data: {
+        labels: top10LS.map(([item]) => item.length > 20 ? item.substring(0, 20) + '...' : item),
+        datasets: [{ 
+          label: 'Total Minutes', 
+          data: top10LS.map(([, duration]) => duration), 
+          backgroundColor: '#ef4444' 
+        }]
+      },
+      options: {
+        responsive: true, 
+        maintainAspectRatio: true, 
+        indexAxis: 'y',
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const fullName = top10LS[context.dataIndex][0];
+                return `${fullName}: ${context.parsed.x} min`;
+              }
+            }
+          }
+        },
+        scales: { 
+          y: { 
+            ticks: { 
+              color: '#64748b', 
+              font: { size: 10 } 
+            }, 
+            grid: { color: '#e2e8f0' } 
+          }, 
+          x: { 
+            ticks: { 
+              color: '#64748b',
+              callback: function(value) { return value + ' min'; }
+            }, 
+            grid: { color: '#e2e8f0' } 
+          } 
+        }
+      }
+    });
+  }
 }
 
 function updateTables(records) {
@@ -329,6 +437,10 @@ function updateTables(records) {
     const lsDurations = typeof r.line_stop_durations === 'string' ? JSON.parse(r.line_stop_durations) : r.line_stop_durations || {};
     const lsText = Object.entries(lsDurations).map(([k, v]) => `${k.split(' - ')[1] || k}: ${v}m`).join(', ') || '-';
 
+    // Minor Stop
+    const minorStopData = typeof r.minor_stop_durations === 'string' ? JSON.parse(r.minor_stop_durations) : r.minor_stop_durations || {};
+    const minorStopText = Object.entries(minorStopData).map(([item, duration]) => `${item}: ${duration}m`).join(', ') || '-';
+
     return `
       <tr class="border-b border-slate-200 ${parseFloat(r.oee) < 86 ? 'bg-red-50' : ''}">
         <td class="py-3 px-2 text-slate-700">${r.date}</td>
@@ -340,7 +452,7 @@ function updateTables(records) {
         <td class="py-3 px-2 text-right text-slate-700">${parseFloat(r.oee_365).toFixed(1)}%</td>
         <td class="py-3 px-2 text-slate-600 text-xs">${odtText}</td>
         <td class="py-3 px-2 text-slate-600 text-xs">${lsText}</td>
-        <td class="py-3 px-2 text-slate-600 text-xs">-</td>
+        <td class="py-3 px-2 text-slate-600 text-xs">${minorStopText}</td>
       </tr>
     `;
   }).join('');
@@ -660,6 +772,24 @@ function loadMachineTemplate() {
     lineStopNonMesinSection.innerHTML = lsNonHtml + '</div>';
   }
 
+  // MINOR STOP Section
+  const minorItems = typeof currentMachine.minor_stop_items === 'string' ? JSON.parse(currentMachine.minor_stop_items) : currentMachine.minor_stop_items || [];
+  let minorHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Minor Stop (< 10 menit)</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+  minorItems.forEach(item => {
+    minorHtml += `
+      <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+        <div class="font-semibold text-slate-700 mb-2">${item}</div>
+        <input type="number" class="minor-stop-duration w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Total durasi (min)" max="10" data-item="${item}" oninput="calculateOee()">
+        <div class="text-xs text-slate-500 mt-1">Minor stop (< 10 menit)</div>
+      </div>
+    `;
+  });
+  
+  const minorStopSection = document.getElementById('minorStopSection');
+  if (minorStopSection) {
+    minorStopSection.innerHTML = minorHtml + '</div>';
+  }
+
   calculateOee();
 }
 
@@ -676,7 +806,7 @@ function updateTargetRecommendation() {
   }[shift] || 0;
   
   let totalDowntime = 0;
-  document.querySelectorAll('.odt-time:not(:disabled), .ls-mesin-duration, .ls-nonmesin-duration').forEach(i => {
+  document.querySelectorAll('.odt-time:not(:disabled), .ls-mesin-duration, .ls-nonmesin-duration, .minor-stop-duration').forEach(i => {
     totalDowntime += (parseFloat(i.value) || 0);
   });
   
@@ -732,7 +862,13 @@ function calculateOee() {
     totalLS += (parseFloat(i.value) || 0);
   });
   
-  totalLS += extraLineStop;
+  // Tambahkan minor stop ke total downtime
+  let totalMinorStop = 0;
+  document.querySelectorAll('.minor-stop-duration').forEach(i => {
+    totalMinorStop += (parseFloat(i.value) || 0);
+  });
+  
+  totalLS += extraLineStop + totalMinorStop;
 
   const targetOutput = parseFloat(currentMachine.target_per_minute) * Math.max(0, workTime - totalOdt - totalLS);
   
@@ -801,6 +937,7 @@ async function saveOeeRecord(e) {
   const lsDurations = {}; 
   const lsActions = {}; 
   const wrNums = {};
+  const minorStopDurations = {};
   
   // VALIDASI LINE STOP MESIN
   let validationPassed = true;
@@ -864,6 +1001,15 @@ async function saveOeeRecord(e) {
     }
   });
   
+  // MINOR STOP DATA
+  document.querySelectorAll('.minor-stop-duration').forEach(i => {
+    const val = parseFloat(i.value) || 0;
+    if (val > 0) {
+      const name = i.dataset.item;
+      minorStopDurations[name] = val;
+    }
+  });
+  
   // TAMPILKAN ERROR JIKA VALIDASI GAGAL
   if (!validationPassed) {
     const errorMsg = validationErrors.join('\n');
@@ -890,16 +1036,22 @@ async function saveOeeRecord(e) {
     totalLS += parseFloat(val) || 0;
   });
 
-  const targetOutput = parseFloat(currentMachine.target_per_minute) * Math.max(0, workTime - totalOdt - totalLS);
+  let totalMinorStop = 0;
+  Object.values(minorStopDurations).forEach(val => {
+    totalMinorStop += parseFloat(val) || 0;
+  });
+
+  const totalDowntime = totalOdt + totalLS + totalMinorStop;
+  const targetOutput = parseFloat(currentMachine.target_per_minute) * Math.max(0, workTime - totalDowntime);
   
   // Standard OEE Calculation
-  const availability = workTime > totalOdt ? ((workTime - totalOdt - totalLS) / (workTime - totalOdt)) * 100 : 0;
+  const availability = workTime > totalOdt ? ((workTime - totalDowntime) / (workTime - totalOdt)) * 100 : 0;
   const performance = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
   const quality = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
   const oee = (availability * performance * quality) / 10000;
 
   // OEE 365 Calculation
-  const availability365 = workTime > 0 ? ((workTime - totalOdt - totalLS) / workTime) * 100 : 0;
+  const availability365 = workTime > 0 ? ((workTime - totalDowntime) / workTime) * 100 : 0;
   const performance365 = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
   const quality365 = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
   const oee365 = (availability365 * performance365 * quality365) / 10000;
@@ -923,6 +1075,7 @@ async function saveOeeRecord(e) {
     line_stop_durations: lsDurations,
     line_stop_actions: lsActions,
     wr_numbers: wrNums,
+    minor_stop_durations: minorStopDurations,
     work_time: workTime,
     target_output: targetOutput
   };
