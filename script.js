@@ -29,7 +29,7 @@ const defaultConfig = {
 };
 
 // ========================================== 
-// 1. HELPER FUNCTIONS
+// 1. HELPER FUNCTIONS (DEFINED FIRST)
 // ========================================== 
 
 function showToast(message, type) {
@@ -93,6 +93,7 @@ function updateDashboard() {
 }
 
 function updateCharts(records) {
+  // Sort records by date for charts
   const sortedRecords = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
   const last10 = sortedRecords.slice(-10);
   
@@ -328,9 +329,6 @@ function updateTables(records) {
     
     const lsDurations = typeof r.line_stop_durations === 'string' ? JSON.parse(r.line_stop_durations) : r.line_stop_durations || {};
     const lsText = Object.entries(lsDurations).map(([k, v]) => `${k.split(' - ')[1] || k}: ${v}m`).join(', ') || '-';
-    
-    const minorStops = typeof r.minor_stop_counts === 'string' ? JSON.parse(r.minor_stop_counts) : r.minor_stop_counts || {};
-    const minorText = Object.entries(minorStops).map(([k, v]) => `${k}: ${v}x`).join(', ') || '-';
 
     return `
       <tr class="border-b border-slate-200 ${parseFloat(r.oee) < 86 ? 'bg-red-50' : ''}">
@@ -343,13 +341,13 @@ function updateTables(records) {
         <td class="py-3 px-2 text-right text-slate-700">${parseFloat(r.oee_365).toFixed(1)}%</td>
         <td class="py-3 px-2 text-slate-600 text-xs">${odtText}</td>
         <td class="py-3 px-2 text-slate-600 text-xs">${lsText}</td>
-        <td class="py-3 px-2 text-slate-600 text-xs">${minorText}</td>
+        <td class="py-3 px-2 text-slate-600 text-xs">-</td>
       </tr>
     `;
   }).join('');
   
   if (document.getElementById('historyTable')) {
-    document.getElementById('historyTable').innerHTML = histHtml || '<tr><td colspan="11" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+    document.getElementById('historyTable').innerHTML = histHtml || '<tr><td colspan="10" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
   }
 }
 
@@ -434,13 +432,11 @@ async function loadAllData() {
     machines = machinesData || [];
     oeeRecords = recordsData || [];
 
-    // DEBUG: Cek data mesin
-    console.log('Machines loaded:', machines.length);
-    machines.forEach(m => {
-      console.log(`Machine: ${m.name}`);
-      console.log('Minor stop items raw:', m.minor_stop_items);
-      console.log('Minor stop items parsed:', typeof m.minor_stop_items === 'string' ? JSON.parse(m.minor_stop_items) : m.minor_stop_items);
-    });
+    // Map to allData for compatibility
+    allData = [
+      ...machines.map(m => ({ ...m, type: 'machine' })),
+      ...oeeRecords.map(r => ({ ...r, type: 'oee_record' }))
+    ];
 
     updateDashboard();
     updateFilters();
@@ -458,7 +454,7 @@ async function init() {
 }
 
 // ========================================== 
-// 4. EVENT HANDLERS - PERBAIKAN LOAD MACHINE TEMPLATE
+// 4. EVENT HANDLERS
 // ========================================== 
 
 function switchTab(tab) {
@@ -560,216 +556,73 @@ function handleOdtTimeInput(input) {
   calculateOee();
 }
 
-function validateLineStopInput(input) {
-  const duration = parseFloat(input.value) || 0;
-  const name = input.dataset.item;
-  
-  const actionInput = document.querySelector(`[data-item="${name}"].ls-mesin-action`);
-  const wrInput = document.querySelector(`[data-item="${name}"].ls-mesin-wr`);
-  
-  // Reset error styling
-  actionInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-  wrInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-  
-  // Tampilkan warning jika durasi >= 180
-  if (duration >= 180) {
-    if (wrInput) {
-      wrInput.placeholder = "WR # WAJIB DIISI (≥180 menit)";
-      wrInput.classList.add('border-yellow-500', 'bg-yellow-50');
-    }
-  } else {
-    if (wrInput) {
-      wrInput.placeholder = "WR #";
-      wrInput.classList.remove('border-yellow-500', 'bg-yellow-50');
-    }
-  }
-  
-  calculateOee();
-}
-
-// FIXED: LOAD MACHINE TEMPLATE dengan MINOR STOP
 function loadMachineTemplate() {
-  console.log('Loading machine template...');
-  
   const name = document.getElementById('inputMachine').value;
-  console.log('Selected machine:', name);
-  
   currentMachine = machines.find(m => m.name === name);
-  
-  if (!currentMachine) {
-    console.error('Machine not found:', name);
-    
-    // Clear semua section
-    ['odtSection', 'lineStopMesinSection', 'lineStopNonMesinSection', 'minorStopSection'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = '';
-    });
-    return;
-  }
-  
-  console.log('Current machine data:', currentMachine);
-  
+  if (!currentMachine) return;
+
   updateTargetRecommendation();
 
-  // 1. ODT Section
-  try {
-    const odtItems = typeof currentMachine.odt_items === 'string' ? JSON.parse(currentMachine.odt_items) : currentMachine.odt_items || [];
-    console.log('ODT items:', odtItems);
-    
-    let odtHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">ODT (Operator Delay Time)</h3>';
-    
-    if (odtItems.length > 0) {
-      odtHtml += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
-      odtItems.forEach(item => {
-        odtHtml += `
-          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <label class="flex items-center mb-2">
-              <input type="checkbox" class="odt-check mr-2" data-name="${item.name}" data-standard="${item.standardTime}" onchange="handleOdtCheck(this)">
-              <span class="text-slate-700 font-semibold">${item.name}</span>
-              <span class="text-slate-500 text-sm ml-2">(Std: ${item.standardTime} min)</span>
-            </label>
-            <input type="number" class="odt-time w-full px-3 py-2 bg-white border border-slate-300 rounded text-slate-800" placeholder="Actual time (min)" min="0" data-name="${item.name}" data-standard="${item.standardTime}" oninput="handleOdtTimeInput(this)" disabled>
-          </div>
-        `;
-      });
-      odtHtml += '</div>';
-    } else {
-      odtHtml += '<p class="text-slate-500">No ODT items configured</p>';
-    }
-    
-    const odtSection = document.getElementById('odtSection');
-    if (odtSection) {
-      odtSection.innerHTML = odtHtml;
-    } else {
-      console.error('ODT section element not found!');
-    }
-  } catch (error) {
-    console.error('Error loading ODT:', error);
+  // ODT Section
+  const odtItems = typeof currentMachine.odt_items === 'string' ? JSON.parse(currentMachine.odt_items) : currentMachine.odt_items || [];
+  let odtHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">ODT (Operator Delay Time)</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+  odtItems.forEach(item => {
+    odtHtml += `
+      <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <label class="flex items-center mb-2">
+          <input type="checkbox" class="odt-check mr-2" data-name="${item.name}" data-standard="${item.standardTime}" onchange="handleOdtCheck(this)">
+          <span class="text-slate-700 font-semibold">${item.name}</span>
+          <span class="text-slate-500 text-sm ml-2">(Std: ${item.standardTime} min)</span>
+        </label>
+        <input type="number" class="odt-time w-full px-3 py-2 bg-white border border-slate-300 rounded text-slate-800" placeholder="Actual time (min)" min="0" data-name="${item.name}" data-standard="${item.standardTime}" oninput="handleOdtTimeInput(this)" disabled>
+      </div>
+    `;
+  });
+  
+  const odtSection = document.getElementById('odtSection');
+  if (odtSection) {
+    odtSection.innerHTML = odtHtml + '</div>';
   }
 
-  // 2. Line Stop Mesin
-  try {
-    const lsMesin = typeof currentMachine.line_stop_mesin === 'string' ? JSON.parse(currentMachine.line_stop_mesin) : currentMachine.line_stop_mesin || [];
-    console.log('Line Stop Mesin items:', lsMesin);
-    
-    let lsHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Line Stop Mesin <span class="text-sm text-red-600">*Action wajib diisi, WR wajib jika ≥180 menit</span></h3>';
-    
-    if (lsMesin.length > 0) {
-      lsHtml += '<div class="space-y-4">';
-      lsMesin.forEach(item => {
-        lsHtml += `
-          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div class="font-semibold text-slate-700 mb-2">${item}</div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <div>
-                <input type="number" class="ls-mesin-duration w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Durasi (min)" data-item="${item}" oninput="validateLineStopInput(this)">
-                <div class="text-xs text-slate-500 mt-1">Durasi line stop</div>
-              </div>
-              <div>
-                <input type="text" class="ls-mesin-action w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Action *WAJIB" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
-                <div class="text-xs text-red-600 mt-1">*Wajib diisi</div>
-              </div>
-              <div>
-                <input type="text" class="ls-mesin-wr w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="WR #" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
-                <div class="text-xs text-yellow-600 mt-1">Wajib jika ≥180 menit</div>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      lsHtml += '</div>';
-    } else {
-      lsHtml += '<p class="text-slate-500">No Line Stop Mesin items configured</p>';
-    }
-    
-    const lineStopMesinSection = document.getElementById('lineStopMesinSection');
-    if (lineStopMesinSection) {
-      lineStopMesinSection.innerHTML = lsHtml;
-    } else {
-      console.error('Line Stop Mesin section element not found!');
-    }
-  } catch (error) {
-    console.error('Error loading Line Stop Mesin:', error);
+  // LS Mesin
+  const lsMesin = typeof currentMachine.line_stop_mesin === 'string' ? JSON.parse(currentMachine.line_stop_mesin) : currentMachine.line_stop_mesin || [];
+  let lsHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Line Stop Mesin</h3><div class="space-y-4">';
+  lsMesin.forEach(item => {
+    lsHtml += `
+      <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <div class="font-semibold text-slate-700 mb-2">${item}</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <input type="number" class="ls-mesin-duration px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Min" data-item="${item}" oninput="calculateOee()">
+          <input type="text" class="ls-mesin-action px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Action" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
+          <input type="text" class="ls-mesin-wr px-3 py-2 bg-white border border-slate-300 rounded" placeholder="WR #" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
+        </div>
+      </div>
+    `;
+  });
+  
+  const lineStopMesinSection = document.getElementById('lineStopMesinSection');
+  if (lineStopMesinSection) {
+    lineStopMesinSection.innerHTML = lsHtml + '</div>';
   }
 
-  // 3. Line Stop Non Mesin
-  try {
-    const lsNon = typeof currentMachine.line_stop_non_mesin === 'string' ? JSON.parse(currentMachine.line_stop_non_mesin) : currentMachine.line_stop_non_mesin || [];
-    console.log('Line Stop Non Mesin items:', lsNon);
-    
-    let lsNonHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Line Stop Non Mesin <span class="text-sm text-red-600">*Action wajib diisi</span></h3>';
-    
-    if (lsNon.length > 0) {
-      lsNonHtml += '<div class="space-y-4">';
-      lsNon.forEach(item => {
-        lsNonHtml += `
-          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div class="font-semibold text-slate-700 mb-2">${item}</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div>
-                <input type="number" class="ls-nonmesin-duration w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Durasi (min)" data-item="${item}" oninput="calculateOee()">
-                <div class="text-xs text-slate-500 mt-1">Durasi line stop</div>
-              </div>
-              <div>
-                <input type="text" class="ls-nonmesin-action w-full px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Action *WAJIB" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
-                <div class="text-xs text-red-600 mt-1">*Wajib diisi</div>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      lsNonHtml += '</div>';
-    } else {
-      lsNonHtml += '<p class="text-slate-500">No Line Stop Non Mesin items configured</p>';
-    }
-    
-    const lineStopNonMesinSection = document.getElementById('lineStopNonMesinSection');
-    if (lineStopNonMesinSection) {
-      lineStopNonMesinSection.innerHTML = lsNonHtml;
-    } else {
-      console.error('Line Stop Non Mesin section element not found!');
-    }
-  } catch (error) {
-    console.error('Error loading Line Stop Non Mesin:', error);
-  }
-
-  // 4. MINOR STOP Section - FIXED
-  try {
-    const minorStopItems = typeof currentMachine.minor_stop_items === 'string' ? JSON.parse(currentMachine.minor_stop_items) : currentMachine.minor_stop_items || [];
-    console.log('Minor Stop items:', minorStopItems);
-    
-    let minorHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Minor Stop (Frekuensi)</h3>';
-    
-    if (minorStopItems && minorStopItems.length > 0) {
-      minorHtml += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
-      minorStopItems.forEach(item => {
-        minorHtml += `
-          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <label class="block text-slate-700 font-semibold mb-2">${item}</label>
-            <input type="number" class="minor-stop-count w-full px-3 py-2 bg-white border border-slate-300 rounded text-slate-800" placeholder="Jumlah frekuensi" min="0" data-item="${item}" oninput="calculateOee()">
-          </div>
-        `;
-      });
-      minorHtml += '</div>';
-    } else {
-      minorHtml += '<div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">';
-      minorHtml += '<p class="text-yellow-700">⚠️ Tidak ada data Minor Stop untuk mesin ini.</p>';
-      minorHtml += '<p class="text-yellow-600 text-sm mt-1">Tambahkan Minor Stop di Master Data > Machines</p>';
-      minorHtml += '</div>';
-    }
-    
-    const minorStopSection = document.getElementById('minorStopSection');
-    if (minorStopSection) {
-      minorStopSection.innerHTML = minorHtml;
-      console.log('Minor Stop section updated:', minorHtml);
-    } else {
-      console.error('⚠️ Element minorStopSection tidak ditemukan di HTML!');
-      console.error('Pastikan ada element dengan id="minorStopSection" di HTML tab input');
-    }
-  } catch (error) {
-    console.error('Error loading Minor Stop:', error);
-    console.error('Error details:', error.message);
-    console.error('Minor stop items raw:', currentMachine.minor_stop_items);
+  // LS Non Mesin
+  const lsNon = typeof currentMachine.line_stop_non_mesin === 'string' ? JSON.parse(currentMachine.line_stop_non_mesin) : currentMachine.line_stop_non_mesin || [];
+  let lsNonHtml = '<h3 class="text-slate-800 text-xl font-bold mb-4">Line Stop Non Mesin</h3><div class="space-y-4">';
+  lsNon.forEach(item => {
+    lsNonHtml += `
+      <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <div class="font-semibold text-slate-700 mb-2">${item}</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <input type="number" class="ls-nonmesin-duration px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Min" data-item="${item}" oninput="calculateOee()">
+          <input type="text" class="ls-nonmesin-action px-3 py-2 bg-white border border-slate-300 rounded" placeholder="Action" data-item="${item}" oninput="this.value = this.value.toUpperCase()">
+        </div>
+      </div>
+    `;
+  });
+  
+  const lineStopNonMesinSection = document.getElementById('lineStopNonMesinSection');
+  if (lineStopNonMesinSection) {
+    lineStopNonMesinSection.innerHTML = lsNonHtml + '</div>';
   }
 
   calculateOee();
@@ -825,16 +678,19 @@ function calculateOee() {
   const reject = parseFloat(document.getElementById('inputReject').value) || 0;
 
   let totalOdt = 0;
-  let extraLineStop = 0;
+  let extraLineStop = 0; // Untuk waktu yang melebihi standar
   
   document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => {
     const actualTime = parseFloat(i.value) || 0;
     const standardTime = parseFloat(i.dataset.standard) || 0;
     
     if (actualTime > standardTime) {
+      // Jika waktu aktual melebihi standar, ambil standarnya untuk ODT
       totalOdt += standardTime;
+      // Kelebihan waktu masuk ke line stop non mesin
       extraLineStop += (actualTime - standardTime);
     } else {
+      // Jika waktu aktual <= standar, gunakan waktu aktual
       totalOdt += actualTime;
     }
   });
@@ -844,6 +700,7 @@ function calculateOee() {
     totalLS += (parseFloat(i.value) || 0);
   });
   
+  // Tambahkan extra line stop dari ODT yang melebihi standar
   totalLS += extraLineStop;
 
   const targetOutput = parseFloat(currentMachine.target_per_minute) * Math.max(0, workTime - totalOdt - totalLS);
@@ -854,7 +711,7 @@ function calculateOee() {
   const quality = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
   const oee = (availability * performance * quality) / 10000;
 
-  // OEE 365 Calculation
+  // OEE 365 Calculation (Availability berdasarkan total work time)
   const availability365 = workTime > 0 ? ((workTime - totalOdt - totalLS) / workTime) * 100 : 0;
   const performance365 = targetOutput > 0 ? (actualOutput / targetOutput) * 100 : 0;
   const quality365 = actualOutput > 0 ? ((actualOutput - reject) / actualOutput) * 100 : 0;
@@ -893,7 +750,7 @@ async function saveOeeRecord(e) {
   }[shift] || 0;
 
   const odtTimes = {};
-  const extraLineStop = {};
+  const extraLineStop = {}; // Untuk mencatat waktu yang melebihi standar
   
   document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => {
     const actualTime = parseFloat(i.value) || 0;
@@ -902,9 +759,12 @@ async function saveOeeRecord(e) {
     
     if (actualTime > 0) {
       if (actualTime > standardTime) {
+        // Simpan waktu standar sebagai ODT
         odtTimes[itemName] = standardTime;
+        // Simpan kelebihan waktu sebagai line stop non mesin
         extraLineStop[`${itemName} (Extra)`] = (actualTime - standardTime);
       } else {
+        // Simpan waktu aktual sebagai ODT
         odtTimes[itemName] = actualTime;
       }
     }
@@ -914,85 +774,34 @@ async function saveOeeRecord(e) {
   const lsActions = {}; 
   const wrNums = {};
   
-  // VALIDASI LINE STOP MESIN
-  let validationPassed = true;
-  let validationErrors = [];
-  
+  // Ambil line stop mesin
   document.querySelectorAll('.ls-mesin-duration').forEach(i => {
     const val = parseFloat(i.value) || 0;
     if (val > 0) {
       const name = i.dataset.item;
       lsDurations[name] = val;
       
-      const actInput = document.querySelector(`[data-item="${name}"].ls-mesin-action`);
-      const wrInput = document.querySelector(`[data-item="${name}"].ls-mesin-wr`);
+      const act = document.querySelector(`[data-item="${name}"].ls-mesin-action`)?.value;
+      if (act) lsActions[name] = act;
       
-      const action = actInput?.value || '';
-      const wr = wrInput?.value || '';
-      
-      // VALIDASI 1: Action wajib diisi
-      if (!action.trim()) {
-        validationPassed = false;
-        validationErrors.push(`Action harus diisi untuk "${name}"`);
-        actInput?.classList.add('border-red-500', 'ring-2', 'ring-red-200');
-      } else {
-        actInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-        lsActions[name] = action;
-      }
-      
-      // VALIDASI 2: WR wajib diisi jika durasi >= 180 menit
-      if (val >= 180 && !wr.trim()) {
-        validationPassed = false;
-        validationErrors.push(`WR # wajib diisi untuk "${name}" (durasi ≥ 180 menit)`);
-        wrInput?.classList.add('border-red-500', 'ring-2', 'ring-red-200');
-      } else {
-        wrInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-        if (wr.trim()) {
-          wrNums[name] = wr;
-        }
-      }
+      const wr = document.querySelector(`[data-item="${name}"].ls-mesin-wr`)?.value;
+      if (wr) wrNums[name] = wr;
     }
   });
   
-  // VALIDASI LINE STOP NON MESIN
+  // Ambil line stop non mesin
   document.querySelectorAll('.ls-nonmesin-duration').forEach(i => {
     const val = parseFloat(i.value) || 0;
     if (val > 0) {
       const name = i.dataset.item;
       lsDurations[name] = val;
       
-      const actInput = document.querySelector(`[data-item="${name}"].ls-nonmesin-action`);
-      const action = actInput?.value || '';
-      
-      // VALIDASI: Action wajib diisi
-      if (!action.trim()) {
-        validationPassed = false;
-        validationErrors.push(`Action harus diisi untuk "${name}"`);
-        actInput?.classList.add('border-red-500', 'ring-2', 'ring-red-200');
-      } else {
-        actInput?.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-        lsActions[name] = action;
-      }
+      const act = document.querySelector(`[data-item="${name}"].ls-nonmesin-action`)?.value;
+      if (act) lsActions[name] = act;
     }
   });
   
-  // MINOR STOP Collection
-  const minorStops = {};
-  document.querySelectorAll('.minor-stop-count').forEach(i => {
-    const count = parseInt(i.value) || 0;
-    if (count > 0) {
-      minorStops[i.dataset.item] = count;
-    }
-  });
-  
-  // TAMPILKAN ERROR JIKA VALIDASI GAGAL
-  if (!validationPassed) {
-    const errorMsg = validationErrors.join('\n');
-    showToast(`Validasi gagal:\n${errorMsg}`, 'error');
-    return;
-  }
-  
-  // TAMBAH EXTRA LINE STOP
+  // Tambahkan extra line stop dari ODT yang melebihi standar
   Object.entries(extraLineStop).forEach(([name, time]) => {
     lsDurations[name] = time;
     lsActions[name] = 'EXCESS ODT TIME';
@@ -1044,12 +853,9 @@ async function saveOeeRecord(e) {
     line_stop_durations: lsDurations,
     line_stop_actions: lsActions,
     wr_numbers: wrNums,
-    minor_stop_counts: minorStops, // MENAMBAHKAN MINOR STOP KE DATABASE
     work_time: workTime,
     target_output: targetOutput
   };
-
-  console.log('Saving record with minor stops:', minorStops);
 
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; 
@@ -1061,7 +867,7 @@ async function saveOeeRecord(e) {
   btn.innerHTML = 'Save OEE Record';
 
   if (!error) {
-    showToast('Data OEE berhasil disimpan!');
+    showToast('Success');
     document.getElementById('oeeForm').reset();
     await loadAllData();
   } else {
@@ -1244,7 +1050,6 @@ window.updateWorkTime = updateWorkTime;
 window.calculateOee = calculateOee;
 window.handleOdtCheck = handleOdtCheck;
 window.handleOdtTimeInput = handleOdtTimeInput;
-window.validateLineStopInput = validateLineStopInput;
 window.editMachine = editMachine;
 window.deleteMachine = deleteMachine;
 window.exportData = exportData;
