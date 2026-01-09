@@ -1,7 +1,13 @@
-// Supabase Configuration
+// Pastikan library Supabase sudah load
 const SUPABASE_URL = 'https://vspmleghlzxmhddoanbw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzcG1sZWdobHp4bWhkZG9hbmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5MjcxNDgsImV4cCI6MjA4MzUwMzE0OH0.0csh_5Z-FYro3rqyqlNtsEzkGJdga2iGw-I95loHhO8'; 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzcG1sZWdobHp4bWhkZG9hbmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5MjcxNDgsImV4cCI6MjA4MzUwMzE0OH0.0csh_5Z-FYro3rqyqlNtsEzkGJdga2iGw-I95loHhO8';
+
+let supabaseClient;
+try {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+  console.error('Supabase client failed to init:', e);
+}
 
 // Global state
 let allData = [];
@@ -22,44 +28,24 @@ const defaultConfig = {
   secondary_action_color: '#64748b'
 };
 
-// Initialize
-async function init() {
-  // Apply visual config (default for now)
-  applyConfig(defaultConfig);
+// ========================================== 
+// 1. HELPER FUNCTIONS (DEFINED FIRST)
+// ========================================== 
 
-  // Load data from Supabase
-  await loadAllData();
-}
-
-async function loadAllData() {
-  try {
-    const { data: machinesData, error: mError } = await supabaseClient.from('machines').select('*');
-    const { data: recordsData, error: rError } = await supabaseClient.from('oee_records').select('*');
-
-    if (mError || rError) throw mError || rError;
-
-    machines = machinesData || [];
-    oeeRecords = recordsData || [];
-
-    // Map to allData for compatibility with existing functions
-    allData = [
-      ...machines.map(m => ({ ...m, type: 'machine' })),
-      ...oeeRecords.map(r => ({ ...r, type: 'oee_record' }))
-    ];
-
-    updateDashboard();
-    updateFilters();
-    updateExportPreview();
-    updateMachineList();
-  } catch (error) {
-    console.error('Error loading data:', error);
-    showToast('Failed to load data from database', 'error');
-  }
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = toast ${type};
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
 }
 
 function applyConfig(config) {
-  document.getElementById('appTitle').textContent = config.app_title || defaultConfig.app_title;
-  document.getElementById('companyName').textContent = config.company_name || defaultConfig.company_name;
+  const titleEl = document.getElementById('appTitle');
+  if (titleEl) titleEl.textContent = config.app_title || defaultConfig.app_title;
+  
+  const compEl = document.getElementById('companyName');
+  if (compEl) compEl.textContent = config.company_name || defaultConfig.company_name;
   
   const bgColor = config.background_color || defaultConfig.background_color;
   const surfaceColor = config.surface_color || defaultConfig.surface_color;
@@ -67,7 +53,8 @@ function applyConfig(config) {
   const primaryColor = config.primary_action_color || defaultConfig.primary_action_color;
   const secondaryColor = config.secondary_action_color || defaultConfig.secondary_action_color;
   
-  document.getElementById('app').style.background = `linear-gradient(135deg, ${bgColor} 0%, ${surfaceColor} 100%)`;
+  const appEl = document.getElementById('app');
+  if (appEl) appEl.style.background = linear-gradient(135deg, ${bgColor} 0%, ${surfaceColor} 100%);
   
   const style = document.createElement('style');
   style.textContent = `
@@ -78,48 +65,17 @@ function applyConfig(config) {
   document.head.appendChild(style);
 }
 
-// Tab switching
-function switchTab(tab) {
-  if (currentTab === 'machines' && tab !== 'machines') {
-    lockMachineManagement();
-  }
-  
-  currentTab = tab;
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  
-  document.getElementById(`${tab}-tab`).classList.remove('hidden');
-  document.getElementById(`tab-${tab}`).classList.add('active');
-  
-  if (tab === 'dashboard') {
-    updateDashboard();
-  } else if (tab === 'input') {
-    loadMachineOptions();
-  } else if (tab === 'machines') {
-    updateAuthStatus();
-    updateMachineList();
-  } else if (tab === 'export') {
-    updateExportPreview();
-  }
-}
+// ========================================== 
+// 2. CORE LOGIC FUNCTIONS
+// ========================================== 
 
-// Toast notifications
-function showToast(message, type = 'success') {
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-// Dashboard functions
 function updateDashboard() {
   const records = oeeRecords;
   
   if (records.length === 0) {
-    document.getElementById('avgOeeStandard').textContent = '0%';
-    document.getElementById('totalOutput').textContent = '0';
-    document.getElementById('avgOee365').textContent = '0%';
+    if(document.getElementById('avgOeeStandard')) document.getElementById('avgOeeStandard').textContent = '0%';
+    if(document.getElementById('totalOutput')) document.getElementById('totalOutput').textContent = '0';
+    if(document.getElementById('avgOee365')) document.getElementById('avgOee365').textContent = '0%';
     return;
   }
 
@@ -127,9 +83,9 @@ function updateDashboard() {
   const totalOut = records.reduce((sum, r) => sum + (parseInt(r.actual_output) || 0), 0);
   const avgOee365 = records.reduce((sum, r) => sum + (parseFloat(r.oee_365) || 0), 0) / records.length;
 
-  document.getElementById('avgOeeStandard').textContent = `${avgOee.toFixed(1)}%`;
+  document.getElementById('avgOeeStandard').textContent = ${avgOee.toFixed(1)}%;
   document.getElementById('totalOutput').textContent = totalOut.toLocaleString();
-  document.getElementById('avgOee365').textContent = `${avgOee365.toFixed(1)}%`;
+  document.getElementById('avgOee365').textContent = ${avgOee365.toFixed(1)}%;
 
   updateCharts(records);
   updateTables(records);
@@ -142,38 +98,40 @@ function updateCharts(records) {
   
   // OEE Trend
   if (charts.oeeTrend) charts.oeeTrend.destroy();
-  const trendCtx = document.getElementById('oeeTrendChart').getContext('2d');
-  charts.oeeTrend = new Chart(trendCtx, {
-    type: 'line',
-    data: {
-      labels: last10.map(r => r.date),
-      datasets: [{
-        label: 'OEE Standard',
-        data: last10.map(r => r.oee),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: { 
-        legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } },
-        datalabels: {
-          display: true,
-          align: 'top',
-          color: '#1e293b',
-          font: { size: 10, weight: 'bold' },
-          formatter: (value) => `${parseFloat(value).toFixed(1)}%`
-        }
+  const trendCtx = document.getElementById('oeeTrendChart')?.getContext('2d');
+  if (trendCtx) {
+    charts.oeeTrend = new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: last10.map(r => r.date),
+        datasets: [{
+          label: 'OEE Standard',
+          data: last10.map(r => r.oee),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4
+        }]
       },
-      scales: {
-        y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, min: 0, max: 100 },
-        x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { 
+          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } },
+          datalabels: {
+            display: true,
+            align: 'top',
+            color: '#1e293b',
+            font: { size: 10, weight: 'bold' },
+            formatter: (value) => ${parseFloat(value).toFixed(1)}%
+          }
+        },
+        scales: {
+          y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, min: 0, max: 100 },
+          x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
+        }
       }
-    }
-  });
+    });
+  }
 
   // OEE per Machine
   const machineData = {};
@@ -187,45 +145,43 @@ function updateCharts(records) {
   }));
 
   if (charts.oeeMachine) charts.oeeMachine.destroy();
-  const machineCtx = document.getElementById('oeeMachineChart').getContext('2d');
-  charts.oeeMachine = new Chart(machineCtx, {
-    type: 'bar',
-    data: {
-      labels: machineAvg.map(m => m.machine),
-      datasets: [{
-        label: 'Average OEE Standard',
-        data: machineAvg.map(m => m.avg),
-        backgroundColor: '#10b981'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: { 
-        legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } },
-        datalabels: {
-          display: true,
-          anchor: 'end',
-          align: 'top',
-          color: '#1e293b',
-          font: { size: 10, weight: 'bold' },
-          formatter: (value) => `${parseFloat(value).toFixed(1)}%`
-        },
-        annotation: {
-          annotations: {
-            targetLine: {
-              type: 'line', yMin: 88, yMax: 88, borderColor: '#ef4444', borderWidth: 2, borderDash: [6, 6],
-              label: { content: 'Target 88%', enabled: true, position: 'end', backgroundColor: '#ef4444', color: 'white', font: { size: 10, weight: 'bold' } }
+  const machineCtx = document.getElementById('oeeMachineChart')?.getContext('2d');
+  if (machineCtx) {
+    charts.oeeMachine = new Chart(machineCtx, {
+      type: 'bar',
+      data: {
+        labels: machineAvg.map(m => m.machine),
+        datasets: [{
+          label: 'Average OEE Standard',
+          data: machineAvg.map(m => m.avg),
+          backgroundColor: '#10b981'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { 
+          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } },
+          datalabels: {
+            display: true, anchor: 'end', align: 'top', color: '#1e293b', font: { size: 10, weight: 'bold' },
+            formatter: (value) => ${parseFloat(value).toFixed(1)}%
+          },
+          annotation: {
+            annotations: {
+              targetLine: {
+                type: 'line', yMin: 88, yMax: 88, borderColor: '#ef4444', borderWidth: 2, borderDash: [6, 6],
+                label: { content: 'Target 88%', enabled: true, position: 'end', backgroundColor: '#ef4444', color: 'white', font: { size: 10, weight: 'bold' } }
+              }
             }
           }
+        },
+        scales: {
+          y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, min: 0, max: 100 },
+          x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
         }
-      },
-      scales: {
-        y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, min: 0, max: 100 },
-        x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
       }
-    }
-  });
+    });
+  }
 
   // A-P-Q Comparison
   const avgA = records.reduce((s, r) => s + (parseFloat(r.availability) || 0), 0) / records.length;
@@ -234,33 +190,35 @@ function updateCharts(records) {
   const avgA365 = records.reduce((s, r) => s + (parseFloat(r.availability_365) || 0), 0) / records.length;
 
   if (charts.apq) charts.apq.destroy();
-  const apqCtx = document.getElementById('apqChart').getContext('2d');
-  charts.apq = new Chart(apqCtx, {
-    type: 'bar',
-    data: {
-      labels: ['A (Std)', 'P (Std)', 'Q (Std)', 'A (365)'],
-      datasets: [{
-        label: 'Percentage',
-        data: [avgA, avgP, avgQ, avgA365],
-        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: { 
-        legend: { display: false },
-        datalabels: {
-          display: true, anchor: 'end', align: 'top', color: '#1e293b', font: { size: 11, weight: 'bold' },
-          formatter: (value) => `${parseFloat(value).toFixed(1)}%`
-        }
+  const apqCtx = document.getElementById('apqChart')?.getContext('2d');
+  if (apqCtx) {
+    charts.apq = new Chart(apqCtx, {
+      type: 'bar',
+      data: {
+        labels: ['A (Std)', 'P (Std)', 'Q (Std)', 'A (365)'],
+        datasets: [{
+          label: 'Percentage',
+          data: [avgA, avgP, avgQ, avgA365],
+          backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+        }]
       },
-      scales: {
-        y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, beginAtZero: true, max: 100 },
-        x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { 
+          legend: { display: false },
+          datalabels: {
+            display: true, anchor: 'end', align: 'top', color: '#1e293b', font: { size: 11, weight: 'bold' },
+            formatter: (value) => ${parseFloat(value).toFixed(1)}%
+          }
+        },
+        scales: {
+          y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, beginAtZero: true, max: 100 },
+          x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
+        }
       }
-    }
-  });
+    });
+  }
 
   // Top 10 ODT
   const odtData = {};
@@ -273,26 +231,27 @@ function updateCharts(records) {
   const top10Odt = Object.entries(odtData).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
   if (charts.odtChart) charts.odtChart.destroy();
-  const odtCtx = document.getElementById('odtChart').getContext('2d');
-  charts.odtChart = new Chart(odtCtx, {
-    type: 'bar',
-    data: {
-      labels: top10Odt.map(([item]) => item),
-      datasets: [{ label: 'Total Minutes', data: top10Odt.map(([, time]) => time), backgroundColor: '#f59e0b' }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: true, indexAxis: 'y',
-      plugins: { 
-        legend: { display: false },
-        datalabels: { display: true, anchor: 'end', align: 'right', color: '#1e293b', font: { size: 10, weight: 'bold' }, formatter: (value) => `${value} min` }
+  const odtCtx = document.getElementById('odtChart')?.getContext('2d');
+  if (odtCtx) {
+    charts.odtChart = new Chart(odtCtx, {
+      type: 'bar',
+      data: {
+        labels: top10Odt.map(([item]) => item),
+        datasets: [{ label: 'Total Minutes', data: top10Odt.map(([, time]) => time), backgroundColor: '#f59e0b' }]
       },
-      scales: { y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#e2e8f0' } }, x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } } }
-    }
-  });
+      options: {
+        responsive: true, maintainAspectRatio: true, indexAxis: 'y',
+        plugins: { 
+          legend: { display: false },
+          datalabels: { display: true, anchor: 'end', align: 'right', color: '#1e293b', font: { size: 10, weight: 'bold' }, formatter: (value) => ${value} min }
+        },
+        scales: { y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#e2e8f0' } }, x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } } }
+      }
+    });
+  }
 }
 
 function updateTables(records) {
-  // Sorted records by date desc
   const sortedRecords = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Operator Performance
@@ -338,15 +297,15 @@ function updateTables(records) {
       </tr>
     `;
   }).join('');
-  document.getElementById('operatorTable').innerHTML = opHtml || '<tr><td colspan="5" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+  if (document.getElementById('operatorTable')) document.getElementById('operatorTable').innerHTML = opHtml || '<tr><td colspan="5" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
 
   // History
   const histHtml = sortedRecords.slice(0, 10).map(r => {
     const odtTimes = typeof r.odt_actual_times === 'string' ? JSON.parse(r.odt_actual_times) : r.odt_actual_times || {};
-    const odtText = Object.entries(odtTimes).map(([item, time]) => `${item}: ${time}m`).join(', ') || '-';
+    const odtText = Object.entries(odtTimes).map(([item, time]) => ${item}: ${time}m).join(', ') || '-';
     
     const lsDurations = typeof r.line_stop_durations === 'string' ? JSON.parse(r.line_stop_durations) : r.line_stop_durations || {};
-    const lsText = Object.entries(lsDurations).map(([k, v]) => `${k.split(' - ')[1] || k}: ${v}m`).join(', ') || '-';
+    const lsText = Object.entries(lsDurations).map(([k, v]) => ${k.split(' - ')[1] || k}: ${v}m).join(', ') || '-';
 
     return `
       <tr class="border-b border-slate-200 ${parseFloat(r.oee) < 86 ? 'bg-red-50' : ''}">
@@ -363,14 +322,118 @@ function updateTables(records) {
       </tr>
     `;
   }).join('');
-  document.getElementById('historyTable').innerHTML = histHtml || '<tr><td colspan="10" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+  if (document.getElementById('historyTable')) document.getElementById('historyTable').innerHTML = histHtml || '<tr><td colspan="10" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
 }
 
 function updateFilters() {
   const mNames = [...new Set(machines.map(m => m.name))];
   const ops = [...new Set(oeeRecords.map(r => r.pic))];
-  document.getElementById('filterMachine').innerHTML = '<option value="">All Machines</option>' + mNames.map(m => `<option value="${m}">${m}</option>`).join('');
-  document.getElementById('filterOperator').innerHTML = '<option value="">All Operators</option>' + ops.map(o => `<option value="${o}">${o}</option>`).join('');
+  if(document.getElementById('filterMachine')) document.getElementById('filterMachine').innerHTML = '<option value="">All Machines</option>' + mNames.map(m => <option value="${m}">${m}</option>).join('');
+  if(document.getElementById('filterOperator')) document.getElementById('filterOperator').innerHTML = '<option value="">All Operators</option>' + ops.map(o => <option value="${o}">${o}</option>).join('');
+}
+
+function updateExportPreview() {
+  const mNames = [...new Set(machines.map(m => m.name))];
+  if(document.getElementById('exportMachine')) document.getElementById('exportMachine').innerHTML = '<option value="">All Machines</option>' + mNames.map(m => <option value="${m}">${m}</option>).join('');
+
+  const records = oeeRecords.slice(0, 10);
+  const html = records.map(r => `
+    <tr class="border-b border-slate-200">
+      <td class="py-3 px-2 text-slate-700">${r.date}</td>
+      <td class="py-3 px-2 text-slate-700">${r.shift}</td>
+      <td class="py-3 px-2 text-slate-700">${r.machine}</td>
+      <td class="py-3 px-2 text-slate-700">${r.pic}</td>
+      <td class="py-3 px-2 text-right text-slate-700">${parseInt(r.actual_output).toLocaleString()}</td>
+      <td class="py-3 px-2 text-right text-slate-700">${parseFloat(r.oee).toFixed(1)}%</td>
+      <td class="py-3 px-2 text-right text-slate-700">${parseFloat(r.oee_365).toFixed(1)}%</td>
+    </tr>
+  `).join('');
+  if(document.getElementById('exportPreview')) document.getElementById('exportPreview').innerHTML = html || '<tr><td colspan="7" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+}
+
+function updateMachineList() {
+  const html = machines.map(m => `
+    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 flex justify-between items-center mb-2">
+      <div>
+        <h4 class="font-bold">${m.name}</h4>
+        <p class="text-sm">${m.area} | Target: ${m.target_per_minute}/min</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="editMachine('${m.id}')" class="bg-blue-600 text-white px-3 py-1 rounded">Edit</button>
+        <button onclick="deleteMachine('${m.id}')" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+      </div>
+    </div>
+  `).join('');
+  const listEl = document.getElementById('machineList');
+  if (listEl) listEl.innerHTML = html || '<p>No machines</p>';
+}
+
+// ========================================== 
+// 3. MAIN LOGIC (ASYNC)
+// ========================================== 
+
+async function loadAllData() {
+  try {
+    if (!supabaseClient) {
+      console.error('Supabase client not initialized');
+      return;
+    }
+    const { data: machinesData, error: mError } = await supabaseClient.from('machines').select('*');
+    const { data: recordsData, error: rError } = await supabaseClient.from('oee_records').select('*');
+
+    if (mError) console.error('Machine load error:', mError);
+    if (rError) console.error('Records load error:', rError);
+
+    machines = machinesData || [];
+    oeeRecords = recordsData || [];
+
+    // Map to allData for compatibility
+    allData = [
+      ...machines.map(m => ({ ...m, type: 'machine' })),
+      ...oeeRecords.map(r => ({ ...r, type: 'oee_record' }))
+    ];
+
+    updateDashboard();
+    updateFilters();
+    updateExportPreview();
+    updateMachineList();
+  } catch (error) {
+    console.error('Error loading data:', error);
+    showToast('Failed to load data from database', 'error');
+  }
+}
+
+async function init() {
+  applyConfig(defaultConfig);
+  await loadAllData();
+}
+
+// ========================================== 
+// 4. EVENT HANDLERS
+// ========================================== 
+
+function switchTab(tab) {
+  if (currentTab === 'machines' && tab !== 'machines') {
+    lockMachineManagement();
+  }
+  
+  currentTab = tab;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  
+  document.getElementById(${tab}-tab).classList.remove('hidden');
+  document.getElementById(tab-${tab}).classList.add('active');
+  
+  if (tab === 'dashboard') {
+    updateDashboard();
+  } else if (tab === 'input') {
+    loadMachineOptions();
+  } else if (tab === 'machines') {
+    updateAuthStatus();
+    updateMachineList();
+  } else if (tab === 'export') {
+    updateExportPreview();
+  }
 }
 
 function applyFilters() {
@@ -389,7 +452,6 @@ function applyFilters() {
 }
 
 function updateDashboardWithData(data) {
-  // Re-run summary and charts with filtered data
   const records = data;
   if (records.length === 0) {
     document.getElementById('avgOeeStandard').textContent = '0%';
@@ -400,22 +462,34 @@ function updateDashboardWithData(data) {
   const avgOee = records.reduce((sum, r) => sum + (parseFloat(r.oee) || 0), 0) / records.length;
   const totalOut = records.reduce((sum, r) => sum + (parseInt(r.actual_output) || 0), 0);
   const avgOee365 = records.reduce((sum, r) => sum + (parseFloat(r.oee_365) || 0), 0) / records.length;
-  document.getElementById('avgOeeStandard').textContent = `${avgOee.toFixed(1)}%`;
+  document.getElementById('avgOeeStandard').textContent = ${avgOee.toFixed(1)}%;
   document.getElementById('totalOutput').textContent = totalOut.toLocaleString();
-  document.getElementById('avgOee365').textContent = `${avgOee365.toFixed(1)}%`;
+  document.getElementById('avgOee365').textContent = ${avgOee365.toFixed(1)}%;
   updateCharts(records);
   updateTables(records);
 }
 
-// OEE Input
 function loadMachineOptions() {
-  document.getElementById('inputMachine').innerHTML = '<option value="">Select Machine</option>' + machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  document.getElementById('inputMachine').innerHTML = '<option value="">Select Machine</option>' + machines.map(m => <option value="${m.name}">${m.name}</option>).join('');
 }
 
 function updateWorkTime() {
   const shift = document.getElementById('inputShift').value;
   const times = { 'SHIFT1': 510, 'SHIFT2': 450, 'SHIFT3': 510, 'LONGSHIFT_PAGI': 720, 'LONGSHIFT_MALAM': 720 };
-  document.getElementById('liveWorkTime').textContent = `${times[shift] || 0} min`;
+  document.getElementById('liveWorkTime').textContent = ${times[shift] || 0} min;
+  calculateOee();
+}
+
+function handleOdtCheck(checkbox) {
+  const input = document.querySelector(.odt-time[data-name="${checkbox.dataset.name}"]);
+  if(input) {
+    input.disabled = !checkbox.checked;
+    if (!checkbox.checked) input.value = '';
+    calculateOee();
+  }
+}
+
+function handleOdtTimeInput(input) {
   calculateOee();
 }
 
@@ -489,8 +563,8 @@ function updateTargetRecommendation() {
   
   const effectiveTime = workTime - totalDowntime;
   const recommendation = parseFloat(currentMachine.target_per_minute) * Math.max(0, effectiveTime);
-  document.getElementById('outputRecommendation').textContent = `${Math.round(recommendation).toLocaleString()} pcs`;
-  document.getElementById('timeLost').textContent = `${totalDowntime} min`;
+  document.getElementById('outputRecommendation').textContent = ${Math.round(recommendation).toLocaleString()} pcs;
+  document.getElementById('timeLost').textContent = ${totalDowntime} min;
 }
 
 function calculateOee() {
@@ -517,11 +591,11 @@ function calculateOee() {
 
   const oee365 = workTime > 0 ? (((workTime - totalOdt - totalLS) / workTime) * performance * quality) / 10000 : 0;
 
-  document.getElementById('liveA').textContent = `${availability.toFixed(1)}%`;
-  document.getElementById('liveP').textContent = `${performance.toFixed(1)}%`;
-  document.getElementById('liveQ').textContent = `${quality.toFixed(1)}%`;
-  document.getElementById('liveOEE').textContent = `${oee.toFixed(1)}%`;
-  document.getElementById('liveOEE365').textContent = `${oee365.toFixed(1)}%`;
+  document.getElementById('liveA').textContent = ${availability.toFixed(1)}%;
+  document.getElementById('liveP').textContent = ${performance.toFixed(1)}%;
+  document.getElementById('liveQ').textContent = ${quality.toFixed(1)}%;
+  document.getElementById('liveOEE').textContent = ${oee.toFixed(1)}%;
+  document.getElementById('liveOEE365').textContent = ${oee365.toFixed(1)}%;
 }
 
 async function saveOeeRecord(e) {
@@ -540,9 +614,9 @@ async function saveOeeRecord(e) {
     if (val > 0) {
       const name = i.dataset.item;
       lsDurations[name] = val;
-      const act = document.querySelector(`[data-item="${name}"].ls-mesin-action, [data-item="${name}"].ls-nonmesin-action`)?.value;
+      const act = document.querySelector([data-item="${name}"].ls-mesin-action, [data-item="${name}"].ls-nonmesin-action)?.value;
       if (act) lsActions[name] = act;
-      const wr = document.querySelector(`[data-item="${name}"].ls-mesin-wr`)?.value;
+      const wr = document.querySelector([data-item="${name}"].ls-mesin-wr)?.value;
       if (wr) wrNums[name] = wr;
     }
   });
@@ -586,7 +660,7 @@ async function saveOeeRecord(e) {
   }
 }
 
-// Machine Management
+// Machine Management Auth
 function authenticate() {
   if (document.getElementById('adminPassword').value === 'admin123') {
     isAuthenticated = true;
@@ -613,6 +687,18 @@ function showAddMachineForm() {
 
 function cancelMachineForm() {
   document.getElementById('addMachineForm').classList.add('hidden');
+}
+
+function addOdtRow() {
+  const container = document.getElementById('odtItemsContainer');
+  const row = document.createElement('div');
+  row.className = 'grid grid-cols-12 gap-2 mb-2';
+  row.innerHTML = <input type="text" class="odt-item-name col-span-8 px-2 py-1 border" placeholder="Name"><input type="number" class="odt-item-time col-span-3 px-2 py-1 border" placeholder="Time"><button type="button" onclick="this.parentElement.remove()" class="col-span-1 text-red-500">×</button>;
+  container.appendChild(row);
+}
+
+function removeOdtRow(btn) {
+  btn.parentElement.remove();
 }
 
 async function saveMachine(e) {
@@ -655,22 +741,6 @@ async function saveMachine(e) {
   } else showToast(error.message, 'error');
 }
 
-function updateMachineList() {
-  const html = machines.map(m => `
-    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 flex justify-between items-center mb-2">
-      <div>
-        <h4 class="font-bold">${m.name}</h4>
-        <p class="text-sm">${m.area} | Target: ${m.target_per_minute}/min</p>
-      </div>
-      <div class="flex gap-2">
-        <button onclick="editMachine('${m.id}')" class="bg-blue-600 text-white px-3 py-1 rounded">Edit</button>
-        <button onclick="deleteMachine('${m.id}')" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
-      </div>
-    </div>
-  `).join('');
-  document.getElementById('machineList').innerHTML = html || '<p>No machines</p>';
-}
-
 async function deleteMachine(id) {
   if (confirm('Delete machine?')) {
     const { error } = await supabaseClient.from('machines').delete().eq('id', id);
@@ -695,7 +765,7 @@ function editMachine(id) {
   items.forEach(it => {
     const row = document.createElement('div');
     row.className = 'grid grid-cols-12 gap-2 mb-2';
-    row.innerHTML = `<input type="text" class="odt-item-name col-span-8 px-2 py-1 border" value="${it.name}"><input type="number" class="odt-item-time col-span-3 px-2 py-1 border" value="${it.standardTime}"><button type="button" onclick="this.parentElement.remove()" class="col-span-1 text-red-500">×</button>`;
+    row.innerHTML = <input type="text" class="odt-item-name col-span-8 px-2 py-1 border" value="${it.name}"><input type="number" class="odt-item-time col-span-3 px-2 py-1 border" value="${it.standardTime}"><button type="button" onclick="this.parentElement.remove()" class="col-span-1 text-red-500">×</button>;
     container.appendChild(row);
   });
   
@@ -704,11 +774,40 @@ function editMachine(id) {
   document.getElementById('machineMinorStop').value = (typeof m.minor_stop_items === 'string' ? JSON.parse(m.minor_stop_items) : m.minor_stop_items || []).join(', ');
 }
 
-// Helpers for event handlers
+function exportData(format) {
+  // Simple export stub
+  const rows = [['Date', 'Machine', 'OEE']];
+  oeeRecords.forEach(r => rows.push([r.date, r.machine, r.oee]));
+  
+  let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "oee_data.csv");
+  document.body.appendChild(link);
+  link.click();
+}
+
+// ========================================== 
+// 5. EXPOSE HELPERS TO WINDOW (FOR HTML ONCLICK)
+// ========================================== 
+window.switchTab = switchTab;
+window.applyFilters = applyFilters;
+window.saveOeeRecord = saveOeeRecord;
+window.authenticate = authenticate;
+window.showAddMachineForm = showAddMachineForm;
+window.cancelMachineForm = cancelMachineForm;
+window.saveMachine = saveMachine;
+window.addOdtRow = addOdtRow;
+window.removeOdtRow = removeOdtRow;
+window.loadMachineTemplate = loadMachineTemplate;
+window.updateWorkTime = updateWorkTime;
+window.calculateOee = calculateOee;
 window.handleOdtCheck = handleOdtCheck;
 window.handleOdtTimeInput = handleOdtTimeInput;
 window.editMachine = editMachine;
 window.deleteMachine = deleteMachine;
+window.exportData = exportData;
 
-// Start app
-init();
+// Start app when DOM is ready
+document.addEventListener('DOMContentLoaded', init);
