@@ -32,12 +32,13 @@ const defaultConfig = {
 // 1. HELPER FUNCTIONS (DEFINED FIRST)
 // ========================================== 
 
-function showToast(message, type = 'success') {
+function showToast(message, type) {
+  if (!type) type = 'success';
   const toast = document.createElement('div');
-  toast.className = toast ${type};
+  toast.className = 'toast ' + type;
   toast.textContent = message;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  setTimeout(function() { toast.remove(); }, 3000);
 }
 
 function applyConfig(config) {
