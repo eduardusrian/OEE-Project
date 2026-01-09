@@ -55,7 +55,7 @@ function applyConfig(config) {
   const secondaryColor = config.secondary_action_color || defaultConfig.secondary_action_color;
   
   const appEl = document.getElementById('app');
-  if (appEl) appEl.style.background = linear-gradient(135deg, ${bgColor} 0%, ${surfaceColor} 100%);
+  if (appEl) appEl.style.background = `linear-gradient(135deg, ${bgColor} 0%, ${surfaceColor} 100%)`;
   
   const style = document.createElement('style');
   style.textContent = `
@@ -84,9 +84,9 @@ function updateDashboard() {
   const totalOut = records.reduce((sum, r) => sum + (parseInt(r.actual_output) || 0), 0);
   const avgOee365 = records.reduce((sum, r) => sum + (parseFloat(r.oee_365) || 0), 0) / records.length;
 
-  document.getElementById('avgOeeStandard').textContent = ${avgOee.toFixed(1)}%;
+  document.getElementById('avgOeeStandard').textContent = `${avgOee.toFixed(1)}%`;
   document.getElementById('totalOutput').textContent = totalOut.toLocaleString();
-  document.getElementById('avgOee365').textContent = ${avgOee365.toFixed(1)}%;
+  document.getElementById('avgOee365').textContent = `${avgOee365.toFixed(1)}%`;
 
   updateCharts(records);
   updateTables(records);
@@ -117,17 +117,15 @@ function updateCharts(records) {
         responsive: true,
         maintainAspectRatio: true,
         plugins: { 
-          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } },
-          datalabels: {
-            display: true,
-            align: 'top',
-            color: '#1e293b',
-            font: { size: 10, weight: 'bold' },
-            formatter: (value) => ${parseFloat(value).toFixed(1)}%
-          }
+          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } }
         },
         scales: {
-          y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, min: 0, max: 100 },
+          y: { 
+            ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, 
+            grid: { color: '#e2e8f0' }, 
+            min: 0, 
+            max: 100 
+          },
           x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
         }
       }
@@ -162,22 +160,18 @@ function updateCharts(records) {
         responsive: true,
         maintainAspectRatio: true,
         plugins: { 
-          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } },
-          datalabels: {
-            display: true, anchor: 'end', align: 'top', color: '#1e293b', font: { size: 10, weight: 'bold' },
-            formatter: (value) => ${parseFloat(value).toFixed(1)}%
-          },
-          annotation: {
-            annotations: {
-              targetLine: {
-                type: 'line', yMin: 88, yMax: 88, borderColor: '#ef4444', borderWidth: 2, borderDash: [6, 6],
-                label: { content: 'Target 88%', enabled: true, position: 'end', backgroundColor: '#ef4444', color: 'white', font: { size: 10, weight: 'bold' } }
-              }
-            }
-          }
+          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } }
         },
         scales: {
-          y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, min: 0, max: 100 },
+          y: { 
+            ticks: { 
+              color: '#64748b', 
+              callback: function(value) { return value + '%'; } 
+            }, 
+            grid: { color: '#e2e8f0' }, 
+            min: 0, 
+            max: 100 
+          },
           x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
         }
       }
@@ -207,14 +201,18 @@ function updateCharts(records) {
         responsive: true,
         maintainAspectRatio: true,
         plugins: { 
-          legend: { display: false },
-          datalabels: {
-            display: true, anchor: 'end', align: 'top', color: '#1e293b', font: { size: 11, weight: 'bold' },
-            formatter: (value) => ${parseFloat(value).toFixed(1)}%
-          }
+          legend: { display: false }
         },
         scales: {
-          y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' }, beginAtZero: true, max: 100 },
+          y: { 
+            ticks: { 
+              color: '#64748b', 
+              callback: function(value) { return value + '%'; } 
+            }, 
+            grid: { color: '#e2e8f0' }, 
+            beginAtZero: true, 
+            max: 100 
+          },
           x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
         }
       }
@@ -238,15 +236,35 @@ function updateCharts(records) {
       type: 'bar',
       data: {
         labels: top10Odt.map(([item]) => item),
-        datasets: [{ label: 'Total Minutes', data: top10Odt.map(([, time]) => time), backgroundColor: '#f59e0b' }]
+        datasets: [{ 
+          label: 'Total Minutes', 
+          data: top10Odt.map(([, time]) => time), 
+          backgroundColor: '#f59e0b' 
+        }]
       },
       options: {
-        responsive: true, maintainAspectRatio: true, indexAxis: 'y',
+        responsive: true, 
+        maintainAspectRatio: true, 
+        indexAxis: 'y',
         plugins: { 
-          legend: { display: false },
-          datalabels: { display: true, anchor: 'end', align: 'right', color: '#1e293b', font: { size: 10, weight: 'bold' }, formatter: (value) => ${value} min }
+          legend: { display: false }
         },
-        scales: { y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#e2e8f0' } }, x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } } }
+        scales: { 
+          y: { 
+            ticks: { 
+              color: '#64748b', 
+              font: { size: 10 } 
+            }, 
+            grid: { color: '#e2e8f0' } 
+          }, 
+          x: { 
+            ticks: { 
+              color: '#64748b',
+              callback: function(value) { return value + ' min'; }
+            }, 
+            grid: { color: '#e2e8f0' } 
+          } 
+        }
       }
     });
   }
@@ -269,7 +287,8 @@ function updateTables(records) {
     const statusColor = pct < 100 ? 'text-red-600 font-bold' : 'text-green-600 font-bold';
     
     // Average Reduce Speed
-    let totalRS = 0; let rsCount = 0;
+    let totalRS = 0; 
+    let rsCount = 0;
     data.records.forEach(r => {
       const machine = machines.find(m => m.name === r.machine);
       if (machine) {
@@ -298,15 +317,18 @@ function updateTables(records) {
       </tr>
     `;
   }).join('');
-  if (document.getElementById('operatorTable')) document.getElementById('operatorTable').innerHTML = opHtml || '<tr><td colspan="5" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+  
+  if (document.getElementById('operatorTable')) {
+    document.getElementById('operatorTable').innerHTML = opHtml || '<tr><td colspan="5" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+  }
 
   // History
   const histHtml = sortedRecords.slice(0, 10).map(r => {
     const odtTimes = typeof r.odt_actual_times === 'string' ? JSON.parse(r.odt_actual_times) : r.odt_actual_times || {};
-    const odtText = Object.entries(odtTimes).map(([item, time]) => ${item}: ${time}m).join(', ') || '-';
+    const odtText = Object.entries(odtTimes).map(([item, time]) => `${item}: ${time}m`).join(', ') || '-';
     
     const lsDurations = typeof r.line_stop_durations === 'string' ? JSON.parse(r.line_stop_durations) : r.line_stop_durations || {};
-    const lsText = Object.entries(lsDurations).map(([k, v]) => ${k.split(' - ')[1] || k}: ${v}m).join(', ') || '-';
+    const lsText = Object.entries(lsDurations).map(([k, v]) => `${k.split(' - ')[1] || k}: ${v}m`).join(', ') || '-';
 
     return `
       <tr class="border-b border-slate-200 ${parseFloat(r.oee) < 86 ? 'bg-red-50' : ''}">
@@ -323,19 +345,34 @@ function updateTables(records) {
       </tr>
     `;
   }).join('');
-  if (document.getElementById('historyTable')) document.getElementById('historyTable').innerHTML = histHtml || '<tr><td colspan="10" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+  
+  if (document.getElementById('historyTable')) {
+    document.getElementById('historyTable').innerHTML = histHtml || '<tr><td colspan="10" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+  }
 }
 
 function updateFilters() {
   const mNames = [...new Set(machines.map(m => m.name))];
   const ops = [...new Set(oeeRecords.map(r => r.pic))];
-  if(document.getElementById('filterMachine')) document.getElementById('filterMachine').innerHTML = '<option value="">All Machines</option>' + mNames.map(m => <option value="${m}">${m}</option>).join('');
-  if(document.getElementById('filterOperator')) document.getElementById('filterOperator').innerHTML = '<option value="">All Operators</option>' + ops.map(o => <option value="${o}">${o}</option>).join('');
+  
+  if(document.getElementById('filterMachine')) {
+    document.getElementById('filterMachine').innerHTML = '<option value="">All Machines</option>' + 
+      mNames.map(m => `<option value="${m}">${m}</option>`).join('');
+  }
+  
+  if(document.getElementById('filterOperator')) {
+    document.getElementById('filterOperator').innerHTML = '<option value="">All Operators</option>' + 
+      ops.map(o => `<option value="${o}">${o}</option>`).join('');
+  }
 }
 
 function updateExportPreview() {
   const mNames = [...new Set(machines.map(m => m.name))];
-  if(document.getElementById('exportMachine')) document.getElementById('exportMachine').innerHTML = '<option value="">All Machines</option>' + mNames.map(m => <option value="${m}">${m}</option>).join('');
+  
+  if(document.getElementById('exportMachine')) {
+    document.getElementById('exportMachine').innerHTML = '<option value="">All Machines</option>' + 
+      mNames.map(m => `<option value="${m}">${m}</option>`).join('');
+  }
 
   const records = oeeRecords.slice(0, 10);
   const html = records.map(r => `
@@ -349,7 +386,10 @@ function updateExportPreview() {
       <td class="py-3 px-2 text-right text-slate-700">${parseFloat(r.oee_365).toFixed(1)}%</td>
     </tr>
   `).join('');
-  if(document.getElementById('exportPreview')) document.getElementById('exportPreview').innerHTML = html || '<tr><td colspan="7" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+  
+  if(document.getElementById('exportPreview')) {
+    document.getElementById('exportPreview').innerHTML = html || '<tr><td colspan="7" class="py-3 px-2 text-slate-500 text-center">No data</td></tr>';
+  }
 }
 
 function updateMachineList() {
@@ -365,8 +405,11 @@ function updateMachineList() {
       </div>
     </div>
   `).join('');
+  
   const listEl = document.getElementById('machineList');
-  if (listEl) listEl.innerHTML = html || '<p>No machines</p>';
+  if (listEl) {
+    listEl.innerHTML = html || '<p>No machines</p>';
+  }
 }
 
 // ========================================== 
@@ -379,6 +422,7 @@ async function loadAllData() {
       console.error('Supabase client not initialized');
       return;
     }
+    
     const { data: machinesData, error: mError } = await supabaseClient.from('machines').select('*');
     const { data: recordsData, error: rError } = await supabaseClient.from('oee_records').select('*');
 
@@ -422,8 +466,8 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   
-  document.getElementById(${tab}-tab).classList.remove('hidden');
-  document.getElementById(tab-${tab}).classList.add('active');
+  document.getElementById(`${tab}-tab`).classList.remove('hidden');
+  document.getElementById(`tab-${tab}`).classList.add('active');
   
   if (tab === 'dashboard') {
     updateDashboard();
@@ -438,10 +482,10 @@ function switchTab(tab) {
 }
 
 function applyFilters() {
-  const m = document.getElementById('filterMachine').value;
-  const o = document.getElementById('filterOperator').value;
-  const start = document.getElementById('filterStartDate').value;
-  const end = document.getElementById('filterEndDate').value;
+  const m = document.getElementById('filterMachine')?.value;
+  const o = document.getElementById('filterOperator')?.value;
+  const start = document.getElementById('filterStartDate')?.value;
+  const end = document.getElementById('filterEndDate')?.value;
 
   let filtered = oeeRecords;
   if (m) filtered = filtered.filter(r => r.machine === m);
@@ -460,29 +504,47 @@ function updateDashboardWithData(data) {
     document.getElementById('avgOee365').textContent = '0%';
     return;
   }
+  
   const avgOee = records.reduce((sum, r) => sum + (parseFloat(r.oee) || 0), 0) / records.length;
   const totalOut = records.reduce((sum, r) => sum + (parseInt(r.actual_output) || 0), 0);
   const avgOee365 = records.reduce((sum, r) => sum + (parseFloat(r.oee_365) || 0), 0) / records.length;
-  document.getElementById('avgOeeStandard').textContent = ${avgOee.toFixed(1)}%;
+  
+  document.getElementById('avgOeeStandard').textContent = `${avgOee.toFixed(1)}%`;
   document.getElementById('totalOutput').textContent = totalOut.toLocaleString();
-  document.getElementById('avgOee365').textContent = ${avgOee365.toFixed(1)}%;
+  document.getElementById('avgOee365').textContent = `${avgOee365.toFixed(1)}%`;
+  
   updateCharts(records);
   updateTables(records);
 }
 
 function loadMachineOptions() {
-  document.getElementById('inputMachine').innerHTML = '<option value="">Select Machine</option>' + machines.map(m => <option value="${m.name}">${m.name}</option>).join('');
+  const inputMachine = document.getElementById('inputMachine');
+  if (inputMachine) {
+    inputMachine.innerHTML = '<option value="">Select Machine</option>' + 
+      machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  }
 }
 
 function updateWorkTime() {
   const shift = document.getElementById('inputShift').value;
-  const times = { 'SHIFT1': 510, 'SHIFT2': 450, 'SHIFT3': 510, 'LONGSHIFT_PAGI': 720, 'LONGSHIFT_MALAM': 720 };
-  document.getElementById('liveWorkTime').textContent = ${times[shift] || 0} min;
+  const times = { 
+    'SHIFT1': 510, 
+    'SHIFT2': 450, 
+    'SHIFT3': 510, 
+    'LONGSHIFT_PAGI': 720, 
+    'LONGSHIFT_MALAM': 720 
+  };
+  
+  const liveWorkTime = document.getElementById('liveWorkTime');
+  if (liveWorkTime) {
+    liveWorkTime.textContent = `${times[shift] || 0} min`;
+  }
+  
   calculateOee();
 }
 
 function handleOdtCheck(checkbox) {
-  const input = document.querySelector(.odt-time[data-name="${checkbox.dataset.name}"]);
+  const input = document.querySelector(`.odt-time[data-name="${checkbox.dataset.name}"]`);
   if(input) {
     input.disabled = !checkbox.checked;
     if (!checkbox.checked) input.value = '';
@@ -516,7 +578,11 @@ function loadMachineTemplate() {
       </div>
     `;
   });
-  document.getElementById('odtSection').innerHTML = odtHtml + '</div>';
+  
+  const odtSection = document.getElementById('odtSection');
+  if (odtSection) {
+    odtSection.innerHTML = odtHtml + '</div>';
+  }
 
   // LS Mesin
   const lsMesin = typeof currentMachine.line_stop_mesin === 'string' ? JSON.parse(currentMachine.line_stop_mesin) : currentMachine.line_stop_mesin || [];
@@ -533,7 +599,11 @@ function loadMachineTemplate() {
       </div>
     `;
   });
-  document.getElementById('lineStopMesinSection').innerHTML = lsHtml + '</div>';
+  
+  const lineStopMesinSection = document.getElementById('lineStopMesinSection');
+  if (lineStopMesinSection) {
+    lineStopMesinSection.innerHTML = lsHtml + '</div>';
+  }
 
   // LS Non Mesin
   const lsNon = typeof currentMachine.line_stop_non_mesin === 'string' ? JSON.parse(currentMachine.line_stop_non_mesin) : currentMachine.line_stop_non_mesin || [];
@@ -549,39 +619,73 @@ function loadMachineTemplate() {
       </div>
     `;
   });
-  document.getElementById('lineStopNonMesinSection').innerHTML = lsNonHtml + '</div>';
+  
+  const lineStopNonMesinSection = document.getElementById('lineStopNonMesinSection');
+  if (lineStopNonMesinSection) {
+    lineStopNonMesinSection.innerHTML = lsNonHtml + '</div>';
+  }
 
   calculateOee();
 }
 
 function updateTargetRecommendation() {
   if (!currentMachine) return;
+  
   const shift = document.getElementById('inputShift').value;
-  const workTime = { 'SHIFT1': 510, 'SHIFT2': 450, 'SHIFT3': 510, 'LONGSHIFT_PAGI': 720, 'LONGSHIFT_MALAM': 720 }[shift] || 0;
+  const workTime = { 
+    'SHIFT1': 510, 
+    'SHIFT2': 450, 
+    'SHIFT3': 510, 
+    'LONGSHIFT_PAGI': 720, 
+    'LONGSHIFT_MALAM': 720 
+  }[shift] || 0;
   
   let totalDowntime = 0;
-  document.querySelectorAll('.odt-time:not(:disabled), .ls-mesin-duration, .ls-nonmesin-duration').forEach(i => totalDowntime += (parseFloat(i.value) || 0));
+  document.querySelectorAll('.odt-time:not(:disabled), .ls-mesin-duration, .ls-nonmesin-duration').forEach(i => {
+    totalDowntime += (parseFloat(i.value) || 0);
+  });
   
   const effectiveTime = workTime - totalDowntime;
   const recommendation = parseFloat(currentMachine.target_per_minute) * Math.max(0, effectiveTime);
-  document.getElementById('outputRecommendation').textContent = ${Math.round(recommendation).toLocaleString()} pcs;
-  document.getElementById('timeLost').textContent = ${totalDowntime} min;
+  
+  const outputRecommendation = document.getElementById('outputRecommendation');
+  const timeLost = document.getElementById('timeLost');
+  
+  if (outputRecommendation) {
+    outputRecommendation.textContent = `${Math.round(recommendation).toLocaleString()} pcs`;
+  }
+  
+  if (timeLost) {
+    timeLost.textContent = `${totalDowntime} min`;
+  }
 }
 
 function calculateOee() {
   if (!currentMachine) return;
+  
   updateTargetRecommendation();
 
   const shift = document.getElementById('inputShift').value;
-  const workTime = { 'SHIFT1': 510, 'SHIFT2': 450, 'SHIFT3': 510, 'LONGSHIFT_PAGI': 720, 'LONGSHIFT_MALAM': 720 }[shift] || 0;
+  const workTime = { 
+    'SHIFT1': 510, 
+    'SHIFT2': 450, 
+    'SHIFT3': 510, 
+    'LONGSHIFT_PAGI': 720, 
+    'LONGSHIFT_MALAM': 720 
+  }[shift] || 0;
+  
   const actualOutput = parseFloat(document.getElementById('inputOutput').value) || 0;
   const reject = parseFloat(document.getElementById('inputReject').value) || 0;
 
   let totalOdt = 0;
-  document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => totalOdt += Math.min(parseFloat(i.value) || 0, parseFloat(i.dataset.standard)));
+  document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => {
+    totalOdt += Math.min(parseFloat(i.value) || 0, parseFloat(i.dataset.standard));
+  });
 
   let totalLS = 0;
-  document.querySelectorAll('.ls-mesin-duration, .ls-nonmesin-duration').forEach(i => totalLS += (parseFloat(i.value) || 0));
+  document.querySelectorAll('.ls-mesin-duration, .ls-nonmesin-duration').forEach(i => {
+    totalLS += (parseFloat(i.value) || 0);
+  });
 
   const targetOutput = parseFloat(currentMachine.target_per_minute) * Math.max(0, workTime - totalOdt - totalLS);
   
@@ -592,32 +696,55 @@ function calculateOee() {
 
   const oee365 = workTime > 0 ? (((workTime - totalOdt - totalLS) / workTime) * performance * quality) / 10000 : 0;
 
-  document.getElementById('liveA').textContent = ${availability.toFixed(1)}%;
-  document.getElementById('liveP').textContent = ${performance.toFixed(1)}%;
-  document.getElementById('liveQ').textContent = ${quality.toFixed(1)}%;
-  document.getElementById('liveOEE').textContent = ${oee.toFixed(1)}%;
-  document.getElementById('liveOEE365').textContent = ${oee365.toFixed(1)}%;
+  const liveA = document.getElementById('liveA');
+  const liveP = document.getElementById('liveP');
+  const liveQ = document.getElementById('liveQ');
+  const liveOEE = document.getElementById('liveOEE');
+  const liveOEE365 = document.getElementById('liveOEE365');
+  
+  if (liveA) liveA.textContent = `${availability.toFixed(1)}%`;
+  if (liveP) liveP.textContent = `${performance.toFixed(1)}%`;
+  if (liveQ) liveQ.textContent = `${quality.toFixed(1)}%`;
+  if (liveOEE) liveOEE.textContent = `${oee.toFixed(1)}%`;
+  if (liveOEE365) liveOEE365.textContent = `${oee365.toFixed(1)}%`;
 }
 
 async function saveOeeRecord(e) {
   e.preventDefault();
-  if (!currentMachine) return showToast('Select Machine', 'error');
+  
+  if (!currentMachine) {
+    showToast('Select Machine', 'error');
+    return;
+  }
 
   const shift = document.getElementById('inputShift').value;
-  const workTime = { 'SHIFT1': 510, 'SHIFT2': 450, 'SHIFT3': 510, 'LONGSHIFT_PAGI': 720, 'LONGSHIFT_MALAM': 720 }[shift] || 0;
+  const workTime = { 
+    'SHIFT1': 510, 
+    'SHIFT2': 450, 
+    'SHIFT3': 510, 
+    'LONGSHIFT_PAGI': 720, 
+    'LONGSHIFT_MALAM': 720 
+  }[shift] || 0;
 
   const odtTimes = {};
-  document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => odtTimes[i.dataset.name] = parseFloat(i.value) || 0);
+  document.querySelectorAll('.odt-time:not(:disabled)').forEach(i => {
+    odtTimes[i.dataset.name] = parseFloat(i.value) || 0;
+  });
   
-  const lsDurations = {}; const lsActions = {}; const wrNums = {};
+  const lsDurations = {}; 
+  const lsActions = {}; 
+  const wrNums = {};
+  
   document.querySelectorAll('.ls-mesin-duration, .ls-nonmesin-duration').forEach(i => {
     const val = parseFloat(i.value) || 0;
     if (val > 0) {
       const name = i.dataset.item;
       lsDurations[name] = val;
-      const act = document.querySelector([data-item="${name}"].ls-mesin-action, [data-item="${name}"].ls-nonmesin-action)?.value;
+      
+      const act = document.querySelector(`[data-item="${name}"].ls-mesin-action, [data-item="${name}"].ls-nonmesin-action`)?.value;
       if (act) lsActions[name] = act;
-      const wr = document.querySelector([data-item="${name}"].ls-mesin-wr)?.value;
+      
+      const wr = document.querySelector(`[data-item="${name}"].ls-mesin-wr`)?.value;
       if (wr) wrNums[name] = wr;
     }
   });
@@ -637,7 +764,11 @@ async function saveOeeRecord(e) {
     batch: document.getElementById('inputBatch').value,
     actual_output: parseFloat(document.getElementById('inputOutput').value) || 0,
     reject: parseFloat(document.getElementById('inputReject').value) || 0,
-    availability, performance, quality, oee, oee_365: oee365,
+    availability, 
+    performance, 
+    quality, 
+    oee, 
+    oee_365: oee365,
     odt_actual_times: odtTimes,
     line_stop_durations: lsDurations,
     line_stop_actions: lsActions,
@@ -646,11 +777,13 @@ async function saveOeeRecord(e) {
   };
 
   const btn = document.getElementById('saveBtn');
-  btn.disabled = true; btn.innerHTML = 'Saving...';
+  btn.disabled = true; 
+  btn.innerHTML = 'Saving...';
 
   const { error } = await supabaseClient.from('oee_records').insert([record]);
   
-  btn.disabled = false; btn.innerHTML = 'Save OEE Record';
+  btn.disabled = false; 
+  btn.innerHTML = 'Save OEE Record';
 
   if (!error) {
     showToast('Success');
@@ -668,7 +801,9 @@ function authenticate() {
     document.getElementById('authSection').classList.add('hidden');
     document.getElementById('machineManagement').classList.remove('hidden');
     updateMachineList();
-  } else showToast('Wrong Password', 'error');
+  } else {
+    showToast('Wrong Password', 'error');
+  }
 }
 
 function lockMachineManagement() {
@@ -678,7 +813,10 @@ function lockMachineManagement() {
 }
 
 function updateAuthStatus() {
-  document.getElementById('authStatus').textContent = isAuthenticated ? '🔓 Unlocked' : '🔒 Locked';
+  const authStatus = document.getElementById('authStatus');
+  if (authStatus) {
+    authStatus.textContent = isAuthenticated ? '🔓 Unlocked' : '🔒 Locked';
+  }
 }
 
 function showAddMachineForm() {
@@ -694,7 +832,11 @@ function addOdtRow() {
   const container = document.getElementById('odtItemsContainer');
   const row = document.createElement('div');
   row.className = 'grid grid-cols-12 gap-2 mb-2';
-  row.innerHTML = <input type="text" class="odt-item-name col-span-8 px-2 py-1 border" placeholder="Name"><input type="number" class="odt-item-time col-span-3 px-2 py-1 border" placeholder="Time"><button type="button" onclick="this.parentElement.remove()" class="col-span-1 text-red-500">×</button>;
+  row.innerHTML = `
+    <input type="text" class="odt-item-name col-span-8 px-2 py-1 border" placeholder="Name">
+    <input type="number" class="odt-item-time col-span-3 px-2 py-1 border" placeholder="Time">
+    <button type="button" onclick="this.parentElement.remove()" class="col-span-1 text-red-500">×</button>
+  `;
   container.appendChild(row);
 }
 
@@ -739,20 +881,26 @@ async function saveMachine(e) {
     showToast('Machine Saved');
     cancelMachineForm();
     await loadAllData();
-  } else showToast(error.message, 'error');
+  } else {
+    showToast(error.message, 'error');
+  }
 }
 
 async function deleteMachine(id) {
   if (confirm('Delete machine?')) {
     const { error } = await supabaseClient.from('machines').delete().eq('id', id);
-    if (!error) await loadAllData();
-    else showToast(error.message, 'error');
+    if (!error) {
+      await loadAllData();
+    } else {
+      showToast(error.message, 'error');
+    }
   }
 }
 
 function editMachine(id) {
   const m = machines.find(x => x.id === id);
   if (!m) return;
+  
   showAddMachineForm();
   document.getElementById('editMachineId').value = m.id;
   document.getElementById('machineName').value = m.name;
@@ -763,10 +911,15 @@ function editMachine(id) {
   const items = typeof m.odt_items === 'string' ? JSON.parse(m.odt_items) : m.odt_items || [];
   const container = document.getElementById('odtItemsContainer');
   container.innerHTML = '';
+  
   items.forEach(it => {
     const row = document.createElement('div');
     row.className = 'grid grid-cols-12 gap-2 mb-2';
-    row.innerHTML = <input type="text" class="odt-item-name col-span-8 px-2 py-1 border" value="${it.name}"><input type="number" class="odt-item-time col-span-3 px-2 py-1 border" value="${it.standardTime}"><button type="button" onclick="this.parentElement.remove()" class="col-span-1 text-red-500">×</button>;
+    row.innerHTML = `
+      <input type="text" class="odt-item-name col-span-8 px-2 py-1 border" value="${it.name}">
+      <input type="number" class="odt-item-time col-span-3 px-2 py-1 border" value="${it.standardTime}">
+      <button type="button" onclick="this.parentElement.remove()" class="col-span-1 text-red-500">×</button>
+    `;
     container.appendChild(row);
   });
   
@@ -776,9 +929,19 @@ function editMachine(id) {
 }
 
 function exportData(format) {
-  // Simple export stub
-  const rows = [['Date', 'Machine', 'OEE']];
-  oeeRecords.forEach(r => rows.push([r.date, r.machine, r.oee]));
+  const rows = [['Date', 'Shift', 'Machine', 'Operator', 'Actual Output', 'OEE', 'OEE (365)']];
+  
+  oeeRecords.forEach(r => {
+    rows.push([
+      r.date,
+      r.shift,
+      r.machine,
+      r.pic,
+      r.actual_output,
+      `${r.oee}%`,
+      `${r.oee_365}%`
+    ]);
+  });
   
   let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
   const encodedUri = encodeURI(csvContent);
