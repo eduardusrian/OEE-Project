@@ -96,7 +96,7 @@ function updateCharts(records) {
   const sortedRecords = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
   const last10 = sortedRecords.slice(-10);
   
-  // OEE Trend - Standard vs 365
+  // OEE Trend - Hanya OEE Standard
   if (charts.oeeTrend) charts.oeeTrend.destroy();
   const trendCtx = document.getElementById('oeeTrendChart')?.getContext('2d');
   if (trendCtx) {
@@ -111,15 +111,8 @@ function updateCharts(records) {
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             tension: 0.4,
-            fill: false
-          },
-          {
-            label: 'OEE 365',
-            data: last10.map(r => r.oee_365),
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            tension: 0.4,
-            fill: false
+            fill: true,
+            borderWidth: 3
           }
         ]
       },
@@ -127,22 +120,42 @@ function updateCharts(records) {
         responsive: true,
         maintainAspectRatio: true,
         plugins: { 
-          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } }
+          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `OEE: ${context.parsed.y.toFixed(1)}%`;
+              }
+            }
+          }
         },
         scales: {
           y: { 
             ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, 
             grid: { color: '#e2e8f0' }, 
             min: 0, 
-            max: 100 
+            max: 100,
+            title: {
+              display: true,
+              text: 'OEE (%)',
+              color: '#64748b'
+            }
           },
-          x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
+          x: { 
+            ticks: { color: '#64748b' }, 
+            grid: { color: '#e2e8f0' },
+            title: {
+              display: true,
+              text: 'Date',
+              color: '#64748b'
+            }
+          }
         }
       }
     });
   }
 
-  // OEE per Machine dengan target line
+  // OEE per Machine dengan target line 88%
   const machineData = {};
   records.forEach(r => {
     if (!machineData[r.machine]) machineData[r.machine] = [];
@@ -189,14 +202,21 @@ function updateCharts(records) {
           data: machineAvg.map(m => m.avg),
           backgroundColor: '#10b981',
           borderColor: '#047857',
-          borderWidth: 1
+          borderWidth: 2
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: true,
         plugins: { 
-          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } }
+          legend: { labels: { color: '#1e293b', font: { size: 12, weight: 'bold' } } },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `OEE: ${context.parsed.y.toFixed(1)}%`;
+              }
+            }
+          }
         },
         scales: {
           y: { 
@@ -206,9 +226,22 @@ function updateCharts(records) {
             }, 
             grid: { color: '#e2e8f0' }, 
             min: 0, 
-            max: 100 
+            max: 100,
+            title: {
+              display: true,
+              text: 'OEE (%)',
+              color: '#64748b'
+            }
           },
-          x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
+          x: { 
+            ticks: { color: '#64748b' }, 
+            grid: { color: '#e2e8f0' },
+            title: {
+              display: true,
+              text: 'Machine',
+              color: '#64748b'
+            }
+          }
         }
       },
       plugins: [targetLine]
@@ -238,7 +271,14 @@ function updateCharts(records) {
         responsive: true,
         maintainAspectRatio: true,
         plugins: { 
-          legend: { display: false }
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
+              }
+            }
+          }
         },
         scales: {
           y: { 
@@ -248,9 +288,22 @@ function updateCharts(records) {
             }, 
             grid: { color: '#e2e8f0' }, 
             beginAtZero: true, 
-            max: 100 
+            max: 100,
+            title: {
+              display: true,
+              text: 'Percentage (%)',
+              color: '#64748b'
+            }
           },
-          x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
+          x: { 
+            ticks: { color: '#64748b' }, 
+            grid: { color: '#e2e8f0' },
+            title: {
+              display: true,
+              text: 'Metrics',
+              color: '#64748b'
+            }
+          }
         }
       }
     });
@@ -272,7 +325,7 @@ function updateCharts(records) {
     charts.odtChart = new Chart(odtCtx, {
       type: 'bar',
       data: {
-        labels: top10Odt.map(([item]) => item),
+        labels: top10Odt.map(([item]) => item.length > 20 ? item.substring(0, 20) + '...' : item),
         datasets: [{ 
           label: 'Total Minutes', 
           data: top10Odt.map(([, time]) => time), 
@@ -284,73 +337,11 @@ function updateCharts(records) {
         maintainAspectRatio: true, 
         indexAxis: 'y',
         plugins: { 
-          legend: { display: false }
-        },
-        scales: { 
-          y: { 
-            ticks: { 
-              color: '#64748b', 
-              font: { size: 10 } 
-            }, 
-            grid: { color: '#e2e8f0' } 
-          }, 
-          x: { 
-            ticks: { 
-              color: '#64748b',
-              callback: function(value) { return value + ' min'; }
-            }, 
-            grid: { color: '#e2e8f0' } 
-          } 
-        }
-      }
-    });
-  }
-
-  // Top 10 Line Stop Mesin
-  const lsData = {};
-  records.forEach(r => {
-    const lsDurations = typeof r.line_stop_durations === 'string' ? JSON.parse(r.line_stop_durations) : r.line_stop_durations || {};
-    const lsActions = typeof r.line_stop_actions === 'string' ? JSON.parse(r.line_stop_actions) : r.line_stop_actions || {};
-    
-    Object.entries(lsDurations).forEach(([item, duration]) => {
-      // Cek apakah ini line stop mesin (bukan non-mesin atau ODT extra)
-      const action = lsActions[item] || '';
-      const isMesinStop = !item.includes('(Extra)') && 
-                         (action.includes('MESIN') || 
-                          action.includes('MACHINE') || 
-                          !action.includes('MATERIAL') && !action.includes('OPERATOR'));
-      
-      if (isMesinStop) {
-        lsData[item] = (lsData[item] || 0) + parseFloat(duration);
-      }
-    });
-  });
-  
-  const top10LS = Object.entries(lsData).sort((a, b) => b[1] - a[1]).slice(0, 10);
-
-  if (charts.lsChart) charts.lsChart.destroy();
-  const lsCtx = document.getElementById('lsChart')?.getContext('2d');
-  if (lsCtx) {
-    charts.lsChart = new Chart(lsCtx, {
-      type: 'bar',
-      data: {
-        labels: top10LS.map(([item]) => item.length > 20 ? item.substring(0, 20) + '...' : item),
-        datasets: [{ 
-          label: 'Total Minutes', 
-          data: top10LS.map(([, duration]) => duration), 
-          backgroundColor: '#ef4444' 
-        }]
-      },
-      options: {
-        responsive: true, 
-        maintainAspectRatio: true, 
-        indexAxis: 'y',
-        plugins: { 
           legend: { display: false },
           tooltip: {
             callbacks: {
               label: function(context) {
-                const fullName = top10LS[context.dataIndex][0];
+                const fullName = top10Odt[context.dataIndex][0];
                 return `${fullName}: ${context.parsed.x} min`;
               }
             }
@@ -369,7 +360,170 @@ function updateCharts(records) {
               color: '#64748b',
               callback: function(value) { return value + ' min'; }
             }, 
+            grid: { color: '#e2e8f0' },
+            title: {
+              display: true,
+              text: 'Total Minutes',
+              color: '#64748b'
+            }
+          } 
+        }
+      }
+    });
+  }
+
+  // Top 10 Line Stop Mesin
+  const lsMesinData = {};
+  // Top 10 Line Stop Non Mesin
+  const lsNonMesinData = {};
+  
+  records.forEach(r => {
+    const lsDurations = typeof r.line_stop_durations === 'string' ? JSON.parse(r.line_stop_durations) : r.line_stop_durations || {};
+    const lsActions = typeof r.line_stop_actions === 'string' ? JSON.parse(r.line_stop_actions) : r.line_stop_actions || {};
+    
+    Object.entries(lsDurations).forEach(([item, duration]) => {
+      const action = lsActions[item] || '';
+      const durationValue = parseFloat(duration) || 0;
+      
+      if (durationValue > 0) {
+        // Cek apakah termasuk Line Stop Mesin
+        const isMesinStop = 
+          item.toLowerCase().includes('breakdown') ||
+          item.toLowerCase().includes('motor') ||
+          item.toLowerCase().includes('conveyor') ||
+          item.toLowerCase().includes('sensor') ||
+          item.toLowerCase().includes('plc') ||
+          item.toLowerCase().includes('tool') ||
+          item.toLowerCase().includes('calibration') ||
+          item.toLowerCase().includes('maintenance') ||
+          item.toLowerCase().includes('electrical') ||
+          item.toLowerCase().includes('mechanical') ||
+          item.toLowerCase().includes('software') ||
+          action.toLowerCase().includes('repair') ||
+          action.toLowerCase().includes('replace') ||
+          action.toLowerCase().includes('maintenance') ||
+          action.toLowerCase().includes('fix');
+        
+        if (isMesinStop) {
+          lsMesinData[item] = (lsMesinData[item] || 0) + durationValue;
+        } else {
+          // Line Stop Non Mesin
+          lsNonMesinData[item] = (lsNonMesinData[item] || 0) + durationValue;
+        }
+      }
+    });
+  });
+  
+  // Urutkan dan ambil top 10
+  const top10LSMesin = Object.entries(lsMesinData).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const top10LSNonMesin = Object.entries(lsNonMesinData).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+  // Chart Line Stop Mesin
+  if (charts.lsMesinChart) charts.lsMesinChart.destroy();
+  const lsMesinCtx = document.getElementById('lsMesinChart')?.getContext('2d');
+  if (lsMesinCtx) {
+    charts.lsMesinChart = new Chart(lsMesinCtx, {
+      type: 'bar',
+      data: {
+        labels: top10LSMesin.map(([item]) => item.length > 25 ? item.substring(0, 25) + '...' : item),
+        datasets: [{ 
+          label: 'Total Minutes', 
+          data: top10LSMesin.map(([, duration]) => duration), 
+          backgroundColor: '#ef4444',
+          borderColor: '#dc2626',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true, 
+        maintainAspectRatio: true, 
+        indexAxis: 'y',
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const fullName = top10LSMesin[context.dataIndex][0];
+                return `${fullName}: ${context.parsed.x} min`;
+              }
+            }
+          }
+        },
+        scales: { 
+          y: { 
+            ticks: { 
+              color: '#64748b', 
+              font: { size: 10 } 
+            }, 
             grid: { color: '#e2e8f0' } 
+          }, 
+          x: { 
+            ticks: { 
+              color: '#64748b',
+              callback: function(value) { return value + ' min'; }
+            }, 
+            grid: { color: '#e2e8f0' },
+            title: {
+              display: true,
+              text: 'Total Minutes',
+              color: '#64748b'
+            }
+          } 
+        }
+      }
+    });
+  }
+
+  // Chart Line Stop Non Mesin
+  if (charts.lsNonMesinChart) charts.lsNonMesinChart.destroy();
+  const lsNonMesinCtx = document.getElementById('lsNonMesinChart')?.getContext('2d');
+  if (lsNonMesinCtx) {
+    charts.lsNonMesinChart = new Chart(lsNonMesinCtx, {
+      type: 'bar',
+      data: {
+        labels: top10LSNonMesin.map(([item]) => item.length > 25 ? item.substring(0, 25) + '...' : item),
+        datasets: [{ 
+          label: 'Total Minutes', 
+          data: top10LSNonMesin.map(([, duration]) => duration), 
+          backgroundColor: '#8b5cf6',
+          borderColor: '#7c3aed',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true, 
+        maintainAspectRatio: true, 
+        indexAxis: 'y',
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const fullName = top10LSNonMesin[context.dataIndex][0];
+                return `${fullName}: ${context.parsed.x} min`;
+              }
+            }
+          }
+        },
+        scales: { 
+          y: { 
+            ticks: { 
+              color: '#64748b', 
+              font: { size: 10 } 
+            }, 
+            grid: { color: '#e2e8f0' } 
+          }, 
+          x: { 
+            ticks: { 
+              color: '#64748b',
+              callback: function(value) { return value + ' min'; }
+            }, 
+            grid: { color: '#e2e8f0' },
+            title: {
+              display: true,
+              text: 'Total Minutes',
+              color: '#64748b'
+            }
           } 
         }
       }
@@ -1257,7 +1411,7 @@ function exportData(format) {
 }
 
 // ========================================== 
-// 5. EXPOSE HELPERS TO WINDOW (FOR HTML ONCLICK)
+// 5. EXPOSE HELPERS TO WINDOW
 // ========================================== 
 window.switchTab = switchTab;
 window.applyFilters = applyFilters;
