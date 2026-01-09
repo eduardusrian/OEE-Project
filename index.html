@@ -1,227 +1,347 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OEE Manufacturing System</title>
-  
-  <!-- Tailwind CSS (development) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <style>
-    .toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 24px;
-      border-radius: 8px;
-      color: white;
-      font-weight: 500;
-      z-index: 1000;
-      animation: slideIn 0.3s ease-out;
-    }
-    
-    .toast.success { background: #10b981; }
-    .toast.error { background: #ef4444; }
-    .toast.warning { background: #f59e0b; }
-    
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-  </style>
-</head>
-<body class="bg-gray-50">
-  <div id="app" class="min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-      <div class="container mx-auto px-4 py-4">
-        <div class="flex justify-between items-center">
-          <div>
-            <h1 id="appTitle" class="text-2xl font-bold text-slate-800">OEE Manufacturing System</h1>
-            <p id="companyName" class="text-slate-600">Real-time Production Monitoring & Analysis</p>
-          </div>
+  <link rel="stylesheet" href="style.css">
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-auto">
+   <div class="min-h-full p-8">
+    <div class="max-w-7xl mx-auto"><!-- Header -->
+     <div class="bg-white rounded-2xl p-6 mb-6 border border-blue-200 shadow-xl">
+      <h1 id="appTitle" class="text-4xl font-bold text-slate-800 mb-2">OEE Manufacturing System</h1>
+      <p id="companyName" class="text-slate-600 text-lg">Real-time Production Monitoring &amp; Analysis</p>
+     </div><!-- Navigation Tabs -->
+     <div class="bg-white rounded-2xl p-2 mb-6 border border-blue-200 shadow-xl">
+      <div class="flex gap-2"><button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex-1 px-6 py-3 rounded-xl font-semibold transition-all"> 📊 Dashboard </button> <button onclick="switchTab('input')" id="tab-input" class="tab-btn flex-1 px-6 py-3 rounded-xl font-semibold transition-all"> ✏️ OEE Data Input </button> <button onclick="switchTab('machines')" id="tab-machines" class="tab-btn flex-1 px-6 py-3 rounded-xl font-semibold transition-all"> ⚙️ Machine Management </button> <button onclick="switchTab('export')" id="tab-export" class="tab-btn flex-1 px-6 py-3 rounded-xl font-semibold transition-all"> 📥 Data Export </button>
+      </div>
+     </div><!-- Tab Contents -->
+     <div id="dashboard-tab" class="tab-content"><!-- Key Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+       <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-xl">
+        <div class="text-blue-100 text-sm font-semibold mb-2">
+         Average OEE Standard
         </div>
-      </div>
-    </header>
-
-    <!-- Tabs Navigation -->
-    <div class="bg-white border-b">
-      <div class="container mx-auto px-4">
-        <div class="flex space-x-2">
-          <button id="tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn active px-4 py-3 rounded-t-lg">📊 Dashboard</button>
-          <button id="tab-input" onclick="switchTab('input')" class="tab-btn px-4 py-3 rounded-t-lg">📝 Input Data</button>
-          <button id="tab-machines" onclick="switchTab('machines')" class="tab-btn px-4 py-3 rounded-t-lg">⚙️ Master Data</button>
-          <button id="tab-export" onclick="switchTab('export')" class="tab-btn px-4 py-3 rounded-t-lg">📤 Export</button>
+        <div id="avgOeeStandard" class="text-white text-4xl font-bold">
+         --
         </div>
+       </div>
+       <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-xl">
+        <div class="text-green-100 text-sm font-semibold mb-2">
+         Total Output
+        </div>
+        <div id="totalOutput" class="text-white text-4xl font-bold">
+         --
+        </div>
+       </div>
+       <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-xl">
+        <div class="text-purple-100 text-sm font-semibold mb-2">
+         Average OEE 365
+        </div>
+        <div id="avgOee365" class="text-white text-4xl font-bold">
+         --
+        </div>
+       </div>
+      </div><!-- Filters -->
+      <div class="bg-white rounded-2xl p-6 mb-6 border border-blue-200 shadow-xl">
+       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div><label class="block text-slate-700 text-sm font-semibold mb-2">Start Date</label> <input type="date" id="filterStartDate" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div><label class="block text-slate-700 text-sm font-semibold mb-2">End Date</label> <input type="date" id="filterEndDate" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div><label class="block text-slate-700 text-sm font-semibold mb-2">Machine</label> <select id="filterMachine" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <option value="">All Machines</option> </select>
+        </div>
+        <div><label class="block text-slate-700 text-sm font-semibold mb-2">Operator</label> <select id="filterOperator" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <option value="">All Operators</option> </select>
+        </div>
+       </div><button onclick="applyFilters()" class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"> Apply Filters </button>
+      </div><!-- Charts Row 1 -->
+      <div class="grid grid-cols-1 gap-6 mb-6">
+       <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+        <h3 class="text-slate-800 text-xl font-bold mb-4">OEE Trend (Last 10 Records)</h3>
+        <canvas id="oeeTrendChart"></canvas>
+       </div>
+      </div><!-- Charts Row 2 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+       <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+        <h3 class="text-slate-800 text-xl font-bold mb-4">OEE per Machine</h3>
+        <canvas id="oeeMachineChart"></canvas>
+       </div>
+       <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+        <h3 class="text-slate-800 text-xl font-bold mb-4">A-P-Q Comparison</h3>
+        <canvas id="apqChart"></canvas>
+       </div>
+      </div><!-- Charts Row 3 -->
+      <div class="grid grid-cols-1 gap-6 mb-6">
+       <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+        <h3 class="text-slate-800 text-xl font-bold mb-4">OEE Standard vs OEE 365</h3>
+        <canvas id="oeeComparisonChart"></canvas>
+       </div>
+      </div><!-- Charts Row 4 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+       <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+        <h3 class="text-slate-800 text-xl font-bold mb-4">Top 10 ODT Analysis</h3>
+        <canvas id="odtChart"></canvas>
+       </div>
+       <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+        <h3 class="text-slate-800 text-xl font-bold mb-4">Top 10 Line Stop Mesin</h3>
+        <canvas id="lineStopChart"></canvas>
+       </div>
+       <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+        <h3 class="text-slate-800 text-xl font-bold mb-4">Top 10 Line Stop Non Mesin</h3>
+        <canvas id="minorStopChart"></canvas>
+       </div>
+      </div><!-- Operator Performance Table Full Width -->
+      <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl mb-6">
+       <h3 class="text-slate-800 text-xl font-bold mb-4">Operator Performance</h3>
+       <div class="overflow-x-auto">
+        <table class="w-full">
+         <thead>
+          <tr class="border-b border-slate-200">
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Operator</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">Output</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">Target</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">Achievement %</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">Reduce Speed %</th>
+          </tr>
+         </thead>
+         <tbody id="operatorTable"></tbody>
+        </table>
+       </div>
+      </div><!-- OEE History Full Width -->
+      <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl mb-6">
+       <h3 class="text-slate-800 text-xl font-bold mb-4">OEE History</h3>
+       <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+         <thead>
+          <tr class="border-b border-slate-200">
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Date</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Shift</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Machine</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Operator</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">Output</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">OEE%</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">OEE365%</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">ODT</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Line Stop</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Minor Stop</th>
+          </tr>
+         </thead>
+         <tbody id="historyTable"></tbody>
+        </table>
+       </div>
       </div>
-    </div>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-6">
-      <!-- Dashboard Tab -->
-      <div id="dashboard-tab" class="tab-content">
-        <!-- ... isi dashboard ... -->
-      </div>
-
-      <!-- Input Tab -->
-      <div id="input-tab" class="tab-content hidden">
-        <h2 class="text-2xl font-bold text-slate-800 mb-6">📝 Input Data OEE</h2>
-        
-        <form id="oeeForm" onsubmit="saveOeeRecord(event)" class="space-y-6">
-          <!-- Form dasar -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Date *</label>
-              <input type="date" id="inputDate" class="w-full px-3 py-2 border border-slate-300 rounded" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Shift *</label>
-              <select id="inputShift" class="w-full px-3 py-2 border border-slate-300 rounded" required onchange="updateWorkTime()">
-                <option value="">Select Shift</option>
-                <option value="SHIFT1">Shift 1 (06:00-14:30)</option>
-                <option value="SHIFT2">Shift 2 (14:30-23:00)</option>
-                <option value="SHIFT3">Shift 3 (23:00-06:00)</option>
-                <option value="LONGSHIFT_PAGI">Long Shift Pagi (06:00-18:00)</option>
-                <option value="LONGSHIFT_MALAM">Long Shift Malam (18:00-06:00)</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Machine *</label>
-              <select id="inputMachine" class="w-full px-3 py-2 border border-slate-300 rounded" required onchange="loadMachineTemplate()">
-                <!-- Daftar mesin akan diisi oleh JavaScript -->
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Operator (PIC) *</label>
-              <input type="text" id="inputOperator" class="w-full px-3 py-2 border border-slate-300 rounded" required>
-            </div>
+     </div><!-- OEE Input Tab -->
+     <div id="input-tab" class="tab-content hidden">
+      <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+       <form id="oeeForm" onsubmit="saveOeeRecord(event)"><!-- Basic Info -->
+        <div class="mb-6">
+         <h3 class="text-slate-800 text-xl font-bold mb-4">Basic Information</h3>
+         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div><label class="block text-slate-700 text-sm font-semibold mb-2">Date *</label> <input type="date" id="inputDate" required class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
-
-          <!-- Work Time -->
-          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="font-semibold text-slate-800">Work Time</h3>
-                <p class="text-sm text-slate-600">Based on selected shift</p>
-              </div>
-              <div class="text-2xl font-bold text-blue-600" id="liveWorkTime">0 min</div>
-            </div>
+          <div><label class="block text-slate-700 text-sm font-semibold mb-2">Shift *</label> <select id="inputShift" required onchange="updateWorkTime()" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <option value="">Select Shift</option> <option value="SHIFT1">SHIFT 1 (510 min)</option> <option value="SHIFT2">SHIFT 2 (450 min)</option> <option value="SHIFT3">SHIFT 3 (510 min)</option> <option value="LONGSHIFT_PAGI">LONG SHIFT PAGI (720 min)</option> <option value="LONGSHIFT_MALAM">LONG SHIFT MALAM (720 min)</option> </select>
           </div>
-
-          <!-- ODT Section -->
-          <div id="odtSection">
-            <!-- Akan diisi oleh JavaScript -->
+          <div><label class="block text-slate-700 text-sm font-semibold mb-2">Machine *</label> <select id="inputMachine" required onchange="loadMachineTemplate()" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <option value="">Select Machine</option> </select>
           </div>
-
-          <!-- Line Stop Mesin Section -->
-          <div id="lineStopMesinSection">
-            <!-- Akan diisi oleh JavaScript -->
+          <div><label class="block text-slate-700 text-sm font-semibold mb-2">PIC/Operator *</label> <input type="text" id="inputOperator" required oninput="this.value = this.value.toUpperCase()" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
-
-          <!-- Line Stop Non Mesin Section -->
-          <div id="lineStopNonMesinSection">
-            <!-- Akan diisi oleh JavaScript -->
+          <div><label class="block text-slate-700 text-sm font-semibold mb-2">Product *</label> <input type="text" id="inputProduct" required oninput="this.value = this.value.toUpperCase()" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
-
-          <!-- MINOR STOP Section - INI YANG PENTING -->
-          <div id="minorStopSection">
-            <!-- Akan diisi oleh JavaScript -->
+          <div><label class="block text-slate-700 text-sm font-semibold mb-2">Batch *</label> <input type="text" id="inputBatch" required oninput="this.value = this.value.toUpperCase()" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
-
-          <!-- Output & Target -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <h3 class="font-semibold text-slate-800 mb-2">Output & Target</h3>
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-1">Actual Output *</label>
-                  <input type="number" id="inputOutput" class="w-full px-3 py-2 border border-slate-300 rounded" placeholder="Pieces" required oninput="calculateOee()">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-1">Reject</label>
-                  <input type="number" id="inputReject" class="w-full px-3 py-2 border border-slate-300 rounded" placeholder="Pieces" value="0" oninput="calculateOee()">
-                </div>
-                <div class="bg-white p-3 rounded border">
-                  <p class="text-sm text-slate-600">Output Recommendation</p>
-                  <p class="text-xl font-bold text-slate-800" id="outputRecommendation">0 pcs</p>
-                  <p class="text-sm text-slate-500">Time lost: <span id="timeLost" class="text-red-600 font-semibold">0 min</span></p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Live OEE Calculation -->
-            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-              <h3 class="font-semibold text-slate-800 mb-2">Live OEE Calculation</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between">
-                  <span class="text-slate-700">Availability (Std):</span>
-                  <span class="font-bold text-slate-800" id="liveA">0%</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-slate-700">Performance (Std):</span>
-                  <span class="font-bold text-slate-800" id="liveP">0%</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-slate-700">Quality (Std):</span>
-                  <span class="font-bold text-slate-800" id="liveQ">0%</span>
-                </div>
-                <div class="flex justify-between border-t pt-2">
-                  <span class="text-slate-700 font-semibold">OEE Standard:</span>
-                  <span class="font-bold text-green-600 text-lg" id="liveOEE">0%</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-slate-700">Availability (365):</span>
-                  <span class="font-bold text-slate-800" id="liveA365">0%</span>
-                </div>
-                <div class="flex justify-between border-t pt-2">
-                  <span class="text-slate-700 font-semibold">OEE 365:</span>
-                  <span class="font-bold text-blue-600 text-lg" id="liveOEE365">0%</span>
-                </div>
-              </div>
-            </div>
+         </div>
+        </div><!-- ODT Section -->
+        <div id="odtSection" class="mb-6"></div><!-- Line Stop Mesin -->
+        <div id="lineStopMesinSection" class="mb-6"></div><!-- Line Stop Non Mesin -->
+        <div id="lineStopNonMesinSection" class="mb-6"></div><!-- Minor Stop -->
+        <div id="minorStopSection" class="mb-6"></div><!-- Output Section -->
+        <div class="mb-6">
+         <h3 class="text-slate-800 text-xl font-bold mb-4">Output &amp; Target</h3>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label class="block text-slate-700 text-sm font-semibold mb-2">Actual Output *</label> <input type="number" id="inputOutput" required min="0" oninput="calculateOee()" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
-
-          <!-- Product Info -->
+          <div><label class="block text-slate-700 text-sm font-semibold mb-2">Reject</label> <input type="number" id="inputReject" min="0" value="0" oninput="calculateOee()" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+         </div>
+         <div class="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-2 border-green-300">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Product</label>
-              <input type="text" id="inputProduct" class="w-full px-3 py-2 border border-slate-300 rounded">
+           <div>
+            <div class="text-blue-700 text-sm font-semibold">
+             Output Recommendation
             </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Batch No</label>
-              <input type="text" id="inputBatch" class="w-full px-3 py-2 border border-slate-300 rounded">
+            <div id="outputRecommendation" class="text-blue-900 text-2xl font-bold mt-1">
+             --
             </div>
+           </div>
+           <div>
+            <div class="text-purple-700 text-sm font-semibold">
+             Time Lost
+            </div>
+            <div id="timeLost" class="text-purple-900 text-2xl font-bold mt-1">
+             --
+            </div>
+           </div>
           </div>
-
-          <!-- Save Button -->
-          <div class="flex justify-end">
-            <button type="submit" id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg">
-              Save OEE Record
-            </button>
+         </div>
+        </div><!-- Live OEE Calculation -->
+        <div class="mb-6 p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+         <h3 class="text-slate-800 text-xl font-bold mb-4">Live OEE Calculation</h3>
+         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="text-center">
+           <div class="text-slate-600 text-sm mb-1">
+            Availability
+           </div>
+           <div id="liveA" class="text-slate-900 text-3xl font-bold">
+            --%
+           </div>
           </div>
-        </form>
+          <div class="text-center">
+           <div class="text-slate-600 text-sm mb-1">
+            Performance
+           </div>
+           <div id="liveP" class="text-slate-900 text-3xl font-bold">
+            --%
+           </div>
+          </div>
+          <div class="text-center">
+           <div class="text-slate-600 text-sm mb-1">
+            Quality
+           </div>
+           <div id="liveQ" class="text-slate-900 text-3xl font-bold">
+            --%
+           </div>
+          </div>
+          <div class="text-center">
+           <div class="text-slate-600 text-sm mb-1">
+            OEE Standard
+           </div>
+           <div id="liveOEE" class="text-slate-900 text-3xl font-bold">
+            --%
+           </div>
+          </div>
+         </div>
+         <div class="mt-4 pt-4 border-t border-blue-200">
+          <div class="grid grid-cols-3 gap-4">
+           <div class="text-center">
+            <div class="text-slate-600 text-sm mb-1">
+             Availability 365
+            </div>
+            <div id="liveA365" class="text-slate-900 text-2xl font-bold">
+             --%
+            </div>
+           </div>
+           <div class="text-center">
+            <div class="text-slate-600 text-sm mb-1">
+             OEE 365
+            </div>
+            <div id="liveOEE365" class="text-slate-900 text-2xl font-bold">
+             --%
+            </div>
+           </div>
+           <div class="text-center">
+            <div class="text-slate-600 text-sm mb-1">
+             Work Time
+            </div>
+            <div id="liveWorkTime" class="text-slate-900 text-2xl font-bold">
+             -- min
+            </div>
+           </div>
+          </div>
+         </div>
+        </div><button type="submit" id="saveBtn" class="w-full px-6 py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-colors"> Save OEE Record </button>
+       </form>
       </div>
-
-      <!-- Machines Tab -->
-      <div id="machines-tab" class="tab-content hidden">
-        <!-- ... isi machines ... -->
+     </div><!-- Machine Management Tab -->
+     <div id="machines-tab" class="tab-content hidden">
+      <div class="bg-white rounded-2xl p-6 mb-6 border border-blue-200 shadow-xl">
+       <div class="flex justify-between items-center mb-6">
+        <h3 class="text-slate-800 text-xl font-bold">Admin Authentication</h3>
+        <div id="authStatus" class="text-slate-600 text-sm"></div>
+       </div>
+       <div id="authSection">
+        <div class="max-w-md"><label class="block text-slate-700 text-sm font-semibold mb-2">Admin Password</label>
+         <div class="flex gap-2"><input type="password" id="adminPassword" placeholder="Enter password" class="flex-1 px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <button onclick="authenticate()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"> Login </button>
+         </div>
+        </div>
+       </div>
+       <div id="machineManagement" class="hidden"><button onclick="showAddMachineForm()" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors mb-6"> + Add New Machine </button>
+        <div id="addMachineForm" class="hidden mb-6 p-6 bg-blue-50 rounded-xl border border-blue-200">
+         <h4 class="text-slate-800 text-2xl font-bold mb-4">Add/Edit Machine</h4>
+         <form id="machineForm" onsubmit="saveMachine(event)"><input type="hidden" id="editMachineId">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+           <div><label class="block text-slate-700 text-base font-bold mb-2">Machine Name *</label> <input type="text" id="machineName" required oninput="this.value = this.value.toUpperCase()" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+           </div>
+           <div><label class="block text-slate-700 text-base font-bold mb-2">Area *</label> <select id="machineArea" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <option value="">Select Area</option> <option value="INJEKSI">INJEKSI</option> <option value="NON INJEKSI">NON INJEKSI</option> </select>
+           </div>
+           <div><label class="block text-slate-700 text-base font-bold mb-2">Target per Minute *</label> <input type="number" id="machineTarget" required min="1" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+           </div>
+           <div><label class="block text-slate-700 text-base font-bold mb-2">PIC *</label> <input type="text" id="machinePic" required oninput="this.value = this.value.toUpperCase()" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+           </div>
+          </div>
+          <div class="mb-4"><label class="block text-slate-700 text-base font-bold mb-2">ODT Items</label>
+           <div id="odtItemsContainer" class="space-y-2 mb-2">
+            <div class="grid grid-cols-12 gap-2"><input type="text" class="odt-item-name col-span-8 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="ODT Item Name" oninput="this.value = this.value.toUpperCase()"> <input type="number" class="odt-item-time col-span-3 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Minutes" min="0"> <button type="button" onclick="removeOdtRow(this)" class="col-span-1 px-2 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors">×</button>
+            </div>
+           </div><button type="button" onclick="addOdtRow()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-colors">+ Add ODT Item</button>
+          </div>
+          <div class="mb-4"><label class="block text-slate-700 text-base font-bold mb-2">Line Stop Mesin (comma-separated)</label> <input type="text" id="machineLineStopMesin" placeholder="KERUSAKAN MOLD,LISTRIK MATI" oninput="this.value = this.value.toUpperCase()" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div class="mb-4"><label class="block text-slate-700 text-base font-bold mb-2">Line Stop Non Mesin (comma-separated)</label> <input type="text" id="machineLineStopNonMesin" placeholder="MATERIAL KOSONG,MEETING" oninput="this.value = this.value.toUpperCase()" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div class="mb-4"><label class="block text-slate-700 text-base font-bold mb-2">Minor Stop Items (comma-separated)</label> <input type="text" id="machineMinorStop" placeholder="JAM STOP,ADJUSTMENT" oninput="this.value = this.value.toUpperCase()" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div class="flex gap-2"><button type="submit" id="saveMachineBtn" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors"> Save Machine </button> <button type="button" onclick="cancelMachineForm()" class="px-6 py-2 bg-slate-300 hover:bg-slate-400 text-slate-800 rounded-lg font-semibold transition-colors"> Cancel </button>
+          </div>
+         </form>
+        </div>
+        <div id="machineList" class="space-y-4"></div>
+       </div>
       </div>
-
-      <!-- Export Tab -->
-      <div id="export-tab" class="tab-content hidden">
-        <!-- ... isi export ... -->
+     </div><!-- Export Tab -->
+     <div id="export-tab" class="tab-content hidden">
+      <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-xl">
+       <h3 class="text-slate-800 text-xl font-bold mb-6">Data Export</h3>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div><label class="block text-slate-700 text-sm font-semibold mb-2">Start Date</label> <input type="date" id="exportStartDate" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div><label class="block text-slate-700 text-sm font-semibold mb-2">End Date</label> <input type="date" id="exportEndDate" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div><label class="block text-slate-700 text-sm font-semibold mb-2">Machine</label> <select id="exportMachine" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <option value="">All Machines</option> </select>
+        </div>
+       </div>
+       <div class="flex gap-4 mb-6"><button onclick="exportData('csv')" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"> 📄 Export CSV </button> <button onclick="exportData('excel')" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors"> 📊 Export Excel </button>
+       </div>
+       <div class="mb-4">
+        <h4 class="text-slate-800 text-lg font-bold mb-3">Preview (First 10 Records)</h4>
+       </div>
+       <div class="overflow-x-auto">
+        <table class="w-full">
+         <thead>
+          <tr class="border-b border-slate-200">
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Date</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Shift</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Machine</th>
+           <th class="text-left text-slate-700 py-3 px-2 font-semibold">Operator</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">Output</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">OEE%</th>
+           <th class="text-right text-slate-700 py-3 px-2 font-semibold">OEE 365%</th>
+          </tr>
+         </thead>
+         <tbody id="exportPreview"></tbody>
+        </table>
+       </div>
       </div>
-    </main>
+     </div>
+    </div>
+   </div>
   </div>
-
-  <!-- Load script.js DI AKHIR BODY -->
   <script src="script.js"></script>
-</body>
+ </body>
 </html>
